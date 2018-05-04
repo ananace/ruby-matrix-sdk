@@ -62,10 +62,10 @@ module MatrixSdk
     end
 
     def join_room(id_or_alias)
-      request(:post, :client_r0, "/join/#{id_or_alias}")
+      request(:post, :client_r0, "/join/#{URI.escape id_or_alias}")
     end
 
-    def logged_in?
+    def whoami?
       request(:get, :client_r0, '/account/whoami')
     end
 
@@ -79,11 +79,13 @@ module MatrixSdk
       request.body = request.body.to_json unless request.body.is_a? String
       request.body_stream = options[:body_stream] if options.key? :body_stream
 
-      options[:headers].each do |h, v|
-        request[h] = v
-      end if options.key? :headers
+      request.content_type = 'application/json' if request.body || request.body_stream
 
-      request[:authorization] = "Bearer #{access_token}" if access_token
+      request['authorization'] = "Bearer #{access_token}" if access_token
+      request['user-agent'] = 'Cool string goes here' if false
+      options[:headers].each do |h, v|
+        request[h.to_s.downcase] = v
+      end if options.key? :headers
 
       response = http.request request
       data = JSON.parse response.body, symbolize_names: true
