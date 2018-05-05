@@ -91,8 +91,7 @@ module MatrixSdk
       data = JSON.parse response.body, symbolize_names: true
 
       return data if response.kind_of? Net::HTTPSuccess
-      # TODO: Exceptions
-      response
+      raise MatrixError, data, response.code
     end
 
     private
