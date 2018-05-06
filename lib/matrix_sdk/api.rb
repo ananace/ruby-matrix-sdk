@@ -82,7 +82,7 @@ module MatrixSdk
       request.content_type = 'application/json' if request.body || request.body_stream
 
       request['authorization'] = "Bearer #{access_token}" if access_token
-      request['user-agent'] = 'Cool string goes here' if false
+      request['user-agent'] = user_agent
       options[:headers].each do |h, v|
         request[h.to_s.downcase] = v
       end if options.key? :headers
@@ -108,6 +108,10 @@ module MatrixSdk
         opts[:verify_mode] = ::OpenSSL::SSL::VERIFY_NONE unless @validate_certificate
         Net::HTTP.start homeserver.host, homeserver.port, opts
       )
+    end
+
+    def user_agent
+      "Ruby Matrix SDK v#{MatrixSdk::VERSION}"
     end
   end
 end

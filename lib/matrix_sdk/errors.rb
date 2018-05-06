@@ -9,7 +9,7 @@ module MatrixSdk
     end
 
     def to_s
-      "#{errcode}: #{error}"
+      "#{httpstatus}: #{errcode} - #{error}"
     end
   end
 end
