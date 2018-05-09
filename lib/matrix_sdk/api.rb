@@ -16,6 +16,9 @@ module MatrixSdk
       @access_token = params.fetch(:access_token, nil)
       @device_id = params.fetch(:device_id, nil)
       @validate_certificate = params.fetch(:validate_certificate, false)
+
+      login(user: @homeserver.user, password: @homeserver.password) if @homserver.user && @homeserver.password && !@access_token && !params[:skip_login]
+      @homserver.userinfo = '' unless params[:skip_login]
     end
 
     def api_versions
