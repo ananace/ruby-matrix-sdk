@@ -45,6 +45,8 @@ module MatrixSdk
     def login(params = {})
       options = {}
       options[:store_token] = params.delete(:store_token) { true }
+      options[:store_device_id] = params.delete(:store_device_id) { true }
+      options[:initial_device_display_name] = params.delete(:initial_device_display_name) { user_agent }
 
       data = {
         type: params.delete(:login_type) { 'm.login.password' }
@@ -53,6 +55,7 @@ module MatrixSdk
 
       request(:post, :client_r0, '/login', body: data).tap do |resp|
         @access_token = resp[:token] if resp[:token] && options[:store_token]
+        @device_id = resp[:device_id] if resp[:device_id] && options[:store_device_id]
       end
     end
 
