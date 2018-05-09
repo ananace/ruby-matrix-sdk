@@ -26,7 +26,7 @@ module MatrixSdk
       options = {
         timeout: 30.0,
       }.merge(params).select { |k, _v|
-        %i[since timeout filter full_state set_presence].include? k
+        %i[since timeout timeout_ms filter full_state set_presence].include? k
       }
 
       options[:timeout] = ((options[:timeout] || 30) * 1000).to_i
@@ -72,7 +72,7 @@ module MatrixSdk
     def request(method, api, path, options = {})
       url = homeserver.dup.tap do |u|
         u.path = api_to_path(api) + path
-        u.query = [u.query, options[:query]].reject(&:nil?).flatten.join('&') if options[:query]
+        u.query = [u.query, options[:query].map {|k,v| "#{k}#{"=#{v}" unless v.nil?}"}].flatten.join('&') if options[:query]
       end
       request = Net::HTTP.const_get(method.to_s.capitalize.to_sym).new url.request_uri
       request.body = options[:body] if options.key? :body
@@ -105,7 +105,7 @@ module MatrixSdk
       @http ||= (
         opts = { }
         opts[:use_ssl] = true if homeserver.scheme == 'https'
-        opts[:verify_mode] = ::OpenSSL::SSL::VERIFY_NONE unless @validate_certificate
+        opts[:verify_mode] = ::OpenSSL::SSL::VERIFY_NONE unless validate_certificate
         Net::HTTP.start homeserver.host, homeserver.port, opts
       )
     end
