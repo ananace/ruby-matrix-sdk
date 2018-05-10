@@ -150,6 +150,140 @@ module MatrixSdk
       send_message_event(room_id, 'm.room.message', content, params)
     end
 
+    def get_room_messages(room_id, token, direction, params = {})
+      query = {
+        roomId: room_id,
+        from: token,
+        dir: direction,
+        limit: params.fetch(:limit, 10)
+      }
+      query[:to] = params[:to] if params.key? :to
+
+      request(:get, :client_r0, "/rooms/#{room_id}/messages", query: query)
+    end
+
+    def get_room_name(room_id)
+      request(:get, :client_r0, "/rooms/#{room_id}/state/m.room.name")
+    end
+
+    def set_room_name(room_id, name, params = {})
+      content = {
+        name: name
+      }
+      send_state_event(room_id, 'm.room.name', content, params)
+    end
+
+    def get_room_topic(room_id)
+      request(:get, :client_r0, "/rooms/#{room_id}/state/m.room.topic")
+    end
+
+    def set_room_name(room_id, topic, params = {})
+      content = {
+        topic: topic
+      }
+      send_state_event(room_id, 'm.room.topic', content, params)
+    end
+
+    def get_power_levels(room_id)
+      request(:get, :client_r0, "/rooms/#{room_id}/state/m.room.power_levels")
+    end
+
+    def set_power_levels(room_id, content)
+      content[:events] = {} unless content.key? :events
+      send_state_event(room_id, 'm.room.power_levels', content)
+    end
+
+    def leave_room(room_id)
+      request(:post, :client_r0, "/rooms/#{room_id}/leave")
+    end
+
+    def forget_room(room_id)
+      request(:post, :client_r0, "/rooms/#{room_id}/forget")
+    end
+
+    def invite_user(room_id, user_id)
+      content = {
+        user_id: user_id
+      }
+      request(:post, :client_r0, "/rooms/#{room_id}/invite", body: content)
+    end
+
+    def kick_user(room_id, user_id, reason = '')
+      set_membership(room_id, user_id, 'leave', reason: reason)
+    end
+
+    def get_membership(room_id, user_id)
+      request(:get, :client_r0, "/rooms/#{room_id}/state/m.room.member/#{user_id}")
+    end
+
+    def set_membership(room_id, user_id, membership, params = {})
+      content = {
+        membership: membership,
+        reason: params.delete(:reason) { '' }
+      }
+      content[:displayname] = params.delete(:displayname) if params.key? :displayname
+      content[:avatar_url] = params.delete(:avatar_url) if params.key? :avatar_url
+
+      send_state_event(room_id, 'm.room.member', content, params)
+    end
+
+    def ban_user(room_id, user_id, reason = '')
+      content = {
+        user_id: user_id,
+        reason: reason
+      }
+      request(:post, :client_r0, "/rooms/#{room_id}/ban", body: content)
+    end
+
+    def unban_user(room_id, user_id)
+      content = {
+        user_id: user_id,
+      }
+      request(:post, :client_r0, "/rooms/#{room_id}/unban", body: content)
+    end
+
+    def get_user_tags(user_id, room_id)
+      request(:get, :client_r0, "/user/#{user_id}/rooms/#{room_id}/tags")
+    end
+
+    def remove_user_tag(user_id, room_id, tag)
+      request(:delete, :client_r0, "/user/#{user_id}/rooms/#{room_id}/tags/#{tag}")
+    end
+
+    def add_user_tag(user_id, room_id, tag, params = {})
+      if params[:body]
+        content = params[:body]
+      else
+        content = {}
+        content[:order] = params[:order] if params.key? :order
+      end
+      request(:put, :client_r0, "/user/#{user_id}/rooms/#{room_id}/tags/#{tag}", body: content)
+    end
+
+    def set_account_data(user_id, type, account_data)
+      request(:put, :client_r0, "/user/#{user_id}/account_data/#{type}", body: account_data)
+    end
+
+    def set_room_account_data(user_id, room_id, type, account_data)
+      request(:put, :client_r0, "/user/#{user_id}/rooms/#{room_id}/account_data/#{type}", body: account_data)
+    end
+
+    def get_room_state(room_id)
+      request(:get, :client_r0, "/rooms/#{room_id}/state")
+    end
+
+    def get_filter(user_id, filter_id)
+      request(:get, :client_r0, "/user/#{user_id}/filter/#{filter_id}")
+    end
+
+    def create_filter(user_id, filter_params)
+      request(:post, :client_r0, "/user/#{user_id}/filter", body: filter_params)
+    end
+
+    def media_upload(content, content_type)
+      request(:post, :media_r0, '/upload', body: content, headers: { 'content-type' => content_type })
+    end
+
 
     def whoami?
       request(:get, :client_r0, '/account/whoami')
