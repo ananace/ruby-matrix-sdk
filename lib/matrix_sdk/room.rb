@@ -250,7 +250,10 @@ module MatrixSdk
 
     def reload_aliases!
       data = client.api.get_room_state(id)
-      new_aliases = data.find { |chunk| chunk.key?(:content) && chunk[:content].key?(:aliases) }
+      new_aliases = data.select { |chunk| chunk.key?(:content) && chunk[:content].key?(:aliases) }
+                        .map { |chunk| chunk[:content][:aliases] }
+                        .flatten
+                        .reject(&:nil?)
       return false if new_aliases.nil?
 
       changed = new_aliases != aliases
