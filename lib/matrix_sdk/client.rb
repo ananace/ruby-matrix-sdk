@@ -6,7 +6,7 @@ module MatrixSdk
   class Client
     extend Forwardable
 
-    attr_reader :api, :rooms
+    attr_reader :api
     attr_accessor :cache, :mxid, :sync_filter
 
     events :event, :presence_event, :invite_event, :left_event, :ephemeral_event
@@ -52,6 +52,10 @@ module MatrixSdk
 
     def logger
       @logger ||= Logging.logger[self.class.name]
+    end
+
+    def rooms
+      @rooms.values
     end
 
     def register_as_guest
