@@ -103,7 +103,7 @@ module MatrixSdk
       query[:ts] = params[:timestamp].to_i if params.key? :timestamp
 
       content = {}
-      content[:reason] = params[:reason] if params.key? :reason
+      content[:reason] = params[:reason] if params[:reason]
 
       txn_id = transaction_id
       txn_id = params.fetch(:txn_id, "#{txn_id}#{Time.now.to_i}")
@@ -216,8 +216,8 @@ module MatrixSdk
       request(:post, :client_r0, "/rooms/#{room_id}/invite", body: content)
     end
 
-    def kick_user(room_id, user_id, reason = '')
-      set_membership(room_id, user_id, 'leave', reason: reason)
+    def kick_user(room_id, user_id, params = {})
+      set_membership(room_id, user_id, 'leave', params)
     end
 
     def get_membership(room_id, user_id)
@@ -235,10 +235,10 @@ module MatrixSdk
       send_state_event(room_id, 'm.room.member', content, params.merge(state_key: user_id))
     end
 
-    def ban_user(room_id, user_id, reason = '')
+    def ban_user(room_id, user_id, params = {})
       content = {
         user_id: user_id,
-        reason: reason
+        reason: params[:reason] || ''
       }
       request(:post, :client_r0, "/rooms/#{room_id}/ban", body: content)
     end
