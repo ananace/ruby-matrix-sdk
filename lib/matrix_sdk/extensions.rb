@@ -11,25 +11,20 @@ module URI
 end
 
 module MatrixSdk
-  class EventHandlerArray < Array
-    def add
-      raise 'Use `add_handler` to add event handlers'
+  class EventHandlerArray < Hash
+    def add_handler(filter = nil, id = nil, &block)
+      id ||= block.hash
+      self[id] = { filter: filter, id: id, block: block }
     end
 
-    def add_handler(code = nil, &block)
-      if code
-        push(code)
-      else
-        push(block)
-      end
-    end
-
-    def remove_handler(code)
-      delete(code)
+    def remove_handler(id)
+      delete id
     end
 
     def fire(event)
-      reverse_each { |h| h.call(event) }
+      reverse_each do |h|
+        h[:block].call(event) unless event.matches? h[:filter]
+      end
     end
   end
 
@@ -43,6 +38,29 @@ module MatrixSdk
 
     def handled?
       @handled
+    end
+
+    def matches?(_filter)
+      true
+    end
+  end
+
+  class MatrixEvent < Event
+    attr_accessor :event
+
+    def initialize(sender, event = nil)
+      @event = event
+      super sender
+    end
+
+    def matches?(filter)
+      return true if @filter.nil? || filter.nil?
+
+      if filter.is_a? Regexp
+        filter.match(@event[:type]) { true } || false
+      else
+        @event[:type] == filter
+      end
     end
   end
 end
