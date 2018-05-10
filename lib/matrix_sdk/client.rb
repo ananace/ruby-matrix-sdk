@@ -90,6 +90,10 @@ module MatrixSdk
       ensure_room(data.fetch(:room_id, room_id_or_alias))
     end
 
+    def find_room(room_id_or_alias)
+      @rooms.fetch(room_id_or_alias, @rooms.values.find { |r| r.canonical_alias == room_id_or_alias })
+    end
+
     def get_user(user_id)
       User.new(self, user_id)
     end
