@@ -19,7 +19,7 @@ module MatrixSdk
       @name = nil
       @topic = nil
       @canonical_alias = nil
-      @aliases = nil
+      @aliases = []
       @join_rule = nil
       @guest_access = nil
       @members = []

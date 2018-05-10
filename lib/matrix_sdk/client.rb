@@ -174,7 +174,7 @@ module MatrixSdk
       when 'm.room.topic'
         room.instance_variable_set '@topic', content[:topic]
       when 'm.room.aliases'
-        room.instance_variable_set '@aliases', content[:aliases]
+        room.instance_variable_get('@aliases').concat content[:aliases]
       when 'm.room.join_rules'
         room.instance_variable_set '@join_rule', content[:join_rule].to_sym
       when 'm.room.guest_access'
