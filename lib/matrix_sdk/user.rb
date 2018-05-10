@@ -4,6 +4,8 @@ module MatrixSdk
   class User
     attr_reader :id, :client
 
+    alias user_id :id
+
     def initialize(client, id, data = {})
       @client = client
       @id = id

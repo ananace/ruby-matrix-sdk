@@ -7,6 +7,8 @@ module MatrixSdk
 
     events :event, :state_event, :ephemeral_event
 
+    alias room_id id
+
     def initialize(client, room_id, data = {})
       @client = client
       @id = room_id

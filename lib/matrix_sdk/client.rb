@@ -78,6 +78,14 @@ module MatrixSdk
       ensure_room(data.fetch(:room_id, room_id_or_alias))
     end
 
+    def get_user(user_id)
+      User.new(self, user_id)
+    end
+
+    def remove_room_alias(room_alias)
+      api.remove_room_alias(room_alias)
+    end
+
     def upload(content, content_type)
       data = api.media_upload(content, content_type)
       return data[:content_uri] if data.key? :content_uri
