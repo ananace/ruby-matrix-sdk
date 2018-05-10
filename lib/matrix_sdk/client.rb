@@ -1,8 +1,11 @@
-require 'matrix_sdk/extensions'
-require 'matrix_sdk/room'
+require 'matrix_sdk'
+
+require 'forwardable'
 
 module MatrixSdk
   class Client
+    extend Forwardable
+
     attr_reader :api, :rooms, :sync_token
     attr_accessor :cache, :mxid
 
@@ -10,6 +13,10 @@ module MatrixSdk
 
     alias user_id mxid
     alias user_id= mxid=
+
+    def_delegators :@api,
+                   :access_token, :access_token=, :device_id, :device_id=, :homeserver, :homeserver=,
+                   :validate_certificate, :validate_certificate=
 
     def initialize(hs_url, params = {})
       params[:user_id] = params[:mxid] if params[:mxid]
@@ -41,7 +48,12 @@ module MatrixSdk
 
     def register_as_guest
       data = api.register(kind: :guest)
-      # post_registration(data)
+      post_registration(data)
+    end
+
+    def register_with_password(username, password)
+      data = api.register(auth: { type: 'm.login.dummy' }, username: username, password: password)
+      post_registration(data)
     end
 
     def login(username, password)
@@ -59,6 +71,14 @@ module MatrixSdk
     end
 
     private
+
+    def post_registration(data)
+      @mxid = data[:user_id]
+      @api.access_token = data[:access_token]
+      @api.device_id = data[:device_id]
+      @api.homeserver = data[:home_server]
+      access_token
+    end
 
     def ensure_room(room_id)
       @rooms[room_id] ||= Room.new room_id

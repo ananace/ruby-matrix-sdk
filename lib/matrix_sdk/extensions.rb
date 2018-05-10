@@ -89,8 +89,7 @@ def events(*symbols)
     "
   end
 
-  # rubocop:disable Security/Eval
-  eval "
+  class_eval "
     module #{module_name}
       attr_reader #{readers.join ', '}
 
@@ -99,13 +98,12 @@ def events(*symbols)
           super(*args)
         rescue NoMethodError; end
 
-        #{initalizers.join}
+        #{initializers.join}
       end
 
       #{methods.join}
     end
 
     include #{module_name}
-  ", __FILE__, __LINE__
-  # rubocop:enable Security/Eval
+  ", __FILE__, __LINE__ - 16
 end

@@ -15,7 +15,7 @@ module MatrixSdk
     end
 
     def to_s
-      "HTTP #{httpstatus}: #{code} - #{message}"
+      "HTTP #{httpstatus} (#{code}): #{message}"
     end
   end
 

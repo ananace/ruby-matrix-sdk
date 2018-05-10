@@ -1,13 +1,14 @@
+require 'matrix_sdk'
+
 require 'json'
-require 'matrix_sdk/extensions'
 require 'net/http'
 require 'openssl'
 require 'uri'
 
 module MatrixSdk
   class Api
-    attr_accessor :access_token, :device_id, :validate_certificate
-    attr_reader :homeserver
+    attr_accessor :access_token, :device_id
+    attr_reader :homeserver, :validate_certificate
 
     def initialize(homeserver, params = {})
       @homeserver = homeserver
@@ -27,8 +28,21 @@ module MatrixSdk
       @transaction_id = params.fetch(:transaction_id, 0)
       @backoff_time = params.fetch(:backoff_time, 5000)
 
-      login(user: @homeserver.user, password: @homeserver.password) if @homserver.user && @homeserver.password && !@access_token && !params[:skip_login]
-      @homserver.userinfo = '' unless params[:skip_login]
+      login(user: @homeserver.user, password: @homeserver.password) if @homeserver.user && @homeserver.password && !@access_token && !params[:skip_login]
+      @homeserver.userinfo = '' unless params[:skip_login]
+    end
+
+    def validate_certificate=(validate)
+      # The HTTP connection needs to be reopened if this changes
+      @http.finish if @http && validate != @validate_certificate
+      @validate_certificate = validate
+    end
+
+    def homeserver=(hs_info)
+      # TODO: DNS query for SRV information about HS?
+      return unless hs_info.is_a? URI
+      @http.finish if @http
+      @homeserver = hs_info
     end
 
     def api_versions
@@ -422,12 +436,12 @@ module MatrixSdk
     end
 
     def http
-      @http ||= begin
-        opts = {}
-        opts[:use_ssl] = true if homeserver.scheme == 'https'
-        opts[:verify_mode] = ::OpenSSL::SSL::VERIFY_NONE unless validate_certificate
-        Net::HTTP.start homeserver.host, homeserver.port, opts
-      end
+      @http ||= Net::HTTP.new homeserver.host, homeserver.port
+      return @http if @http.active?
+
+      @http.use_ssl = homeserver.scheme == 'https'
+      @http.verify_mode = validate_certificate ? ::OpenSSL::SSL::VERIFY_NONE : nil
+      @http.start
     end
 
     def user_agent

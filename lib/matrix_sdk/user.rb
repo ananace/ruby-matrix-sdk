@@ -1,4 +1,4 @@
-require 'matrix_sdk/extensions'
+require 'matrix_sdk'
 
 module MatrixSdk
   class User
