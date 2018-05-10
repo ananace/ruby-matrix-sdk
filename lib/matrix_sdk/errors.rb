@@ -21,4 +21,7 @@ module MatrixSdk
 
   class MatrixConnectionError < MatrixError
   end
+
+  class MatrixUnexpectedResponseError < MatrixError
+  end
 end
