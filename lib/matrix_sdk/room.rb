@@ -37,7 +37,7 @@ module MatrixSdk
       return canonical_alias if canonical_alias
 
       members = get_joined_members
-                .reject { |m| m.user_id == client.user_id }
+                .reject { |m| m.user_id == client.mxid }
                 .map(&:get_display_name)
 
       return members.first if members.one?
@@ -167,30 +167,30 @@ module MatrixSdk
     end
 
     def set_account_data(type, account_data)
-      client.api.set_room_account_data(client.user_id, id, type, account_data)
+      client.api.set_room_account_data(client.mxid, id, type, account_data)
     end
 
     def set_user_profile(params = {})
       return nil unless params[:display_name] || params[:avatar_url]
-      data = client.api.get_membership(id, client.user_id)
+      data = client.api.get_membership(id, client.mxid)
       raise "Can't set profile if you haven't joined the room" unless data[:membership] == 'join'
 
       data[:displayname] = params[:display_name] unless params[:display_name].nil?
       data[:avatar_url] = params[:avatar_url] unless params[:avatar_url].nil?
 
-      client.api.set_membership(id, client.user_id, 'join', params.fetch(:reason, 'Updating room profile information'), data)
+      client.api.set_membership(id, client.mxid, 'join', params.fetch(:reason, 'Updating room profile information'), data)
     end
 
     def tags
-      client.api.get_user_tags(client.user_id, id)
+      client.api.get_user_tags(client.mxid, id)
     end
 
     def remove_tag(tag)
-      client.api.remove_user_tag(client.user_id, id, tag)
+      client.api.remove_user_tag(client.mxid, id, tag)
     end
 
     def add_tag(tag, params = {})
-      client.api.add_user_tag(client.user_id, id, tag, params)
+      client.api.add_user_tag(client.mxid, id, tag, params)
     end
 
     #

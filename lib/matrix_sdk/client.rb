@@ -3,16 +3,45 @@ require 'matrix_sdk/room'
 
 module MatrixSdk
   class Client
-    attr_reader :api, :mxid, :rooms
-    attr_accessor :cache
+    attr_reader :api, :rooms, :sync_token
+    attr_accessor :cache, :mxid
 
     events :event, :presence_event, :invite_event, :left_event, :ephemeral_event
 
+    alias user_id mxid
+    alias user_id= mxid=
+
     def initialize(hs_url, params = {})
+      params[:user_id] = params[:mxid] if params[:mxid]
+      raise ArgumentError, 'Must provide user_id with access_token' if params[:access_token] && !params[:user_id]
+
       @api = Api.new hs_url, params
 
-      @cache = params.fetch(:cache, :all)
       @rooms = {}
+      @cache = :all
+
+      @sync_token = nil
+      @sync_thread = nil
+      @sync_filter = { room: { timeline: { limit: params.fetch(:sync_filter_limit, 20) } } }
+
+      @should_listen = false
+
+      @bad_sync_timeout = 60 * 60
+
+      params.each do |k, v|
+        instance_variable_set("@#{k}", v) if instance_variable_defined? "@#{k}"
+      end
+
+      raise ArgumentError, 'Cache value must be one of of [:all, :some, :none]' unless %i[all some none].include? @cache
+
+      return unless params[:user_id]
+      @mxid = params[:user_id]
+      sync
+    end
+
+    def register_as_guest
+      data = api.register(kind: :guest)
+      # post_registration(data)
     end
 
     def login(username, password)
