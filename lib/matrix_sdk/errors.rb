@@ -1,15 +1,24 @@
 module MatrixSdk
-  class MatrixError
-    attr_reader :errcode, :error, :httpstatus
+  class MatrixError < StandardError
+  end
+
+  class MatrixRequestError < MatrixError
+    attr_reader :code, :httpstatus, :message
+    alias error message
 
     def initialize(error, status)
-      @errcode = error[:errcode]
-      @error = error[:error]
+      @code = error[:errcode]
       @httpstatus = status
+      @message = error[:error]
+
+      super error[:error]
     end
 
     def to_s
-      "#{httpstatus}: #{errcode} - #{error}"
+      "HTTP #{httpstatus}: #{code} - #{message}"
     end
+  end
+
+  class MatrixConnectionError < MatrixError
   end
 end

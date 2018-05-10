@@ -383,7 +383,7 @@ module MatrixSdk
 
       failures = 0
       loop do
-        raise 'Too many request failures, aborting' if failures >= 10
+        raise MatrixConnectionError, "Server still too busy to handle request after #{failures} attempts, try again later" if failures >= 10
 
         response = http.request request
         data = JSON.parse response.body, symbolize_names: true
@@ -396,7 +396,7 @@ module MatrixSdk
         end
 
         return data if response.is_a? Net::HTTPSuccess
-        raise MatrixError, data, response.code
+        raise MatrixRequestError.new(data, response.code)
       end
     end
 
