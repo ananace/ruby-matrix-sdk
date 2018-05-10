@@ -1,4 +1,5 @@
 require 'matrix_sdk/extensions'
+require 'matrix_sdk/room'
 
 module MatrixSdk
   class Client
@@ -79,21 +80,6 @@ module MatrixSdk
         join[:state][:events].each do |event|
           handle_state(join, event)
         end
-      end
-    end
-  end
-
-  class Room
-    attr_accessor :id, :name, :topic, :canonical_alias, :aliases, :join_rule, :guest_access
-    attr_reader :members
-
-    events :event, :state_event, :ephemeral_event
-
-    def initialize(room_id, data = {})
-      @id = room_id
-      @members = []
-      data.each do |k, v|
-        instance_variable_set("@#{k}", v)
       end
     end
   end
