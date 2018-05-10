@@ -10,63 +10,6 @@ module URI
   @@schemes['MXC'] = MATRIX
 end
 
-module MatrixSdk
-  class EventHandlerArray < Hash
-    def add_handler(filter = nil, id = nil, &block)
-      id ||= block.hash
-      self[id] = { filter: filter, id: id, block: block }
-    end
-
-    def remove_handler(id)
-      delete id
-    end
-
-    def fire(event, filter = nil)
-      reverse_each do |_k, h|
-        h[:block].call(event) unless event.matches?(h[:filter], filter)
-      end
-    end
-  end
-
-  class Event
-    attr_writer :handled
-
-    def initialize(sender)
-      @sender = sender
-      @handled = false
-    end
-
-    def handled?
-      @handled
-    end
-
-    def matches?(_filter)
-      true
-    end
-  end
-
-  class MatrixEvent < Event
-    attr_accessor :event, :filter
-
-    def initialize(sender, event = nil, filter = nil)
-      @event = event
-      @filter = filter || @event[:type]
-      super sender
-    end
-
-    def matches?(filter, filter_override = nil)
-      return true if filter_override.nil? && (@filter.nil? || filter.nil?)
-
-      to_match = filter_override || @filter
-      if filter.is_a? Regexp
-        filter.match(to_match) { true } || false
-      else
-        to_match == filter
-      end
-    end
-  end
-end
-
 def events(*symbols)
   module_name = "#{name}Events"
 
@@ -112,4 +55,65 @@ def ignore_inspect(*symbols)
       "#<\#{self.class.name}:\#{"%016x" % (object_id << 1)} \#{instance_variables.reject { |f| %i[#{symbols.map { |s| "@#{s}" }.join ' '}].include? f }.map { |f| "\#{f}=\#{instance_variable_get(f).inspect}" }.join ' ' }>"
     end
   *, __FILE__, __LINE__ - 4
+end
+
+module MatrixSdk
+  class EventHandlerArray < Hash
+    def add_handler(filter = nil, id = nil, &block)
+      id ||= block.hash
+      self[id] = { filter: filter, id: id, block: block }
+    end
+
+    def remove_handler(id)
+      delete id
+    end
+
+    def fire(event, filter = nil)
+      reverse_each do |_k, h|
+        h[:block].call(event) unless event.matches?(h[:filter], filter)
+      end
+    end
+  end
+
+  class Event
+    attr_writer :handled
+
+    ignore_inspect :sender
+
+    def initialize(sender)
+      @sender = sender
+      @handled = false
+    end
+
+    def handled?
+      @handled
+    end
+
+    def matches?(_filter)
+      true
+    end
+  end
+
+  class MatrixEvent < Event
+    attr_accessor :event, :filter
+
+    ignore_inspect :sender
+
+    def initialize(sender, event = nil, filter = nil)
+      @event = event
+      @filter = filter || @event[:type]
+      super sender
+    end
+
+    def matches?(filter, filter_override = nil)
+      return true if filter_override.nil? && (@filter.nil? || filter.nil?)
+
+      to_match = filter_override || @filter
+      if filter.is_a? Regexp
+        filter.match(to_match) { true } || false
+      else
+        to_match == filter
+      end
+    end
+  end
 end
