@@ -3,7 +3,7 @@
 A Ruby gem for easing the development of software that communicates with servers implementing the Matrix protocol.
 
 
-## Usage
+## Example usage
 
 ```ruby
 # Raw API usage
@@ -14,6 +14,10 @@ api = MatrixSdk::Api.new 'https://matrix.org'
 api.login user: 'example', password: 'notarealpass'
 api.whoami?
 # => {:user_id=>"@example:matrix.org"}
+
+# It's possible to call arbitrary APIs as well
+api.request :get, :federation_v1, '/version'
+# => {:server=>{:version=>"0.28.1", :name=>"Synapse"}}
 ```
 
 ```ruby
@@ -35,7 +39,7 @@ hq.send_text "This is an example message - don't actually do this ;)"
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/ananace/ruby-matrix-sdk.
+Bug reports and pull requests are welcome on GitHub at https://github.com/ananace/ruby-matrix-sdk
 
 
 ## License
