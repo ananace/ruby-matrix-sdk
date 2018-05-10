@@ -48,8 +48,10 @@ module MatrixSdk
       request(:get, :client_r0, '/sync', query: query)
     end
 
-    def register(_params = {})
-      raise NotImplementedError, 'Registering is not implemented yet'
+    def register(params = {})
+      kind = params.delete(:kind) { 'user' }
+
+      request(:post, :client_r0, '/register', body: params, query: { kind: kind })
     end
 
     def login(params = {})
@@ -73,8 +75,14 @@ module MatrixSdk
       request(:post, :client_r0, '/logout')
     end
 
-    def create_room(_params = {})
-      raise NotImplementedError, 'Creating rooms is not implemented yet'
+    def create_room(params = {})
+      content = {
+        visibility: params.fetch(:visibility, :public)
+      }
+      content[:room_alias_name] = params[:room_alias] if params[:room_alias]
+      content[:invite] = [params[:invite]].flatten if params[:invite]
+
+      request(:post, :client_r0, '/createRoom', content)
     end
 
     def join_room(id_or_alias)
