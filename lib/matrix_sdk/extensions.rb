@@ -21,9 +21,9 @@ module MatrixSdk
       delete id
     end
 
-    def fire(event)
+    def fire(event, filter = nil)
       reverse_each do |h|
-        h[:block].call(event) unless event.matches? h[:filter]
+        h[:block].call(event) unless event.matches?(h[:filter], filter)
       end
     end
   end
@@ -46,20 +46,22 @@ module MatrixSdk
   end
 
   class MatrixEvent < Event
-    attr_accessor :event
+    attr_accessor :event, :filter
 
-    def initialize(sender, event = nil)
+    def initialize(sender, event = nil, filter = nil)
       @event = event
+      @filter = filter || @event[:type]
       super sender
     end
 
-    def matches?(filter)
-      return true if @filter.nil? || filter.nil?
+    def matches?(filter, filter_override = nil)
+      return true if filter_override.nil? && (@filter.nil? || filter.nil?)
 
+      to_match = filter_override || @filter
       if filter.is_a? Regexp
-        filter.match(@event[:type]) { true } || false
+        filter.match(to_match) { true } || false
       else
-        @event[:type] == filter
+        to_match == filter
       end
     end
   end
@@ -80,8 +82,8 @@ def events(*symbols)
     "
     readers << ":on_#{name}"
     methods << "
-      def fire_#{name}(ev)
-        @on_#{name}.fire(ev)
+      def fire_#{name}(ev, filter = nil)
+        @on_#{name}.fire(ev, filter)
         when_#{name}(ev) if !ev.handled?
       end
 
