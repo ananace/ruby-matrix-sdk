@@ -14,7 +14,7 @@ module MatrixSdk
     def initialize(client, room_id, data = {})
       event_initialize
       @client = client
-      @id = room_id
+      @id = room_id.to_s
 
       @name = nil
       @topic = nil
@@ -210,7 +210,7 @@ module MatrixSdk
 
     def name=(name)
       client.api.set_room_name(id, name)
-      self.name = name
+      @name = name
     rescue MatrixError
       nil
     end
@@ -218,7 +218,7 @@ module MatrixSdk
     def reload_name!
       data = client.api.get_room_name(id)
       changed = data[:name] != name
-      self.name = data[:name] if changed
+      @name = data[:name] if changed
       changed
     rescue MatrixError
       false
@@ -226,7 +226,7 @@ module MatrixSdk
 
     def topic=(topic)
       client.api.set_room_topic(id, topic)
-      self.topic = topic
+      @topic = topic
     rescue MatrixError
       nil
     end
@@ -234,7 +234,7 @@ module MatrixSdk
     def reload_topic!
       data = client.api.get_room_topic(id)
       changed = data[:topic] != topic
-      self.topic = data[:topic] if changed
+      @topic = data[:topic] if changed
       changed
     rescue MatrixError
       false
@@ -242,6 +242,7 @@ module MatrixSdk
 
     def add_alias!(room_alias)
       client.api.set_room_alias(id, room_alias)
+      @aliases << room_alias
       true
     rescue MatrixError
       false
@@ -253,7 +254,7 @@ module MatrixSdk
       return false if new_aliases.nil?
 
       changed = new_aliases != aliases
-      self.aliases = new_aliases if changed
+      @aliases = new_aliases if changed
       changed
     rescue MatrixError
       false
