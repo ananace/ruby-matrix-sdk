@@ -393,6 +393,7 @@ module MatrixSdk
       url = homeserver.dup.tap do |u|
         u.path = api_to_path(api) + path
         u.query = [u.query, options[:query].map { |k, v| "#{k}#{"=#{v}" unless v.nil?}" }].flatten.reject(&:nil?).join('&') if options[:query]
+        u.query = nil if u.query.nil? || u.query.empty?
       end
       request = Net::HTTP.const_get(method.to_s.capitalize.to_sym).new url.request_uri
       request.body = options[:body] if options.key? :body
