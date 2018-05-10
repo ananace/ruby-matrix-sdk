@@ -6,10 +6,12 @@ module MatrixSdk
   class Client
     extend Forwardable
 
-    attr_reader :api, :rooms, :sync_token
+    attr_reader :api, :rooms
     attr_accessor :cache, :mxid, :sync_filter
 
     events :event, :presence_event, :invite_event, :left_event, :ephemeral_event
+    ignore_inspect :api,
+                   :on_event, :on_presence_event, :on_invite_event, :on_left_event, :on_ephemeral_event
 
     alias user_id mxid
     alias user_id= mxid=
@@ -19,6 +21,8 @@ module MatrixSdk
                    :validate_certificate, :validate_certificate=
 
     def initialize(hs_url, params = {})
+      event_initialize
+
       params[:user_id] = params[:mxid] if params[:mxid]
       raise ArgumentError, 'Must provide user_id with access_token' if params[:access_token] && !params[:user_id]
 
@@ -44,6 +48,10 @@ module MatrixSdk
       return unless params[:user_id]
       @mxid = params[:user_id]
       sync
+    end
+
+    def logger
+      @logger ||= Logging.logger[self.class.name]
     end
 
     def register_as_guest
@@ -141,32 +149,32 @@ module MatrixSdk
     end
 
     def ensure_room(room_id)
-      @rooms[room_id] ||= Room.new room_id
+      @rooms.fetch(room_id) { @rooms[room_id] = Room.new(self, room_id) }
     end
 
     def handle_state(room_id, state_event)
       return unless state_event.key? :type
 
       room = ensure_room(room_id)
-      content = state.event[:content]
-      case state.event[:type]
+      content = state_event[:content]
+      case state_event[:type]
       when 'm.room.name'
-        room.name = content[:name]
+        room.instance_variable_set '@name', content[:name]
       when 'm.room.canonical_alias'
-        room.canonical_alias = content[:alias]
+        room.instance_variable_set '@canonical_alias', content[:alias]
       when 'm.room.topic'
-        room.topic = content[:topic]
+        room.instance_variable_set '@topic', content[:topic]
       when 'm.room.aliases'
-        room.aliases = content[:aliases]
+        room.instance_variable_set '@aliases', content[:aliases]
       when 'm.room.join_rules'
-        room.join_rule = content[:join_rule].to_sym
+        room.instance_variable_set '@join_rule', content[:join_rule].to_sym
       when 'm.room.guest_access'
-        room.guest_access = content[:guest_access].to_sym
+        room.instance_variable_set '@guest_access', content[:guest_access].to_sym
       when 'm.room.member'
         return unless cache == :all
 
         if content[:membership] == 'join'
-          # Make members
+          room.send :ensure_member, User.new(self, state_event[:state_key], display_name: content[:displayname])
         elsif %w[leave kick invite].include? content[:membership]
           room.members.delete_if { |m| m.id == state_event[:state_key] }
         end
@@ -174,7 +182,7 @@ module MatrixSdk
     end
 
     def sync(params = {})
-      data = api.sync filter: sync_filter.to_json
+      data = api.sync params.merge(filter: sync_filter.to_json)
 
       data[:presence][:events].each do |presence_update|
         fire_presence_event(MatrixEvent.new(self, presence_update))
@@ -193,7 +201,7 @@ module MatrixSdk
         room.prev_batch = join[:timeline][:prev_batch]
         join[:state][:events].each do |event|
           event[:room_id] = room_id
-          handle_state(join, event)
+          handle_state(room_id, event)
         end
 
         join[:timeline][:events].each do |event|

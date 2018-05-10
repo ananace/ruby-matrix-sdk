@@ -6,6 +6,8 @@ module MatrixSdk
 
     alias user_id :id
 
+    ignore_inspect :client
+
     def initialize(client, id, data = {})
       @client = client
       @id = id

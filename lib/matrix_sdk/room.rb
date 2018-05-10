@@ -2,14 +2,17 @@ require 'matrix_sdk'
 
 module MatrixSdk
   class Room
-    attr_accessor :event_history_limit, :prev_batch
-    attr_reader :id, :client, :name, :topic, :canonical_alias, :aliases, :join_rule, :guest_access, :members, :events
+    attr_accessor :canonical_alias, :event_history_limit, :prev_batch
+    attr_reader :id, :client, :name, :topic, :aliases, :join_rule, :guest_access, :members, :events
 
     events :event, :state_event, :ephemeral_event
+    ignore_inspect :client, :members, :events, :prev_batch,
+                   :on_event, :on_state_event, :on_ephemeral_event
 
     alias room_id id
 
     def initialize(client, room_id, data = {})
+      event_initialize
       @client = client
       @id = room_id
 
@@ -19,7 +22,7 @@ module MatrixSdk
       @aliases = nil
       @join_rule = nil
       @guest_access = nil
-      @members = nil
+      @members = []
       @events = []
       @event_history_limit = 10
 
@@ -28,6 +31,12 @@ module MatrixSdk
       data.each do |k, v|
         instance_variable_set("@#{k}", v) if instance_variable_defined? "@#{k}"
       end
+
+      logger.debug "Created room #{room_id}"
+    end
+
+    def logger
+      Logging.logger[self.class.name]
     end
 
     #
@@ -38,7 +47,7 @@ module MatrixSdk
       return name if name
       return canonical_alias if canonical_alias
 
-      members = get_joined_members
+      members = joined_members
                 .reject { |m| m.user_id == client.mxid }
                 .map(&:get_display_name)
 
@@ -50,7 +59,7 @@ module MatrixSdk
     end
 
     def joined_members
-      return members if members
+      return members unless members.empty?
 
       client.api.get_room_members(id)[:chunk].each do |chunk|
         next unless chunk [:content][:membership] == 'join'

@@ -10,6 +10,8 @@ module MatrixSdk
     attr_accessor :access_token, :device_id
     attr_reader :homeserver, :validate_certificate
 
+    ignore_inspect :access_token
+
     def initialize(homeserver, params = {})
       @homeserver = homeserver
       @homeserver = URI.parse(@homeserver.to_s) unless @homeserver.is_a? URI
@@ -30,6 +32,10 @@ module MatrixSdk
 
       login(user: @homeserver.user, password: @homeserver.password) if @homeserver.user && @homeserver.password && !@access_token && !params[:skip_login]
       @homeserver.userinfo = '' unless params[:skip_login]
+    end
+
+    def logger
+      @logger ||= Logging.logger[self.class.name]
     end
 
     def validate_certificate=(validate)
@@ -386,11 +392,11 @@ module MatrixSdk
     def request(method, api, path, options = {})
       url = homeserver.dup.tap do |u|
         u.path = api_to_path(api) + path
-        u.query = [u.query, options[:query].map { |k, v| "#{k}#{"=#{v}" unless v.nil?}" }].flatten.join('&') if options[:query]
+        u.query = [u.query, options[:query].map { |k, v| "#{k}#{"=#{v}" unless v.nil?}" }].flatten.reject(&:nil?).join('&') if options[:query]
       end
       request = Net::HTTP.const_get(method.to_s.capitalize.to_sym).new url.request_uri
       request.body = options[:body] if options.key? :body
-      request.body = request.body.to_json unless request.body.is_a? String
+      request.body = request.body.to_json if options.key?(:body) && !request.body.is_a?(String)
       request.body_stream = options[:body_stream] if options.key? :body_stream
 
       request.content_type = 'application/json' if request.body || request.body_stream
@@ -407,8 +413,10 @@ module MatrixSdk
       loop do
         raise MatrixConnectionError, "Server still too busy to handle request after #{failures} attempts, try again later" if failures >= 10
 
+        print_http(request)
         response = http.request request
-        data = JSON.parse response.body, symbolize_names: true
+        print_http(response)
+        data = JSON.parse(response.body, symbolize_names: true) rescue nil
 
         if response.is_a? Net::HTTPTooManyRequests
           failures += 1
@@ -418,11 +426,27 @@ module MatrixSdk
         end
 
         return data if response.is_a? Net::HTTPSuccess
-        raise MatrixRequestError.new(data, response.code)
+        raise MatrixRequestError.new(data, response.code) if data
+        raise MatrixConnectionError, response
       end
     end
 
     private
+
+    def print_http(http)
+      if http.is_a? Net::HTTPRequest
+        dir = '>'
+        logger.debug "#{dir} Sending a #{http.method} request to `#{http.path}`:"
+      else
+        dir = '<'
+        logger.debug "#{dir} Received a #{http.code} #{http.message} response:"
+      end
+      http.to_hash.map { |k, v| "#{k}: #{k == 'authorization' ? '[redacted]' : v.join(', ')}" }.each do |h|
+        logger.debug "#{dir} #{h}"
+      end
+      logger.debug dir
+      logger.debug "#{dir} #{http.body.length < 200 ? http.body : http.body.slice(0..200) + '... [truncated]'}" if http.body
+    end
 
     def transaction_id
       ret = @transaction_id ||= 0
