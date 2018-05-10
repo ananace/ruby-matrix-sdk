@@ -16,6 +16,7 @@ module MatrixSdk
       @access_token = params.fetch(:access_token, nil)
       @device_id = params.fetch(:device_id, nil)
       @validate_certificate = params.fetch(:validate_certificate, false)
+      @transaction_id = params.fetch(:transaction_id, 0)
 
       login(user: @homeserver.user, password: @homeserver.password) if @homserver.user && @homeserver.password && !@access_token && !params[:skip_login]
       @homserver.userinfo = '' unless params[:skip_login]
@@ -26,16 +27,16 @@ module MatrixSdk
     end
 
     def sync(params = {})
-      options = {
+      query = {
         timeout: 30.0,
       }.merge(params).select { |k, _v|
-        %i[since timeout timeout_ms filter full_state set_presence].include? k
+        %i[since timeout filter full_state set_presence].include? k
       }
 
-      options[:timeout] = ((options[:timeout] || 30) * 1000).to_i
-      options[:timeout] = options.delete(:timeout_ms).to_i if options.key? :timeout_ms
+      query[:timeout] = ((query[:timeout] || 30) * 1000).to_i
+      query[:timeout] = params.delete(:timeout_ms).to_i if params.key? :timeout_ms
 
-      request(:get, :client_r0, '/sync', query: options)
+      request(:get, :client_r0, '/sync', query: query)
     end
 
     def register(params = {})
@@ -46,10 +47,10 @@ module MatrixSdk
       options = {}
       options[:store_token] = params.delete(:store_token) { true }
       options[:store_device_id] = params.delete(:store_device_id) { true }
-      options[:initial_device_display_name] = params.delete(:initial_device_display_name) { user_agent }
 
       data = {
-        type: params.delete(:login_type) { 'm.login.password' }
+        type: params.delete(:login_type) { 'm.login.password' },
+        initial_device_display_name: params.delete(:initial_device_display_name) { user_agent }
       }.merge params
       data[:device_id] = device_id if device_id
 
@@ -70,6 +71,84 @@ module MatrixSdk
     def join_room(id_or_alias)
       request(:post, :client_r0, "/join/#{URI.escape id_or_alias}")
     end
+
+    def send_state_event(room_id, event_type, content, params = {})
+      query = {}
+      query[:ts] = params[:timestamp].to_i if params.key? :timestamp
+
+      request(:put, :client_r0, "/rooms/#{room_id}/state/#{event_type}#{"/#{params[:state_key]}" if params.key? :state_key}", body: content, query: query)
+    end
+
+    def send_message_event(room_id, event_type, content, params = {})
+      query = {}
+      query[:ts] = params[:timestamp].to_i if params.key? :timestamp
+
+      txn_id = transaction_id
+      txn_id = params.fetch(:txn_id, "#{txn_id}#{Time.now.to_i}")
+
+      request(:put, :client_r0, "/rooms/#{room_id}/send/#{event_type}/#{txn_id}", body: content, query: query)
+    end
+
+    def redact_event(room_id, event_type, params = {})
+      query = {}
+      query[:ts] = params[:timestamp].to_i if params.key? :timestamp
+      
+      content = {}
+      content[:reason] = params[:reason] if params.key? :reason
+
+      txn_id = transaction_id
+      txn_id = params.fetch(:txn_id, "#{txn_id}#{Time.now.to_i}")
+
+      request(:put, :client_r0, "/rooms/#{room_id}/redact/#{event_type}/#{txn_id}", body: content, query: query)
+    end
+
+    def send_content(room_id, url, name, msg_type, params = {})
+      content = {
+        url: url,
+        msgtype: msg_type,
+        body: name,
+        info: params.delete(:extra_information) { {} }
+      }
+
+      send_message_event(room_id, 'm.room.message', content, params)
+    end
+
+    def send_location(room_id, geo_uri, name, params = {})
+      content = {
+        geo_uri: geo_uri,
+        msgtype: 'm.location',
+        body: name
+      }
+      content[:thumbnail_url] = params.delete(:thumbnail_url) if params.key? :thumbnail_url
+      content[:thumbnail_info] = params.delete(:thumbnail_info) if params.key? :thumbnail_info
+
+      send_message_event(room_id, 'm.room.message', content, params)
+    end
+
+    def send_message(room_id, message, params = {})
+      content = {
+        msgtype: params.delete(:msg_type) { 'm.text' },
+        body: message
+      }
+      send_message_event(room_id, 'm.room.message', content, params)
+    end
+
+    def send_emote(room_id, emote, params = {})
+      content = {
+        msgtype: params.delete(:msg_type) { 'm.emote' },
+        body: emote
+      }
+      send_message_event(room_id, 'm.room.message', content, params)
+    end
+
+    def send_notice(room_id, notice, params = {})
+      content = {
+        msgtype: params.delete(:msg_type) { 'm.notice' },
+        body: notice
+      }
+      send_message_event(room_id, 'm.room.message', content, params)
+    end
+
 
     def whoami?
       request(:get, :client_r0, '/account/whoami')
@@ -101,6 +180,12 @@ module MatrixSdk
     end
 
     private
+
+    def transaction_id
+      ret = @transaction_id ||= 0
+      @transaction_id = @transaction_id.succ
+      ret
+    end
 
     def api_to_path(api)
       # TODO: <api>_current / <api>_latest
