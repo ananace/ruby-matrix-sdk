@@ -1,10 +1,16 @@
+require 'matrix_sdk/extensions'
+
 module MatrixSdk
   class Client
     attr_reader :api, :mxid, :rooms
+    attr_accessor :cache
+
+    events :event, :presence_event, :invite_event, :left_event, :ephemeral_event
 
     def initialize(hs_url, params = {})
       @api = Api.new hs_url, params
 
+      @cache = params.fetch(:cache, :all)
       @rooms = {}
     end
 
@@ -47,24 +53,29 @@ module MatrixSdk
       when 'm.room.guest_access'
         room.guest_access = content[:guest_access].to_sym
       when 'm.room.member'
+        return unless cache == :all
 
+        if content[:membership] == 'join'
+          # Make members
+        elsif %w[leave kick invite].include? content[:membership]
+          room.members.delete_if { |m| m.id == state_event[:state_key] }
+        end
       end
     end
 
     def sync
       data = api.sync filter: { room: { timeline: { limit: 20 } } }.to_json
-      
+
       data[:presence][:events].each do |presence_update|
       end
 
-      data[:rooms][:invite].each do |room, invite|
+      data[:rooms][:invite].each do |_room_id, invite|
       end
 
-      data[:rooms][:leave].each do |room, left|
+      data[:rooms][:leave].each do |_room_id, left|
       end
 
-      data[:rooms][:join].each do |room, join|
-
+      data[:rooms][:join].each do |_room_id, join|
         join[:state][:events].each do |event|
           handle_state(join, event)
         end
@@ -74,9 +85,13 @@ module MatrixSdk
 
   class Room
     attr_accessor :id, :name, :topic, :canonical_alias, :aliases, :join_rule, :guest_access
+    attr_reader :members
+
+    events :event, :state_event, :ephemeral_event
 
     def initialize(room_id, data = {})
       @id = room_id
+      @members = []
       data.each do |k, v|
         instance_variable_set("@#{k}", v)
       end
