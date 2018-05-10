@@ -222,6 +222,8 @@ module MatrixSdk
           fire_ephemeral_event(MatrixEvent.new(self, event), event[:type])
         end
       end
+
+      nil
     end
   end
 end
