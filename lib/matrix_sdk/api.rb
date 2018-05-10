@@ -296,8 +296,16 @@ module MatrixSdk
       request(:put, :client_r0, "/user/#{user_id}/rooms/#{room_id}/tags/#{tag}", body: content)
     end
 
+    def get_account_data(user_id, type)
+      request(:get, :client_r0, "/user/#{user_id}/account_data/#{type}")
+    end
+
     def set_account_data(user_id, type, account_data)
       request(:put, :client_r0, "/user/#{user_id}/account_data/#{type}", body: account_data)
+    end
+
+    def get_room_account_data(user_id, room_id, type)
+      request(:get, :client_r0, "/user/#{user_id}/rooms/#{room_id}/account_data/#{type}")
     end
 
     def set_room_account_data(user_id, room_id, type, account_data)

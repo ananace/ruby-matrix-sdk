@@ -177,6 +177,10 @@ module MatrixSdk
       false
     end
 
+    def get_account_data(type)
+      client.api.get_room_account_data(client.mxid, id, type)
+    end
+
     def set_account_data(type, account_data)
       client.api.set_room_account_data(client.mxid, id, type, account_data)
     end
