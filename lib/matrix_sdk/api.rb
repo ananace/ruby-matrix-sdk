@@ -1,4 +1,5 @@
 require 'json'
+require 'matrix_sdk/extensions'
 require 'net/http'
 require 'openssl'
 require 'uri'
@@ -10,8 +11,15 @@ module MatrixSdk
 
     def initialize(homeserver, params = {})
       @homeserver = homeserver
-      @homeserver = URI(@homeserver) unless @homeserver.is_a? URI
-      @homeserver.path.sub!('/_matrix/', '/') if @homeserver.path.start_with? '/_matrix/'
+      @homeserver = URI.parse(@homeserver.to_s) unless @homeserver.is_a? URI
+      if @homeserver.path.end_with? '_matrix/'
+        @homeserver.path = begin
+          split = @homeserver.path.rpartition '_matrix/'
+          (split[(split.find_index '_matrix/')] = '/') rescue nil
+          split.join
+        end
+      end
+      raise 'Please use the base URL for your HS (without /_matrix/)' if @homeserver.path.include? '/_matrix/'
 
       @access_token = params.fetch(:access_token, nil)
       @device_id = params.fetch(:device_id, nil)
@@ -29,10 +37,10 @@ module MatrixSdk
 
     def sync(params = {})
       query = {
-        timeout: 30.0,
-      }.merge(params).select { |k, _v|
+        timeout: 30.0
+      }.merge(params).select do |k, _v|
         %i[since timeout filter full_state set_presence].include? k
-      }
+      end
 
       query[:timeout] = ((query[:timeout] || 30) * 1000).to_i
       query[:timeout] = params.delete(:timeout_ms).to_i if params.key? :timeout_ms
@@ -40,7 +48,7 @@ module MatrixSdk
       request(:get, :client_r0, '/sync', query: query)
     end
 
-    def register(params = {})
+    def register(_params = {})
       raise NotImplementedError, 'Registering is not implemented yet'
     end
 
@@ -65,12 +73,12 @@ module MatrixSdk
       request(:post, :client_r0, '/logout')
     end
 
-    def create_room(params = {})
+    def create_room(_params = {})
       raise NotImplementedError, 'Creating rooms is not implemented yet'
     end
 
     def join_room(id_or_alias)
-      request(:post, :client_r0, "/join/#{URI.escape id_or_alias}")
+      request(:post, :client_r0, "/join/#{CGI.escape id_or_alias}")
     end
 
     def send_state_event(room_id, event_type, content, params = {})
@@ -93,7 +101,7 @@ module MatrixSdk
     def redact_event(room_id, event_type, params = {})
       query = {}
       query[:ts] = params[:timestamp].to_i if params.key? :timestamp
-      
+
       content = {}
       content[:reason] = params[:reason] if params.key? :reason
 
@@ -177,7 +185,7 @@ module MatrixSdk
       request(:get, :client_r0, "/rooms/#{room_id}/state/m.room.topic")
     end
 
-    def set_room_name(room_id, topic, params = {})
+    def set_room_topic(room_id, topic, params = {})
       content = {
         topic: topic
       }
@@ -224,7 +232,7 @@ module MatrixSdk
       content[:displayname] = params.delete(:displayname) if params.key? :displayname
       content[:avatar_url] = params.delete(:avatar_url) if params.key? :avatar_url
 
-      send_state_event(room_id, 'm.room.member', content, params)
+      send_state_event(room_id, 'm.room.member', content, params.merge(state_key: user_id))
     end
 
     def ban_user(room_id, user_id, reason = '')
@@ -237,7 +245,7 @@ module MatrixSdk
 
     def unban_user(room_id, user_id)
       content = {
-        user_id: user_id,
+        user_id: user_id
       }
       request(:post, :client_r0, "/rooms/#{room_id}/unban", body: content)
     end
@@ -284,6 +292,70 @@ module MatrixSdk
       request(:post, :media_r0, '/upload', body: content, headers: { 'content-type' => content_type })
     end
 
+    def get_display_name(user_id)
+      request(:get, :client_r0, "/profile/#{user_id}/displayname")
+    end
+
+    def set_display_name(user_id, display_name)
+      content = {
+        display_name: display_name
+      }
+      request(:put, :client_r0, "/profile/#{user_id}/displayname", body: content)
+    end
+
+    def get_avatar_url(user_id)
+      request(:get, :client_r0, "/profile/#{user_id}/avatar_url")
+    end
+
+    def set_avatar_url(user_id, url)
+      content = {
+        avatar_url: url
+      }
+      request(:put, :client_r0, "/profile/#{user_id}/avatar_url", body: content)
+    end
+
+    def get_download_url(mxcurl)
+      mxcurl = URI.parse(mxcurl.to_s) unless mxcurl.is_a? URI
+      raise 'Not a mxc:// URL' unless mxcurl.is_a? URI::MATRIX
+
+      homeserver.dup.tap do |u|
+        u.path = "/_matrix/media/r0/download/#{mxcurl.full_path}"
+      end
+    end
+
+    def get_room_id(room_alias)
+      request(:get, :client_r0, "/directory/room/#{room_alias}")
+    end
+
+    def set_room_alias(room_id, room_alias)
+      content = {
+        room_id: room_id
+      }
+      request(:put, :client_r0, "/directory/room/#{room_alias}", body: content)
+    end
+
+    def remove_room_alias(room_alias)
+      request(:delete, :client_r0, "/directory/room/#{room_alias}")
+    end
+
+    def get_room_members(room_id)
+      request(:get, :client_r0, "/rooms/#{room_id}/members")
+    end
+
+    def set_join_rule(room_id, join_rule)
+      content = {
+        join_rule: join_rule
+      }
+      send_state_event(room_id, 'm.room.join_rules', content)
+    end
+
+    def set_guest_access(room_id, guest_access)
+      # raise ArgumentError, '`guest_access` must be one of [:can_join, :forbidden]' unless %i[can_join forbidden].include? guest_access
+      content = {
+        guest_access: guest_access
+      }
+      send_state_event(room_id, 'm.room.guest_access', content)
+    end
 
     def whoami?
       request(:get, :client_r0, '/account/whoami')
@@ -292,7 +364,7 @@ module MatrixSdk
     def request(method, api, path, options = {})
       url = homeserver.dup.tap do |u|
         u.path = api_to_path(api) + path
-        u.query = [u.query, options[:query].map {|k,v| "#{k}#{"=#{v}" unless v.nil?}"}].flatten.join('&') if options[:query]
+        u.query = [u.query, options[:query].map { |k, v| "#{k}#{"=#{v}" unless v.nil?}" }].flatten.join('&') if options[:query]
       end
       request = Net::HTTP.const_get(method.to_s.capitalize.to_sym).new url.request_uri
       request.body = options[:body] if options.key? :body
@@ -303,9 +375,11 @@ module MatrixSdk
 
       request['authorization'] = "Bearer #{access_token}" if access_token
       request['user-agent'] = user_agent
-      options[:headers].each do |h, v|
-        request[h.to_s.downcase] = v
-      end if options.key? :headers
+      if options.key? :headers
+        options[:headers].each do |h, v|
+          request[h.to_s.downcase] = v
+        end
+      end
 
       failures = 0
       loop do
@@ -340,12 +414,12 @@ module MatrixSdk
     end
 
     def http
-      @http ||= (
-        opts = { }
+      @http ||= begin
+        opts = {}
         opts[:use_ssl] = true if homeserver.scheme == 'https'
         opts[:verify_mode] = ::OpenSSL::SSL::VERIFY_NONE unless validate_certificate
         Net::HTTP.start homeserver.host, homeserver.port, opts
-      )
+      end
     end
 
     def user_agent
