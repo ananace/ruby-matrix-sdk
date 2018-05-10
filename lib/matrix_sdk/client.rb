@@ -153,6 +153,7 @@ module MatrixSdk
     end
 
     def ensure_room(room_id)
+      room_id = room_id.to_s unless room_id.is_a? String
       @rooms.fetch(room_id) { @rooms[room_id] = Room.new(self, room_id) }
     end
 
