@@ -180,9 +180,26 @@ module MatrixSdk
         fire_leave_event(MatrixEvent.new(self, left), room_id)
       end
 
-      data[:rooms][:join].each do |_room_id, join|
+      data[:rooms][:join].each do |room_id, join|
+        room = ensure_room(room_id)
+        room.prev_batch = join[:timeline][:prev_batch]
         join[:state][:events].each do |event|
+          event[:room_id] = room_id
           handle_state(join, event)
+        end
+
+        join[:timeline][:events].each do |event|
+          event[:room_id] = room_id
+          room.send :put_event, event
+
+          fire_event(MatrixEvent.new(self, event), event[:type])
+        end
+
+        join[:ephemeral][:events].each do |event|
+          event[:room_id] = room_id
+          room.send :put_ephemeral_event, event
+
+          fire_ephemeral_event(MatrixEvent.new(self, event), event[:type])
         end
       end
     end
