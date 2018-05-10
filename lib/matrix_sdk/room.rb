@@ -2,7 +2,7 @@ require 'matrix_sdk/extensions'
 
 module MatrixSdk
   class Room
-    attr_accessor :event_history_limit
+    attr_accessor :event_history_limit, :prev_batch
     attr_reader :id, :client, :name, :topic, :canonical_alias, :aliases, :join_rule, :guest_access, :members, :events
 
     events :event, :state_event, :ephemeral_event
@@ -20,6 +20,8 @@ module MatrixSdk
       @members = nil
       @events = []
       @event_history_limit = 10
+
+      @prev_batch = nil
 
       data.each do |k, v|
         instance_variable_set("@#{k}", v) if instance_variable_defined? "@#{k}"
@@ -64,7 +66,7 @@ module MatrixSdk
     end
 
     #
-    # Message sending
+    # Message handling
     #
 
     def send_text(text)
@@ -114,6 +116,16 @@ module MatrixSdk
       client.api.redact_event(id, event_id, reason: reason)
     end
 
+    def backfill_messages(reverse = false, limit = 10)
+      data = client.api.get_room_messages(id, prev_batch, direction: :b, limit: limit)
+
+      events = data[:chunk]
+      events.reverse! unless reverse
+      events.each do |ev|
+        put_event(ev)
+      end
+    end
+
     #
     # User Management
     #
@@ -152,6 +164,33 @@ module MatrixSdk
       true
     rescue MatrixError
       false
+    end
+
+    def set_account_data(type, account_data)
+      client.api.set_room_account_data(client.user_id, id, type, account_data)
+    end
+
+    def set_user_profile(params = {})
+      return nil unless params[:display_name] || params[:avatar_url]
+      data = client.api.get_membership(id, client.user_id)
+      raise "Can't set profile if you haven't joined the room" unless data[:membership] == 'join'
+
+      data[:displayname] = params[:display_name] unless params[:display_name].nil?
+      data[:avatar_url] = params[:avatar_url] unless params[:avatar_url].nil?
+
+      client.api.set_membership(id, client.user_id, 'join', params.fetch(:reason, 'Updating room profile information'), data)
+    end
+
+    def tags
+      client.api.get_user_tags(client.user_id, id)
+    end
+
+    def remove_tag(tag)
+      client.api.remove_user_tag(client.user_id, id, tag)
+    end
+
+    def add_tag(tag, params = {})
+      client.api.add_user_tag(client.user_id, id, tag, params)
     end
 
     #
@@ -209,6 +248,64 @@ module MatrixSdk
       false
     end
 
+    def invite_only=(invite_only)
+      self.join_rule = invite_only ? :invite : :public
+      @join_rule == :invite # rubocop:disable Lint/Void
+    end
+
+    def join_rule=(join_rule)
+      client.api.set_join_rule(id, join_rule)
+      @join_rule = join_rule
+    rescue MatrixError
+      nil
+    end
+
+    def allow_guests=(allow_guests)
+      self.guest_access = (allow_guests ? :can_join : :forbidden)
+      @guest_access == :can_join # rubocop:disable Lint/Void
+    end
+
+    def guest_access=(guest_access)
+      client.api.set_guest_access(id, guest_access)
+      @guest_access = guest_access
+    rescue MatrixError
+      nil
+    end
+
+    def modify_user_power_levels(users = nil, users_default = nil)
+      return false if users.nil? && users_default.nil?
+      data = client.api.get_power_levels(id)
+      data[:users_default] = users_default unless users_default.nil?
+
+      if users
+        data[:users] = {} unless data.key? :users
+        data[:users].merge!(users)
+        data[:users].delete_if { |_k, v| v.nil? }
+      end
+
+      client.api.set_power_levels(id, data)
+      true
+    rescue MatrixError
+      false
+    end
+
+    def modify_required_power_levels(events = nil, params = {})
+      return false if events.nil? && (params.nil? || params.empty?)
+      data = client.api.get_power_levels(id)
+      data.merge!(params)
+      data.delete_if { |_k, v| v.nil? }
+
+      if events
+        data[:events] = {} unless data.key? :events
+        data[:events].merge!(events)
+        data[:events].delete_if { |_k, v| v.nil? }
+      end
+
+      client.api.set_power.levels(id, data)
+    rescue MatrixError
+      false
+    end
+
     private
 
     def ensure_member(member)
@@ -216,7 +313,7 @@ module MatrixSdk
     end
 
     def put_event(event)
-      @events << event
+      @events.push event
       @events.shift if @events.length > @event_history_limit
 
       fire_event MatrixEvent.new(self, event)
