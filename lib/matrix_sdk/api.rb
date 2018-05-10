@@ -17,6 +17,7 @@ module MatrixSdk
       @device_id = params.fetch(:device_id, nil)
       @validate_certificate = params.fetch(:validate_certificate, false)
       @transaction_id = params.fetch(:transaction_id, 0)
+      @backoff_time = params.fetch(:backoff_time, 5000)
 
       login(user: @homeserver.user, password: @homeserver.password) if @homserver.user && @homeserver.password && !@access_token && !params[:skip_login]
       @homserver.userinfo = '' unless params[:skip_login]
@@ -172,11 +173,23 @@ module MatrixSdk
         request[h.to_s.downcase] = v
       end if options.key? :headers
 
-      response = http.request request
-      data = JSON.parse response.body, symbolize_names: true
+      failures = 0
+      loop do
+        raise 'Too many request failures, aborting' if failures >= 10
 
-      return data if response.kind_of? Net::HTTPSuccess
-      raise MatrixError, data, response.code
+        response = http.request request
+        data = JSON.parse response.body, symbolize_names: true
+
+        if response.is_a? Net::HTTPTooManyRequests
+          failures += 1
+          waittime = data[:retry_after_ms] || data[:error][:retry_after_ms] || @backoff_time
+          sleep(waittime.to_f / 1000.0)
+          next
+        end
+
+        return data if response.is_a? Net::HTTPSuccess
+        raise MatrixError, data, response.code
+      end
     end
 
     private
