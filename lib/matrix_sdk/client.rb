@@ -112,6 +112,22 @@ module MatrixSdk
       sync(timeout: timeout)
     end
 
+    def start_listener_thread(params = {})
+      @should_listen = true
+      thread = Thread.new(params, &:listen_forever)
+      @sync_thread = thread
+      thread.run
+    end
+
+    def stop_listener_thread
+      return unless @sync_thread
+      @should_listen = false
+      @sync_thread.join
+      @sync_thread = nil
+    end
+
+    private
+
     def listen_forever(params = {})
       timeout = params.fetch(:timeout, 30)
       params[:bad_sync_timeout] = params.fetch(:bad_sync_timeout, 5)
@@ -131,22 +147,6 @@ module MatrixSdk
         end
       end
     end
-
-    def start_listener_thread(params = {})
-      @should_listen = true
-      thread = Thread.new(params, &:listen_forever)
-      @sync_thread = thread
-      thread.run
-    end
-
-    def stop_listener_thread
-      return unless @sync_thread
-      @should_listen = false
-      @sync_thread.join
-      @sync_thread = nil
-    end
-
-    private
 
     def post_authentication(data)
       @mxid = data[:user_id]
