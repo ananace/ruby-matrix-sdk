@@ -114,7 +114,7 @@ module MatrixSdk
 
     def start_listener_thread(params = {})
       @should_listen = true
-      thread = Thread.new(params, &:listen_forever)
+      thread = Thread.new { listen_forever(params) }
       @sync_thread = thread
       thread.run
     end
@@ -122,7 +122,7 @@ module MatrixSdk
     def stop_listener_thread
       return unless @sync_thread
       @should_listen = false
-      @sync_thread.join
+      @sync_thread.join if @sync_thread.alive?
       @sync_thread = nil
     end
 
