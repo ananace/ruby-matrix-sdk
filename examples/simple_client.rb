@@ -15,7 +15,7 @@ class SimpleClient < MatrixSdk::Client
   end
 
   def run
-    listen_forever
+    start_listener_thread
   end
 
   private
