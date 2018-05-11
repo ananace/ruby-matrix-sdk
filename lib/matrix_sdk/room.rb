@@ -164,34 +164,89 @@ module MatrixSdk
       client.api.send_emote(id, text)
     end
 
+    # Sends a link to a generic file to the room
+    # @param url [String,URI] the URL to the file
+    # @param name [String] the name of the file
+    # @param file_info [Hash] extra information about the file
+    # @option file_info [String] :mimetype the MIME type of the file
+    # @option file_info [Integer] :size the size of the file in bytes
+    # @option file_info [String,URI] :thumbnail_url the URL to a thumbnail of the file
+    # @option file_info [Hash] :thumbnail_info ThumbnailInfo about the thumbnail file
+    # @note The URLs should all be of the 'mxc://' schema
     def send_file(url, name, file_info = {})
       client.api.send_content(id, url, name, 'm.file', extra_information: file_info)
     end
 
+    # Sends a notice (bot) message to the room
+    # @param text [String] the notice to send
     def send_notice(text)
       client.api.send_notice(id, text)
     end
 
+    # Sends a link to an image to the room
+    # @param url [String,URI] the URL to the image
+    # @param name [String] the name of the image
+    # @param image_info [Hash] extra information about the image
+    # @option image_info [Integer] :h the height of the image in pixels
+    # @option image_info [Integer] :w the width of the image in pixels
+    # @option image_info [String] :mimetype the MIME type of the image
+    # @option image_info [Integer] :size the size of the image in bytes
+    # @option image_info [String,URI] :thumbnail_url the URL to a thumbnail of the image
+    # @option image_info [Hash] :thumbnail_info ThumbnailInfo about the thumbnail image
+    # @note The URLs should all be of the 'mxc://' schema
     def send_image(url, name, image_info = {})
       client.api.send_content(id, url, name, 'm.image', extra_information: image_info)
     end
 
+    # Sends a location object to the room
+    # @param geo_uri [String,URI] the geo-URL (e.g. geo:<coords>) of the location
+    # @param name [String] the name of the location
+    # @param thumbnail_url [String,URI] the URL to a thumbnail image of the location
+    # @param thumbnail_info [Hash] a ThumbnailInfo for the location thumbnail
+    # @note The thumbnail URL should be of the 'mxc://' schema
     def send_location(geo_uri, name, thumbnail_url = nil, thumbnail_info = {})
       client.api.send_location(id, geo_uri, name, thumbnail_url: thumbnail_url, thumbnail_info: thumbnail_info)
     end
 
+    # Sends a link to a video to the room
+    # @param url [String,URI] the URL to the video
+    # @param name [String] the name of the video
+    # @param video_info [Hash] extra information about the video
+    # @option video_info [Integer] :duration the duration of the video in milliseconds
+    # @option video_info [Integer] :h the height of the video in pixels
+    # @option video_info [Integer] :w the width of the video in pixels
+    # @option video_info [String] :mimetype the MIME type of the video
+    # @option video_info [Integer] :size the size of the video in bytes
+    # @option video_info [String,URI] :thumbnail_url the URL to a thumbnail of the video
+    # @option video_info [Hash] :thumbnail_info ThumbnailInfo about the thumbnail of the video
+    # @note The URLs should all be of the 'mxc://' schema
     def send_video(url, name, video_info = {})
       client.api.send_content(id, url, name, 'm.video', extra_information: video_info)
     end
 
+    # Sends a link to an audio clip to the room
+    # @param url [String,URI] the URL to the audio clip
+    # @param name [String] the name of the audio clip
+    # @param audio_info [Hash] extra information about the audio clip
+    # @option audio_info [Integer] :duration the duration of the audio clip in milliseconds
+    # @option audio_info [String] :mimetype the MIME type of the audio clip
+    # @option audio_info [Integer] :size the size of the audio clip in bytes
+    # @note The URLs should all be of the 'mxc://' schema
     def send_audio(url, name, audio_info = {})
       client.api.send_content(id, url, name, 'm.audio', extra_information: audio_info)
     end
 
+    # Redacts a message from the room
+    # @param event_id [String] the ID of the event to redact
+    # @param reason [String,nil] the reason for the redaction
     def redact_message(event_id, reason = nil)
       client.api.redact_event(id, event_id, reason: reason)
     end
 
+    # Backfills messages into the room history
+    # @param reverse [Boolean] whether to fill messages in reverse or not
+    # @param limit [Integer] the maximum number of messages to backfill
+    # @note This will trigger the `on_event` events as messages are added
     def backfill_messages(reverse = false, limit = 10)
       data = client.api.get_room_messages(id, @prev_batch, direction: :b, limit: limit)
 
