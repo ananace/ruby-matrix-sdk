@@ -207,7 +207,7 @@ module MatrixSdk
 
       data[:rooms][:join].each do |room_id, join|
         room = ensure_room(room_id)
-        room.prev_batch = join[:timeline][:prev_batch]
+        room.instance_variable_set '@prev_batch', join[:timeline][:prev_batch]
         join[:state][:events].each do |event|
           event[:room_id] = room_id
           handle_state(room_id, event)

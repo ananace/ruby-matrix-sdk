@@ -1,9 +1,9 @@
 require 'matrix_sdk'
 
 module MatrixSdk
+  # A class for tracking information about a user on Matrix
   class User
     attr_reader :id, :client
-
     alias user_id :id
 
     ignore_inspect :client

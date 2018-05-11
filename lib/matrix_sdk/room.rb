@@ -1,11 +1,53 @@
 require 'matrix_sdk'
 
 module MatrixSdk
+  # A class for tracking the information about a room on Matrix
   class Room
-    attr_accessor :canonical_alias, :event_history_limit, :prev_batch
+    # @!attribute [rw] canonical_alias
+    #   @return [String, nil] the canonical alias of the room
+    # @!attribute [rw] event_history_limit
+    #   @return [Fixnum] the limit of events to keep in the event log
+    attr_accessor :canonical_alias, :event_history_limit
+    # @!attribute [r] id
+    #   @return [String] the internal ID of the room
+    # @!attribute [r] client
+    #   @return [Client] the client for the room
+    # @!attribute [rw] name
+    #   @return [String, nil] the user-provided name of the room
+    #   @see reload_name!
+    # @!attribute [rw] topic
+    #   @return [String, nil] the user-provided topic of the room
+    #   @see reload_topic!
+    # @!attribute [r] aliases
+    #   @return [Array(String)] a list of user-set aliases for the room
+    #   @see add_alias
+    #   @see reload_alias!
+    # @!attribute [rw] join_rule
+    #   @return [:invite, :public] the join rule for the room -
+    #                    either +:invite+ or +:public+
+    # @!attribute [rw] guest_access
+    #   @return [:can_join, :forbidden] the guest access for the room -
+    #                    either +:can_join+ or +:forbidden+
+    # @!attribute [r] members
+    #   @return [Array(User)] the members of the room
+    #   @see reload_members!
+    # @!attribute [r] events
+    #   @return [Array(Object)] the last +event_history_limit+ events to arrive in the room
+    #   @see https://matrix.org/docs/spec/client_server/r0.3.0.html#get-matrix-client-r0-sync
+    #        The timeline events are what will end up in here
     attr_reader :id, :client, :name, :topic, :aliases, :join_rule, :guest_access, :members, :events
 
+    # @!attribute [r] on_event
+    #   @return [EventHandlerArray] The list of event handlers for all events
+    # @!attribute [r] on_state_event
+    #   @return [EventHandlerArray] The list of event handlers for only state events
+    # @!attribute [r] on_ephemeral_event
+    #   @return [EventHandlerArray] The list of event handlers for only ephemeral events
     events :event, :state_event, :ephemeral_event
+    # @!method inspect
+    #   An inspect method that skips a handful of instance variables to avoid
+    #   flooding the terminal with debug data.
+    #   @return [String] a regular inspect string without the data for some variables
     ignore_inspect :client, :members, :events, :prev_batch,
                    :on_event, :on_state_event, :on_ephemeral_event
 
@@ -43,6 +85,15 @@ module MatrixSdk
     # State readers
     #
 
+    # Gets a human-readable name for the room
+    #
+    # This will return #name or #canonical_alias if they've been set,
+    # otherwise it will query the API for members and generate a string from
+    # a subset of their names.
+    #
+    # @return [String] a human-readable name for the room
+    # @note This method will populate the #members list if it has to fall back
+    #       to the member name generation.
     def display_name
       return name if name
       return canonical_alias if canonical_alias
@@ -58,6 +109,7 @@ module MatrixSdk
       'Empty Room'
     end
 
+    # Populates and returns the #members array
     def joined_members
       return members unless members.empty?
 
@@ -68,10 +120,12 @@ module MatrixSdk
       members
     end
 
+    # Checks if +guest_access+ is set to +:can_join+
     def guest_access?
       guest_access == :can_join
     end
 
+    # Checks if +join_rule+ is set to +:invite+
     def invite_only?
       join_rule == :invite
     end
@@ -80,10 +134,19 @@ module MatrixSdk
     # Message handling
     #
 
+    # Sends a plain-text message to the room
+    # @param text [String] the message to send
     def send_text(text)
       client.api.send_message(id, text)
     end
 
+    # Sends a custom HTML message to the room
+    # @param html [String] the HTML message to send
+    # @param body [String,nil] a plain-text representation of the object
+    #        (Will default to the HTML with tags stripped away)
+    # @param msg_type [String] A message type for the message
+    # @see https://matrix.org/docs/spec/client_server/r0.3.0.html#m-room-message-msgtypes
+    #      Possible message types as defined by the spec
     def send_html(html, body = nil, msg_type = 'm.text')
       content = {
         body: body ? body : html.gsub(/<\/?[^>]*>/, ''),
@@ -95,6 +158,8 @@ module MatrixSdk
       client.api.send_message_event(id, 'm.room.message', content)
     end
 
+    # Sends an emote (/me) message to the room
+    # @param text [String] the emote to send
     def send_emote(text)
       client.api.send_emote(id, text)
     end
@@ -128,7 +193,7 @@ module MatrixSdk
     end
 
     def backfill_messages(reverse = false, limit = 10)
-      data = client.api.get_room_messages(id, prev_batch, direction: :b, limit: limit)
+      data = client.api.get_room_messages(id, @prev_batch, direction: :b, limit: limit)
 
       events = data[:chunk]
       events.reverse! unless reverse
@@ -244,7 +309,9 @@ module MatrixSdk
       false
     end
 
-    def add_alias!(room_alias)
+    # Add an alias to the room
+    # @return [Boolean] if the addition was successful or not
+    def add_alias(room_alias)
       client.api.set_room_alias(id, room_alias)
       @aliases << room_alias
       true
@@ -252,6 +319,10 @@ module MatrixSdk
       false
     end
 
+    # Reloads the list of aliases by an API query
+    # @return [Boolean] if the alias list was updated or not
+    # @note The list of aliases is not sorted, ordering changes will result in
+    #       alias list updates.
     def reload_aliases!
       data = client.api.get_room_state(id)
       new_aliases = data.select { |chunk| chunk.key?(:content) && chunk[:content].key?(:aliases) }
