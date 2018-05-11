@@ -5,7 +5,7 @@ require 'matrix_sdk'
 
 class SimpleClient < MatrixSdk::Client
   def initialize(hs_url)
-    super hs_url, sync_filter_limit: 2
+    super hs_url, sync_filter_limit: 10
 
     @pls = {}
   end
@@ -60,7 +60,7 @@ if $PROGRAM_NAME == __FILE__
     password = STDIN.noecho(&:gets).strip
 
     puts 'Logging in...'
-    client.login(user, password, sync_timeout: 2)
+    client.login(user, password, sync_timeout: 5)
 
     puts 'Finding room...'
     room = client.find_room(ARGV.last)
