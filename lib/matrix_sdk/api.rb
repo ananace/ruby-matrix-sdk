@@ -463,7 +463,7 @@ module MatrixSdk
       end
       logger.debug dir
       clean_body = JSON.parse(http.body).each { |k, v| v.replace('[redacted]') if %w[password access_token].include? k }.to_json if http.body
-      logger.debug "#{dir} #{clean_body.length < 200 ? clean_body : clean_body.slice(0..200) + '... [truncated]'}" if clean_body
+      logger.debug "#{dir} #{clean_body.length < 200 ? clean_body : clean_body.slice(0..200) + "... [truncated, #{clean_body.length} Bytes]"}" if clean_body
     end
 
     def transaction_id
