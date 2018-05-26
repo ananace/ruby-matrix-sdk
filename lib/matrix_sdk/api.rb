@@ -443,6 +443,8 @@ module MatrixSdk
     private
 
     def print_http(http)
+      return unless logger.debug?
+
       if http.is_a? Net::HTTPRequest
         dir = '>'
         logger.debug "#{dir} Sending a #{http.method} request to `#{http.path}`:"
@@ -454,7 +456,8 @@ module MatrixSdk
         logger.debug "#{dir} #{h}"
       end
       logger.debug dir
-      logger.debug "#{dir} #{http.body.length < 200 ? http.body : http.body.slice(0..200) + '... [truncated]'}" if http.body
+      clean_body = JSON.parse(http.body).each { |k, v| v.replace('[redacted]') if %w[password access_token].include? k }.to_json if http.body
+      logger.debug "#{dir} #{clean_body.length < 200 ? clean_body : clean_body.slice(0..200) + '... [truncated]'}" if clean_body
     end
 
     def transaction_id
