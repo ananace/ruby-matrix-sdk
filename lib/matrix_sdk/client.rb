@@ -81,6 +81,10 @@ module MatrixSdk
       @mxid = nil
     end
 
+    def logged_in?
+      !(@mxid.nil? || @api.access_token.nil?)
+    end
+
     def create_room(room_alias = nil, params = {})
       api.create_room(params.merge(room_alias: room_alias))
     end

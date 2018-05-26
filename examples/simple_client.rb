@@ -87,6 +87,6 @@ if $PROGRAM_NAME == __FILE__
       end
     end
   ensure
-    client.logout if client
+    client.logout if client && client.logged_in?
   end
 end
