@@ -26,19 +26,19 @@ class SimpleClient < MatrixSdk::Client
   end
 
   def on_message(room, event)
-    case ev[:type]
+    case event.type
     when 'm.room.member'
-      puts "#{Time.now.strftime '%H:%M'} #{event[:content][:displayname]} joined." if event['membership'] == 'join'
+      puts "#{Time.now.strftime '%H:%M'} #{event[:content][:displayname]} joined." if event.membership == 'join'
     when 'm.room.message'
-      user = get_user event[:sender]
+      user = get_user event.sender
       admin_level = get_user_level(room, user.id)
       prefix = (admin_level >= 100 ? '@' : (admin_level >= 50 ? '+' : ' '))
-      if %w[m.text m.notice].include? event[:content][:msgtype]
-        puts "#{Time.now.strftime '%H:%M'} <#{prefix}#{user.display_name}> #{event[:content][:body]}"
+      if %w[m.text m.notice].include? event.content[:msgtype]
+        puts "#{Time.now.strftime '%H:%M'} <#{prefix}#{user.display_name}> #{event.content[:body]}"
       elsif event[:content][:msgtype] == 'm.emote'
-        puts "#{Time.now.strftime '%H:%M'} *#{prefix}#{user.display_name} #{event[:content][:body]}"
+        puts "#{Time.now.strftime '%H:%M'} *#{prefix}#{user.display_name} #{event.content[:body]}"
       else
-        puts "#{Time.now.strftime '%H:%M'} <#{prefix}#{user.display_name}> [#{event[:content][:msgtype]}] #{event[:content][:body]} - #{api.get_download_url event[:content][:url]}"
+        puts "#{Time.now.strftime '%H:%M'} <#{prefix}#{user.display_name}> [#{event.content[:msgtype]}] #{event.content[:body]} - #{api.get_download_url event[:content][:url]}"
       end
     end
   end
