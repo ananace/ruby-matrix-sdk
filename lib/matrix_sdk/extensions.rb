@@ -70,7 +70,7 @@ module MatrixSdk
 
     def fire(event, filter = nil)
       reverse_each do |_k, h|
-        h[:block].call(event) unless event.matches?(h[:filter], filter)
+        h[:block].call(event) if event.matches?(h[:filter], filter)
       end
     end
   end
