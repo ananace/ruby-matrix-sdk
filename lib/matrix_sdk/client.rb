@@ -73,7 +73,7 @@ module MatrixSdk
       data = api.login(user: username, password: password)
       post_authentication(data)
 
-      sync(timeout: params.fetch(:sync_timeout, 15), full_state: true) unless params[:no_sync]
+      sync(timeout: params.fetch(:sync_timeout, 15), full_state: params.fetch(:full_state, false)) unless params[:no_sync]
     end
 
     def logout
