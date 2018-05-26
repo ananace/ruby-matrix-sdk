@@ -8,7 +8,7 @@ require 'uri'
 module MatrixSdk
   class Api
     attr_accessor :access_token, :device_id
-    attr_reader :homeserver, :validate_certificate
+    attr_reader :homeserver, :validate_certificate, :read_timeout
 
     ignore_inspect :access_token
 
