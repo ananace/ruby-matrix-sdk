@@ -53,6 +53,7 @@ if $PROGRAM_NAME == __FILE__
     end
 
     client = SimpleClient.new ARGV.first
+    ARGV.shift
 
     print 'Username: '
     user = STDIN.gets.strip
@@ -86,6 +87,8 @@ if $PROGRAM_NAME == __FILE__
         room.send_text msg
       end
     end
+  rescue Interrupt
+    puts "Interrupted, exiting..."
   ensure
     client.logout if client && client.logged_in?
   end
