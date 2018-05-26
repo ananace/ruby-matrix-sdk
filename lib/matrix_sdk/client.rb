@@ -36,6 +36,7 @@ module MatrixSdk
       @sync_filter = { room: { timeline: { limit: params.fetch(:sync_filter_limit, 20) } } }
 
       @should_listen = false
+      @next_batch = nil
 
       @bad_sync_timeout_limit = 60 * 60
 
@@ -195,7 +196,12 @@ module MatrixSdk
     end
 
     def sync(params = {})
-      data = api.sync params.merge(filter: sync_filter.to_json)
+      extra_params = {
+        filter: sync_filter.to_json
+      }
+      extra_params[:since] = @next_batch unless @next_batch.nil?
+      data = api.sync params.merge(extra_params)
+      @next_batch = data[:next_batch]
 
       data[:presence][:events].each do |presence_update|
         fire_presence_event(MatrixEvent.new(self, presence_update))
