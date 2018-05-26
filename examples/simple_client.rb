@@ -31,7 +31,7 @@ class SimpleClient < MatrixSdk::Client
       puts "[#{Time.now.strftime '%H:%M'}] #{event[:content][:displayname]} joined." if event.membership == 'join'
     when 'm.room.message'
       user = get_user event.sender
-      admin_level = get_user_level(room, user.id)
+      admin_level = get_user_level(room, user.id) || 0
       prefix = (admin_level >= 100 ? '@' : (admin_level >= 50 ? '+' : ' '))
       if %w[m.text m.notice].include? event.content[:msgtype]
         notice = event.content[:msgtype] == 'm.notice'
