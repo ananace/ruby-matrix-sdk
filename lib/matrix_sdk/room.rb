@@ -78,7 +78,7 @@ module MatrixSdk
     end
 
     def logger
-      Logging.logger[self.class.name]
+      @logger ||= Logging.logger['MatrixSdk::Room']
     end
 
     #
