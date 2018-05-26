@@ -59,6 +59,14 @@ end
 
 module MatrixSdk
   class EventHandlerArray < Hash
+    attr_accessor :reraise_exceptions
+
+    def initialize(*args)
+      @reraise_exceptions = false
+
+      super(*args)
+    end
+
     def add_handler(filter = nil, id = nil, &block)
       id ||= block.hash
       self[id] = { filter: filter, id: id, block: block }
@@ -70,8 +78,18 @@ module MatrixSdk
 
     def fire(event, filter = nil)
       reverse_each do |_k, h|
-        h[:block].call(event) if event.matches?(h[:filter], filter)
+        begin
+          h[:block].call(event) if event.matches?(h[:filter], filter)
+        rescue StandardError => ex
+          logger.error "#{ex.class.name} occurred when firing event (#{event})\n#{ex}"
+
+          raise ex if @reraise_exceptions
+        end
       end
+    end
+
+    def logger
+      @logger ||= Logging.logger['MatrixSdk::EventHandlerArray']
     end
   end
 
