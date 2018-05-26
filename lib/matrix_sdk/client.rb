@@ -29,6 +29,7 @@ module MatrixSdk
       @api = Api.new hs_url, params
 
       @rooms = {}
+      @users = {}
       @cache = :all
 
       @sync_token = nil
@@ -100,7 +101,11 @@ module MatrixSdk
     end
 
     def get_user(user_id)
-      User.new(self, user_id)
+      if cache == :all
+        @users[user_id] ||= User.new(self, user_id)
+      else
+        User.new(self, user_id)
+      end
     end
 
     def remove_room_alias(room_alias)
