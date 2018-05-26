@@ -29,6 +29,7 @@ module MatrixSdk
       @validate_certificate = params.fetch(:validate_certificate, false)
       @transaction_id = params.fetch(:transaction_id, 0)
       @backoff_time = params.fetch(:backoff_time, 5000)
+      @read_timeout = params.fetch(:read_timeout, 240)
 
       login(user: @homeserver.user, password: @homeserver.password) if @homeserver.user && @homeserver.password && !@access_token && !params[:skip_login]
       @homeserver.userinfo = '' unless params[:skip_login]
@@ -36,6 +37,11 @@ module MatrixSdk
 
     def logger
       @logger ||= Logging.logger[self.class.name]
+    end
+
+    def read_timeout=(seconds)
+      @http.finish if @http && @read_timeout != seconds
+      @read_timeout = seconds
     end
 
     def validate_certificate=(validate)
@@ -475,6 +481,7 @@ module MatrixSdk
       @http ||= Net::HTTP.new homeserver.host, homeserver.port
       return @http if @http.active?
 
+      @http.read_timeout = read_timeout
       @http.use_ssl = homeserver.scheme == 'https'
       @http.verify_mode = validate_certificate ? ::OpenSSL::SSL::VERIFY_NONE : nil
       @http.start
