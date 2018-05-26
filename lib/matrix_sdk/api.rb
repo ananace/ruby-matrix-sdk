@@ -14,7 +14,7 @@ module MatrixSdk
 
     def initialize(homeserver, params = {})
       @homeserver = homeserver
-      @homeserver = URI.parse(@homeserver.to_s) unless @homeserver.is_a? URI
+      @homeserver = URI.parse("#{'https://' unless @homeserver.start_with? 'http'}#{@homeserver}") unless @homeserver.is_a? URI
       if @homeserver.path.end_with? '_matrix/'
         @homeserver.path = begin
           split = @homeserver.path.rpartition '_matrix/'
