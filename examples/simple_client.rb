@@ -11,7 +11,7 @@ class SimpleClient < MatrixSdk::Client
   end
 
   def add_listener(room)
-    room.on_event { |ev| on_message(room, ev) }
+    room.on_event.add_handler { |ev| on_message(room, ev) }
   end
 
   def run
