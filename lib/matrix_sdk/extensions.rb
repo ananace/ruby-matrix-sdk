@@ -115,5 +115,18 @@ module MatrixSdk
         to_match == filter
       end
     end
+
+    def [](key)
+      event[key]
+    end
+
+    def to_s
+      "#{event[:type]}: #{event.reject { |k,_v| k == :type }.to_json}"
+    end
+
+    def method_missing(method, *args)
+      return event[method] if event.key? method
+      super
+    end
   end
 end
