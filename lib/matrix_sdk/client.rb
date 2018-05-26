@@ -136,12 +136,14 @@ module MatrixSdk
     def listen_forever(params = {})
       timeout = params.fetch(:timeout, 30)
       params[:bad_sync_timeout] = params.fetch(:bad_sync_timeout, 5)
+      params[:sync_interval] = params.fetch(:sync_interval, 30)
 
       bad_sync_timeout = params[:bad_sync_timeout]
       while @should_listen
         begin
           sync(timeout: timeout)
           bad_sync_timeout = params[:bad_sync_timeout]
+          sleep(params[:sync_interval]) if params[:sync_interval] > 0
         rescue MatrixRequestError => ex
           logger.warn("A #{ex.class} occurred during sync")
           if ex.httpstatus >= 500
