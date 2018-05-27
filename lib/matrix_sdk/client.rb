@@ -7,13 +7,13 @@ module MatrixSdk
     extend Forwardable
 
     attr_reader :api
-    attr_accessor :cache, :mxid, :sync_filter
+    attr_writer :mxid
+    attr_accessor :cache, :sync_filter
 
     events :event, :presence_event, :invite_event, :left_event, :ephemeral_event
     ignore_inspect :api,
                    :on_event, :on_presence_event, :on_invite_event, :on_left_event, :on_ephemeral_event
 
-    alias user_id mxid
     alias user_id= mxid=
 
     def_delegators :@api,
@@ -23,8 +23,7 @@ module MatrixSdk
     def initialize(hs_url, params = {})
       event_initialize
 
-      params[:user_id] = params[:mxid] if params[:mxid]
-      raise ArgumentError, 'Must provide user_id with access_token' if params[:access_token] && !params[:user_id]
+      params[:user_id] ||= params[:mxid] if params[:mxid]
 
       @api = Api.new hs_url, params
 
@@ -49,12 +48,19 @@ module MatrixSdk
 
       return unless params[:user_id]
       @mxid = params[:user_id]
-      sync
     end
 
     def logger
       @logger ||= Logging.logger['MatrixSdk::Client']
     end
+
+    def mxid
+      @mxid ||= begin
+        api.whoami?[:user_id] if api && api.access_token
+      end
+    end
+
+    alias user_id mxid
 
     def rooms
       @rooms.values
@@ -84,7 +90,7 @@ module MatrixSdk
     end
 
     def logged_in?
-      !(@mxid.nil? || @api.access_token.nil?)
+      !(mxid.nil? || @api.access_token.nil?)
     end
 
     def create_room(room_alias = nil, params = {})
