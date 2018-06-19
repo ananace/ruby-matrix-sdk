@@ -334,7 +334,7 @@ module MatrixSdk
 
     def set_display_name(user_id, display_name)
       content = {
-        display_name: display_name
+        displayname: display_name
       }
       request(:put, :client_r0, "/profile/#{user_id}/displayname", body: content)
     end
