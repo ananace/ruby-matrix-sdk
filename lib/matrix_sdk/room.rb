@@ -78,7 +78,7 @@ module MatrixSdk
     end
 
     def logger
-      Logging.logger[self.class.name]
+      @logger ||= Logging.logger['MatrixSdk::Room']
     end
 
     #
@@ -261,34 +261,54 @@ module MatrixSdk
     # User Management
     #
 
+    # Invites a user into the room
+    # @param user_id [String,User] the MXID of the user
+    # @return [Boolean] wether the action succeeded
     def invite_user(user_id)
+      user_id = user_id.id if user_id.is_a? MatrixSdk::User
       client.api.invite_user(id, user_id)
       true
     rescue MatrixError
       false
     end
 
+    # Kicks a user from the room
+    # @param user_id [String,User] the MXID of the user
+    # @param reason [String] the reason for the kick
+    # @return [Boolean] wether the action succeeded
     def kick_user(user_id, reason = '')
+      user_id = user_id.id if user_id.is_a? MatrixSdk::User
       client.api.kick_user(id, user_id, reason: reason)
       true
     rescue MatrixError
       false
     end
 
+    # Bans a user from the room
+    # @param user_id [String,User] the MXID of the user
+    # @param reason [String] the reason for the ban
+    # @return [Boolean] wether the action succeeded
     def ban_user(user_id, reason = '')
+      user_id = user_id.id if user_id.is_a? MatrixSdk::User
       client.api.ban_user(id, user_id, reason: reason)
       true
     rescue MatrixError
       false
     end
 
+    # Unbans a user from the room
+    # @param user_id [String,User] the MXID of the user
+    # @return [Boolean] wether the action succeeded
     def unban_user(user_id)
+      user_id = user_id.id if user_id.is_a? MatrixSdk::User
       client.api.unban_user(id, user_id)
       true
     rescue MatrixError
       false
     end
 
+    # Requests to be removed from the room
+    # @return [Boolean] wether the request succeeded
     def leave
       client.api.leave_room(id)
       client.rooms.delete id
@@ -297,14 +317,25 @@ module MatrixSdk
       false
     end
 
+    # Retrieves a custom entry from the room-specific account data
+    # @param type [String] the data type to retrieve
+    # @return [Hash] the data that was stored under the given type
     def get_account_data(type)
       client.api.get_room_account_data(client.mxid, id, type)
     end
 
+    # Stores a custom entry into the room-specific account data
+    # @param type [String] the data type to store
+    # @param account_data [Hash] the data to store
     def set_account_data(type, account_data)
       client.api.set_room_account_data(client.mxid, id, type, account_data)
     end
 
+    # Changes the room-specific user profile
+    # @param params [Hash] the user profile changes to apply
+    # @option params [String] :display_name the new display name to use in the room
+    # @option params [String,URI] :avatar_url the new avatar URL to use in the room
+    # @note the avatar URL should be a mxc:// URI
     def set_user_profile(params = {})
       return nil unless params[:display_name] || params[:avatar_url]
       data = client.api.get_membership(id, client.mxid)
@@ -339,6 +370,8 @@ module MatrixSdk
       nil
     end
 
+    # Reloads the name of the room
+    # @return [Boolean] if the name was changed or not
     def reload_name!
       data = client.api.get_room_name(id)
       changed = data[:name] != name
@@ -355,6 +388,8 @@ module MatrixSdk
       nil
     end
 
+    # Reloads the topic of the room
+    # @return [Boolean] if the topic was changed or not
     def reload_topic!
       data = client.api.get_room_topic(id)
       changed = data[:topic] != topic
@@ -417,6 +452,10 @@ module MatrixSdk
       nil
     end
 
+    # Modifies the power levels of the room
+    # @param users [Hash] the user-specific power levels to set or remove
+    # @param users_default [Hash] the default user power levels to set
+    # @return [Boolean] if the change was successful
     def modify_user_power_levels(users = nil, users_default = nil)
       return false if users.nil? && users_default.nil?
       data = client.api.get_power_levels(id)
@@ -434,6 +473,10 @@ module MatrixSdk
       false
     end
 
+    # Modifies the required power levels for actions in the room
+    # @param events [Hash] the event-specific power levels to change
+    # @param params [Hash] other power-level params to change
+    # @return [Boolean] if the change was successful
     def modify_required_power_levels(events = nil, params = {})
       return false if events.nil? && (params.nil? || params.empty?)
       data = client.api.get_power_levels(id)

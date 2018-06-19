@@ -11,7 +11,7 @@ class SimpleClient < MatrixSdk::Client
   end
 
   def add_listener(room)
-    room.on_event { |ev| on_message(room, ev) }
+    room.on_event.add_handler { |ev| on_message(room, ev) }
   end
 
   def run
@@ -26,19 +26,20 @@ class SimpleClient < MatrixSdk::Client
   end
 
   def on_message(room, event)
-    case ev[:type]
+    case event.type
     when 'm.room.member'
-      puts "#{Time.now.strftime '%H:%M'} #{event[:content][:displayname]} joined." if event['membership'] == 'join'
+      puts "[#{Time.now.strftime '%H:%M'}] #{event[:content][:displayname]} joined." if event.membership == 'join'
     when 'm.room.message'
-      user = get_user event[:sender]
-      admin_level = get_user_level(room, user.id)
+      user = get_user event.sender
+      admin_level = get_user_level(room, user.id) || 0
       prefix = (admin_level >= 100 ? '@' : (admin_level >= 50 ? '+' : ' '))
-      if %w[m.text m.notice].include? event[:content][:msgtype]
-        puts "#{Time.now.strftime '%H:%M'} <#{prefix}#{user.display_name}> #{event[:content][:body]}"
+      if %w[m.text m.notice].include? event.content[:msgtype]
+        notice = event.content[:msgtype] == 'm.notice'
+        puts "[#{Time.now.strftime '%H:%M'}] <#{prefix}#{user.display_name}> #{"\033[1;30m" if notice}#{event.content[:body]}#{"\033[0m" if notice}"
       elsif event[:content][:msgtype] == 'm.emote'
-        puts "#{Time.now.strftime '%H:%M'} *#{prefix}#{user.display_name} #{event[:content][:body]}"
+        puts "[#{Time.now.strftime '%H:%M'}] *#{prefix}#{user.display_name} #{event.content[:body]}"
       else
-        puts "#{Time.now.strftime '%H:%M'} <#{prefix}#{user.display_name}> [#{event[:content][:msgtype]}] #{event[:content][:body]} - #{api.get_download_url event[:content][:url]}"
+        puts "[#{Time.now.strftime '%H:%M'}] <#{prefix}#{user.display_name}> (#{event.content[:msgtype]}) #{event.content[:body]} - #{api.get_download_url event.content[:url]}"
       end
     end
   end
@@ -53,6 +54,7 @@ if $PROGRAM_NAME == __FILE__
     end
 
     client = SimpleClient.new ARGV.first
+    ARGV.shift
 
     print 'Username: '
     user = STDIN.gets.strip
@@ -86,7 +88,9 @@ if $PROGRAM_NAME == __FILE__
         room.send_text msg
       end
     end
+  rescue Interrupt
+    puts "Interrupted, exiting..."
   ensure
-    client.logout if client
+    client.logout if client && client.logged_in?
   end
 end

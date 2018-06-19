@@ -8,13 +8,13 @@ require 'uri'
 module MatrixSdk
   class Api
     attr_accessor :access_token, :device_id
-    attr_reader :homeserver, :validate_certificate
+    attr_reader :homeserver, :validate_certificate, :read_timeout
 
     ignore_inspect :access_token
 
     def initialize(homeserver, params = {})
       @homeserver = homeserver
-      @homeserver = URI.parse(@homeserver.to_s) unless @homeserver.is_a? URI
+      @homeserver = URI.parse("#{'https://' unless @homeserver.start_with? 'http'}#{@homeserver}") unless @homeserver.is_a? URI
       if @homeserver.path.end_with? '_matrix/'
         @homeserver.path = begin
           split = @homeserver.path.rpartition '_matrix/'
@@ -29,13 +29,19 @@ module MatrixSdk
       @validate_certificate = params.fetch(:validate_certificate, false)
       @transaction_id = params.fetch(:transaction_id, 0)
       @backoff_time = params.fetch(:backoff_time, 5000)
+      @read_timeout = params.fetch(:read_timeout, 240)
 
       login(user: @homeserver.user, password: @homeserver.password) if @homeserver.user && @homeserver.password && !@access_token && !params[:skip_login]
       @homeserver.userinfo = '' unless params[:skip_login]
     end
 
     def logger
-      @logger ||= Logging.logger[self.class.name]
+      @logger ||= Logging.logger['MatrixSdk::Api']
+    end
+
+    def read_timeout=(seconds)
+      @http.finish if @http && @read_timeout != seconds
+      @read_timeout = seconds
     end
 
     def validate_certificate=(validate)
@@ -443,6 +449,8 @@ module MatrixSdk
     private
 
     def print_http(http)
+      return unless logger.debug?
+
       if http.is_a? Net::HTTPRequest
         dir = '>'
         logger.debug "#{dir} Sending a #{http.method} request to `#{http.path}`:"
@@ -454,7 +462,8 @@ module MatrixSdk
         logger.debug "#{dir} #{h}"
       end
       logger.debug dir
-      logger.debug "#{dir} #{http.body.length < 200 ? http.body : http.body.slice(0..200) + '... [truncated]'}" if http.body
+      clean_body = JSON.parse(http.body).each { |k, v| v.replace('[redacted]') if %w[password access_token].include? k }.to_json if http.body
+      logger.debug "#{dir} #{clean_body.length < 200 ? clean_body : clean_body.slice(0..200) + "... [truncated, #{clean_body.length} Bytes]"}" if clean_body
     end
 
     def transaction_id
@@ -472,6 +481,7 @@ module MatrixSdk
       @http ||= Net::HTTP.new homeserver.host, homeserver.port
       return @http if @http.active?
 
+      @http.read_timeout = read_timeout
       @http.use_ssl = homeserver.scheme == 'https'
       @http.verify_mode = validate_certificate ? ::OpenSSL::SSL::VERIFY_NONE : nil
       @http.start

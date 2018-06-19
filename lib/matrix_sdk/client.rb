@@ -7,13 +7,13 @@ module MatrixSdk
     extend Forwardable
 
     attr_reader :api
-    attr_accessor :cache, :mxid, :sync_filter
+    attr_writer :mxid
+    attr_accessor :cache, :sync_filter
 
     events :event, :presence_event, :invite_event, :left_event, :ephemeral_event
     ignore_inspect :api,
                    :on_event, :on_presence_event, :on_invite_event, :on_left_event, :on_ephemeral_event
 
-    alias user_id mxid
     alias user_id= mxid=
 
     def_delegators :@api,
@@ -23,12 +23,12 @@ module MatrixSdk
     def initialize(hs_url, params = {})
       event_initialize
 
-      params[:user_id] = params[:mxid] if params[:mxid]
-      raise ArgumentError, 'Must provide user_id with access_token' if params[:access_token] && !params[:user_id]
+      params[:user_id] ||= params[:mxid] if params[:mxid]
 
       @api = Api.new hs_url, params
 
       @rooms = {}
+      @users = {}
       @cache = :all
 
       @sync_token = nil
@@ -36,6 +36,7 @@ module MatrixSdk
       @sync_filter = { room: { timeline: { limit: params.fetch(:sync_filter_limit, 20) } } }
 
       @should_listen = false
+      @next_batch = nil
 
       @bad_sync_timeout_limit = 60 * 60
 
@@ -47,12 +48,19 @@ module MatrixSdk
 
       return unless params[:user_id]
       @mxid = params[:user_id]
-      sync
     end
 
     def logger
-      @logger ||= Logging.logger[self.class.name]
+      @logger ||= Logging.logger['MatrixSdk::Client']
     end
+
+    def mxid
+      @mxid ||= begin
+        api.whoami?[:user_id] if api && api.access_token
+      end
+    end
+
+    alias user_id mxid
 
     def rooms
       @rooms.values
@@ -72,13 +80,17 @@ module MatrixSdk
       data = api.login(user: username, password: password)
       post_authentication(data)
 
-      sync(timeout: params.fetch(:sync_timeout, 15)) unless params[:no_sync]
+      sync(timeout: params.fetch(:sync_timeout, 15), full_state: params.fetch(:full_state, false)) unless params[:no_sync]
     end
 
     def logout
       api.logout
       @api.access_token = nil
       @mxid = nil
+    end
+
+    def logged_in?
+      !(mxid.nil? || @api.access_token.nil?)
     end
 
     def create_room(room_alias = nil, params = {})
@@ -95,7 +107,11 @@ module MatrixSdk
     end
 
     def get_user(user_id)
-      User.new(self, user_id)
+      if cache == :all
+        @users[user_id] ||= User.new(self, user_id)
+      else
+        User.new(self, user_id)
+      end
     end
 
     def remove_room_alias(room_alias)
@@ -131,12 +147,14 @@ module MatrixSdk
     def listen_forever(params = {})
       timeout = params.fetch(:timeout, 30)
       params[:bad_sync_timeout] = params.fetch(:bad_sync_timeout, 5)
+      params[:sync_interval] = params.fetch(:sync_interval, 30)
 
       bad_sync_timeout = params[:bad_sync_timeout]
       while @should_listen
         begin
           sync(timeout: timeout)
           bad_sync_timeout = params[:bad_sync_timeout]
+          sleep(params[:sync_interval]) if params[:sync_interval] > 0
         rescue MatrixRequestError => ex
           logger.warn("A #{ex.class} occurred during sync")
           if ex.httpstatus >= 500
@@ -191,7 +209,12 @@ module MatrixSdk
     end
 
     def sync(params = {})
-      data = api.sync params.merge(filter: sync_filter.to_json)
+      extra_params = {
+        filter: sync_filter.to_json
+      }
+      extra_params[:since] = @next_batch unless @next_batch.nil?
+      data = api.sync params.merge(extra_params)
+      @next_batch = data[:next_batch]
 
       data[:presence][:events].each do |presence_update|
         fire_presence_event(MatrixEvent.new(self, presence_update))
