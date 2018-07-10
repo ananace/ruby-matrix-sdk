@@ -57,8 +57,14 @@ module MatrixSdk
       @homeserver = hs_info
     end
 
-    def api_versions
-      request(:get, :client, '/versions')
+    def client_api_versions
+      @client_api_versions ||= request(:get, :client, '/versions')[:versions]
+    end
+
+    def client_latest
+      # r0.3.0 => r0
+      # v1.1   => v1
+      "client_#{client_api_versions.last.split('.').first}"
     end
 
     def sync(params = {})
