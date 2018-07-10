@@ -119,14 +119,20 @@ module MatrixSdk
     end
 
     def join_room(id_or_alias)
-      request(:post, :client_r0, "/join/#{CGI.escape id_or_alias.to_s}")
+      id_or_alias = CGI.escape id_or_alias.to_s
+
+      request(:post, :client_r0, "/join/#{id_or_alias}")
     end
 
     def send_state_event(room_id, event_type, content, params = {})
       query = {}
       query[:ts] = params[:timestamp].to_i if params.key? :timestamp
 
-      request(:put, :client_r0, "/rooms/#{CGI.escape room_id.to_s}/state/#{CGI.escape event_type.to_s}#{"/#{CGI.escape params[:state_key].to_s}" if params.key? :state_key}", body: content, query: query)
+      room_id = CGI.escape room_id.to_s
+      event_type = CGI.escape event_type.to_s
+      state_key = CGI.escape params[:state_key].to_s if params.key? :state_key
+
+      request(:put, :client_r0, "/rooms/#{room_id}/state/#{event_type}#{"/#{state_key}" unless state_key.nil?}", body: content, query: query)
     end
 
     def send_message_event(room_id, event_type, content, params = {})
@@ -136,7 +142,11 @@ module MatrixSdk
       txn_id = transaction_id
       txn_id = params.fetch(:txn_id, "#{txn_id}#{Time.now.to_i}")
 
-      request(:put, :client_r0, "/rooms/#{CGI.escape room_id.to_s}/send/#{CGI.escape event_type.to_s}/#{CGI.escape txn_id.to_s}", body: content, query: query)
+      room_id = CGI.escape room_id.to_s
+      event_type = CGI.escape event_type.to_s
+      txn_id = CGI.escape txn_id.to_s
+
+      request(:put, :client_r0, "/rooms/#{room_id}/send/#{event_type}/#{txn_id}", body: content, query: query)
     end
 
     def redact_event(room_id, event_type, params = {})
@@ -149,7 +159,11 @@ module MatrixSdk
       txn_id = transaction_id
       txn_id = params.fetch(:txn_id, "#{txn_id}#{Time.now.to_i}")
 
-      request(:put, :client_r0, "/rooms/#{CGI.escape room_id.to_s}/redact/#{CGI.escape event_type.to_s}/#{CGI.escape txn_id.to_s}", body: content, query: query)
+      room_id = CGI.escape room_id.to_s
+      event_type = CGI.escape event_type.to_s
+      txn_id = CGI.escape txn_id.to_s
+
+      request(:put, :client_r0, "/rooms/#{room_id}/redact/#{event_type}/#{txn_id}", body: content, query: query)
     end
 
     def send_content(room_id, url, name, msg_type, params = {})
@@ -208,11 +222,20 @@ module MatrixSdk
       }
       query[:to] = params[:to] if params.key? :to
 
-      request(:get, :client_r0, "/rooms/#{CGI.escape room_id.to_s}/messages", query: query)
+      room_id = CGI.escape room_id.to_s
+
+      request(:get, :client_r0, "/rooms/#{room_id}/messages", query: query)
+    end
+
+    def get_room_state(room_id, state_type)
+      room_id = CGI.escape room_id.to_s
+      state_type = CGI.escape state_type.to_s
+
+      request(:get, :client_r0, "/rooms/#{room_id}/state/#{state_type}")
     end
 
     def get_room_name(room_id)
-      request(:get, :client_r0, "/rooms/#{CGI.escape room_id.to_s}/state/m.room.name")
+      get_room_state(room_id, 'm.room.name')
     end
 
     def set_room_name(room_id, name, params = {})
@@ -223,7 +246,7 @@ module MatrixSdk
     end
 
     def get_room_topic(room_id)
-      request(:get, :client_r0, "/rooms/#{CGI.escape room_id.to_s}/state/m.room.topic")
+      get_room_state(room_id, 'm.room.topic')
     end
 
     def set_room_topic(room_id, topic, params = {})
@@ -234,7 +257,7 @@ module MatrixSdk
     end
 
     def get_power_levels(room_id)
-      request(:get, :client_r0, "/rooms/#{CGI.escape room_id.to_s}/state/m.room.power_levels")
+      get_room_state(room_id, 'm.room.power_levels')
     end
 
     def set_power_levels(room_id, content)
@@ -243,18 +266,25 @@ module MatrixSdk
     end
 
     def leave_room(room_id)
-      request(:post, :client_r0, "/rooms/#{CGI.escape room_id.to_s}/leave")
+      room_id = CGI.escape room_id.to_s
+
+      request(:post, :client_r0, "/rooms/#{room_id}/leave")
     end
 
     def forget_room(room_id)
-      request(:post, :client_r0, "/rooms/#{CGI.escape room_id.to_s}/forget")
+      room_id = CGI.escape room_id.to_s
+
+      request(:post, :client_r0, "/rooms/#{room_id}/forget")
     end
 
     def invite_user(room_id, user_id)
       content = {
         user_id: user_id
       }
-      request(:post, :client_r0, "/rooms/#{CGI.escape room_id.to_s}/invite", body: content)
+
+      room_id = CGI.escape room_id.to_s
+
+      request(:post, :client_r0, "/rooms/#{room_id}/invite", body: content)
     end
 
     def kick_user(room_id, user_id, params = {})
@@ -262,7 +292,10 @@ module MatrixSdk
     end
 
     def get_membership(room_id, user_id)
-      request(:get, :client_r0, "/rooms/#{CGI.escape room_id.to_s}/state/m.room.member/#{user_id}")
+      room_id = CGI.escape room_id.to_s
+      user_id = CGI.escape user_id.to_s
+
+      request(:get, :client_r0, "/rooms/#{room_id}/state/m.room.member/#{user_id}")
     end
 
     def set_membership(room_id, user_id, membership, params = {})
@@ -281,22 +314,35 @@ module MatrixSdk
         user_id: user_id,
         reason: params[:reason] || ''
       }
-      request(:post, :client_r0, "/rooms/#{CGI.escape room_id.to_s}/ban", body: content)
+
+      room_id = CGI.escape room_id.to_s
+
+      request(:post, :client_r0, "/rooms/#{room_id}/ban", body: content)
     end
 
     def unban_user(room_id, user_id)
       content = {
         user_id: user_id
       }
-      request(:post, :client_r0, "/rooms/#{CGI.escape room_id.to_s}/unban", body: content)
+
+      room_id = CGI.escape room_id.to_s
+
+      request(:post, :client_r0, "/rooms/#{room_id}/unban", body: content)
     end
 
     def get_user_tags(user_id, room_id)
-      request(:get, :client_r0, "/user/#{CGI.escape user_id.to_s}/rooms/#{CGI.escape room_id.to_s}/tags")
+      room_id = CGI.escape room_id.to_s
+      user_id = CGI.escape user_id.to_s
+
+      request(:get, :client_r0, "/user/#{user_id}/rooms/#{room_id}/tags")
     end
 
     def remove_user_tag(user_id, room_id, tag)
-      request(:delete, :client_r0, "/user/#{CGI.escape user_id.to_s}/rooms/#{CGI.escape room_id.to_s}/tags/#{CGI.escape tag.to_s}")
+      room_id = CGI.escape room_id.to_s
+      user_id = CGI.escape user_id.to_s
+      tag = CGI.escape tag.to_s
+
+      request(:delete, :client_r0, "/user/#{user_id}/rooms/#{room_id}/tags/#{tag}")
     end
 
     def add_user_tag(user_id, room_id, tag, params = {})
@@ -306,35 +352,48 @@ module MatrixSdk
         content = {}
         content[:order] = params[:order] if params.key? :order
       end
-      request(:put, :client_r0, "/user/#{CGI.escape user_id.to_s}/rooms/#{CGI.escape room_id.to_s}/tags/#{CGI.escape tag.to_s}", body: content)
+
+      room_id = CGI.escape room_id.to_s
+      user_id = CGI.escape user_id.to_s
+      tag = CGI.escape tag.to_s
+
+      request(:put, :client_r0, "/user/#{user_id}/rooms/#{room_id}/tags/#{tag}", body: content)
     end
 
     # def get_account_data(user_id, type)
     #   request(:get, :client_r0, "/user/#{user_id}/account_data/#{type}")
     # end
 
-    def set_account_data(user_id, type, account_data)
-      request(:put, :client_r0, "/user/#{CGI.escape user_id.to_s}/account_data/#{CGI.escape type.to_s}", body: account_data)
+    def set_account_data(user_id, type_key, account_data)
+      user_id = CGI.escape user_id.to_s
+      type_key = CGI.escape type_key.to_s
+
+      request(:put, :client_r0, "/user/#{user_id}/account_data/#{type_key}", body: account_data)
     end
 
     # def get_room_account_data(user_id, room_id, type)
     #   request(:get, :client_r0, "/user/#{user_id}/rooms/#{room_id}/account_data/#{type}")
     # end
 
-    def set_room_account_data(user_id, room_id, type, account_data)
-      request(:put, :client_r0, "/user/#{CGI.escape user_id.to_s}/rooms/#{CGI.escape room_id.to_s}/account_data/#{CGI.escape type.to_s}", body: account_data)
-    end
+    def set_room_account_data(user_id, room_id, type_key, account_data)
+      user_id = CGI.escape user_id.to_s
+      room_id = CGI.escape room_id.to_s
+      type_key = CGI.escape type_key.to_s
 
-    def get_room_state(room_id)
-      request(:get, :client_r0, "/rooms/#{CGI.escape room_id.to_s}/state")
+      request(:put, :client_r0, "/user/#{user_id}/rooms/#{room_id}/account_data/#{type_key}", body: account_data)
     end
 
     def get_filter(user_id, filter_id)
-      request(:get, :client_r0, "/user/#{CGI.escape user_id.to_s}/filter/#{CGI.escape filter_id.to_s}")
+      user_id = CGI.escape user_id.to_s
+      filter_id = CGI.escape filter_id.to_s
+
+      request(:get, :client_r0, "/user/#{user_id}/filter/#{filter_id}")
     end
 
     def create_filter(user_id, filter_params)
-      request(:post, :client_r0, "/user/#{CGI.escape user_id.to_s}/filter", body: filter_params)
+      user_id = CGI.escape user_id.to_s
+
+      request(:post, :client_r0, "/user/#{user_id}/filter", body: filter_params)
     end
 
     def media_upload(content, content_type)
@@ -342,25 +401,35 @@ module MatrixSdk
     end
 
     def get_display_name(user_id)
-      request(:get, :client_r0, "/profile/#{CGI.escape user_id.to_s}/displayname")
+      user_id = CGI.escape user_id.to_s
+
+      request(:get, :client_r0, "/profile/#{user_id}/displayname")
     end
 
     def set_display_name(user_id, display_name)
       content = {
         displayname: display_name
       }
-      request(:put, :client_r0, "/profile/#{CGI.escape user_id.to_s}/displayname", body: content)
+
+      user_id = CGI.escape user_id.to_s
+
+      request(:put, :client_r0, "/profile/#{user_id}/displayname", body: content)
     end
 
     def get_avatar_url(user_id)
-      request(:get, :client_r0, "/profile/#{CGI.escape user_id.to_s}/avatar_url")
+      user_id = CGI.escape user_id.to_s
+
+      request(:get, :client_r0, "/profile/#{user_id}/avatar_url")
     end
 
     def set_avatar_url(user_id, url)
       content = {
         avatar_url: url
       }
-      request(:put, :client_r0, "/profile/#{CGI.escape user_id.to_s}/avatar_url", body: content)
+
+      user_id = CGI.escape user_id.to_s
+
+      request(:put, :client_r0, "/profile/#{user_id}/avatar_url", body: content)
     end
 
     def get_download_url(mxcurl)
@@ -368,33 +437,44 @@ module MatrixSdk
       raise 'Not a mxc:// URL' unless mxcurl.is_a? URI::MATRIX
 
       homeserver.dup.tap do |u|
-        u.path = "/_matrix/media/r0/download/#{CGI.escape mxcurl.full_path.to_s}"
+        full_path = CGI.escape mxcurl.full_path.to_s
+        u.path = "/_matrix/media/r0/download/#{full_path}"
       end
     end
 
     def get_room_id(room_alias)
-      request(:get, :client_r0, "/directory/room/#{CGI.escape room_alias.to_s}")
+      room_alias = CGI.escape room_alias.to_s
+
+      request(:get, :client_r0, "/directory/room/#{room_alias}")
     end
 
     def set_room_alias(room_id, room_alias)
       content = {
         room_id: room_id
       }
-      request(:put, :client_r0, "/directory/room/#{CGI.escape room_alias.to_s}", body: content)
+
+      room_alias = CGI.escape room_alias.to_s
+
+      request(:put, :client_r0, "/directory/room/#{room_alias}", body: content)
     end
 
     def remove_room_alias(room_alias)
-      request(:delete, :client_r0, "/directory/room/#{CGI.escape room_alias.to_s}")
+      room_alias = CGI.escape room_alias.to_s
+
+      request(:delete, :client_r0, "/directory/room/#{room_alias}")
     end
 
     def get_room_members(room_id)
-      request(:get, :client_r0, "/rooms/#{CGI.escape room_id.to_s}/members")
+      room_id = CGI.escape room_id.to_s
+
+      request(:get, :client_r0, "/rooms/#{room_id}/members")
     end
 
     def set_join_rule(room_id, join_rule)
       content = {
         join_rule: join_rule
       }
+
       send_state_event(room_id, 'm.room.join_rules', content)
     end
 
@@ -413,7 +493,7 @@ module MatrixSdk
     def request(method, api, path, options = {})
       url = homeserver.dup.tap do |u|
         u.path = api_to_path(api) + path
-        u.query = [u.query, options[:query].map { |k, v| "#{k}#{"=#{v}" unless v.nil?}" }].flatten.reject(&:nil?).join('&') if options[:query]
+        u.query = [u.query, options[:query].map { |k, v| "#{CGI.escape k}#{"=#{CGI.escape v}" unless v.nil?}" }].flatten.reject(&:nil?).join('&') if options[:query]
         u.query = nil if u.query.nil? || u.query.empty?
       end
       request = Net::HTTP.const_get(method.to_s.capitalize.to_sym).new url.request_uri
