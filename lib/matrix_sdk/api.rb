@@ -7,7 +7,7 @@ require 'uri'
 
 module MatrixSdk
   class Api
-    attr_accessor :access_token, :device_id
+    attr_accessor :access_token, :device_id, :autoretry
     attr_reader :homeserver, :validate_certificate, :read_timeout
 
     ignore_inspect :access_token
@@ -26,6 +26,7 @@ module MatrixSdk
 
       @access_token = params.fetch(:access_token, nil)
       @device_id = params.fetch(:device_id, nil)
+      @autoretry = params.fetch(:autoretry, true)
       @validate_certificate = params.fetch(:validate_certificate, false)
       @transaction_id = params.fetch(:transaction_id, 0)
       @backoff_time = params.fetch(:backoff_time, 5000)
@@ -440,6 +441,7 @@ module MatrixSdk
         data = JSON.parse(response.body, symbolize_names: true) rescue nil
 
         if response.is_a? Net::HTTPTooManyRequests
+          raise MatrixRequestError.new(data, response.code) unless autoretry
           failures += 1
           waittime = data[:retry_after_ms] || data[:error][:retry_after_ms] || @backoff_time
           sleep(waittime.to_f / 1000.0)
