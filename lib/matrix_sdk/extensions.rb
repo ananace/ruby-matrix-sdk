@@ -139,12 +139,16 @@ module MatrixSdk
     end
 
     def to_s
-      "#{event[:type]}: #{event.reject { |k,_v| k == :type }.to_json}"
+      "#{event[:type]}: #{event.reject { |k, _v| k == :type }.to_json}"
     end
 
     def method_missing(method, *args)
       return event[method] if event.key? method
       super
+    end
+
+    def respond_to_missing?(method)
+      event.key? method
     end
   end
 end
