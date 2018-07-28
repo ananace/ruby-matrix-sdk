@@ -528,7 +528,7 @@ module MatrixSdk
           next
         end
 
-        return data if response.is_a? Net::HTTPSuccess
+        return MatrixSdk::Response.new self, data if response.is_a? Net::HTTPSuccess
         raise MatrixRequestError.new(data, response.code) if data
         raise MatrixConnectionError, response
       end

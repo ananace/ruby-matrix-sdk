@@ -6,6 +6,7 @@ autoload :Logging, 'logging'
 module MatrixSdk
   autoload :Api, 'matrix_sdk/api'
   autoload :Client, 'matrix_sdk/client'
+  autoload :Response, 'matrix_sdk/response'
   autoload :Room, 'matrix_sdk/room'
   autoload :User, 'matrix_sdk/user'
 
