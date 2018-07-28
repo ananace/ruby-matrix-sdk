@@ -1,27 +1,22 @@
 module MatrixSdk
-  class Response
-    attr_reader :api, :raw
-
-    def initialize(api, data)
-      @api = api
-      @raw = data
+  module Response
+    def self.new(api, data)
+      data.extend(Extensions)
+      data.instance_variable_set(:@api, api)
+      data
     end
 
-    def inspect
-      raw.inspect
-    end
+    module Extensions
+      attr_reader :api
 
-    def [](name)
-      raw[name]
-    end
+      def respond_to_missing?(name)
+        key? name
+      end
 
-    def respond_to_missing?(name)
-      raw.key? name
-    end
-
-    def method_missing(name, *args)
-      return raw.fetch(name) if raw.key?(name) && args.empty?
-      super
+      def method_missing(name, *args)
+        return fetch(name) if key?(name) && args.empty?
+        super
+      end
     end
   end
 end
