@@ -7,7 +7,12 @@ require 'uri'
 
 module MatrixSdk
   class Api
-    attr_accessor :access_token, :device_id, :autoretry
+    DEFAULT_HEADERS = {
+      'accept'     => 'application/json',
+      'user-agent' => "Ruby Matrix SDK v#{MatrixSdk::VERSION}"
+    }.freeze
+
+    attr_accessor :access_token, :device_id, :autoretry, :global_headers
     attr_reader :homeserver, :validate_certificate, :read_timeout
 
     ignore_inspect :access_token
@@ -31,6 +36,8 @@ module MatrixSdk
       @transaction_id = params.fetch(:transaction_id, 0)
       @backoff_time = params.fetch(:backoff_time, 5000)
       @read_timeout = params.fetch(:read_timeout, 240)
+      @global_headers = DEFAULT_HEADERS.dup
+      @global_headers.merge!(params.fetch(:global_headers)) if params.key? :global_headers
 
       login(user: @homeserver.user, password: @homeserver.password) if @homeserver.user && @homeserver.password && !@access_token && !params[:skip_login]
       @homeserver.userinfo = '' unless params[:skip_login]
@@ -493,7 +500,7 @@ module MatrixSdk
     def request(method, api, path, options = {})
       url = homeserver.dup.tap do |u|
         u.path = api_to_path(api) + path
-        u.query = [u.query, options[:query].map { |k, v| "#{CGI.escape k}#{"=#{CGI.escape v}" unless v.nil?}" }].flatten.reject(&:nil?).join('&') if options[:query]
+        u.query = [u.query, URI.encode_www_form(options.fetch(:query))].flatten.compact.join('&') if options[:query]
         u.query = nil if u.query.nil? || u.query.empty?
       end
       request = Net::HTTP.const_get(method.to_s.capitalize.to_sym).new url.request_uri
@@ -501,10 +508,13 @@ module MatrixSdk
       request.body = request.body.to_json if options.key?(:body) && !request.body.is_a?(String)
       request.body_stream = options[:body_stream] if options.key? :body_stream
 
-      request.content_type = 'application/json' if request.body || request.body_stream
+      global_headers.each { |h, v| request[h] = v }
+      if request.body || request.body_stream
+        request.content_type = 'application/json'
+        request.content_length = (request.body || request.body_stream).size
+      end
 
       request['authorization'] = "Bearer #{access_token}" if access_token
-      request['user-agent'] = user_agent
       if options.key? :headers
         options[:headers].each do |h, v|
           request[h.to_s.downcase] = v
@@ -573,10 +583,6 @@ module MatrixSdk
       @http.use_ssl = homeserver.scheme == 'https'
       @http.verify_mode = validate_certificate ? ::OpenSSL::SSL::VERIFY_NONE : nil
       @http.start
-    end
-
-    def user_agent
-      "Ruby Matrix SDK v#{MatrixSdk::VERSION}"
     end
   end
 end
