@@ -18,6 +18,17 @@ module MatrixSdk
 
     ignore_inspect :access_token, :logger
 
+    # @param homeserver [String,URI] The URL to the Matrix homeserver, without the /_matrix/ part
+    # @param params [Hash] Additional parameters on creation
+    # @option params [String] :access_token The access token to use for the connection
+    # @option params [String] :device_id The ID of the logged in decide to use
+    # @option params [Boolean] :autoretry (true) Should requests automatically be retried in case of rate limits
+    # @option params [Boolean] :validate_certificate (false) Should the connection require valid SSL certificates
+    # @option params [Integer] :transaction_id (0) The starting ID for transactions
+    # @option params [Numeric] :backoff_time (5000) The request backoff time in milliseconds
+    # @option params [Numeric] :read_timeout (240) The timeout in seconds for reading responses
+    # @option params [Hash] :global_headers Additional headers to set for all requests
+    # @option params [Boolean] :skip_login Should the API skip logging in if the HS URL contains user information
     def initialize(homeserver, params = {})
       @homeserver = homeserver
       @homeserver = URI.parse("#{'https://' unless @homeserver.start_with? 'http'}#{@homeserver}") unless @homeserver.is_a? URI
