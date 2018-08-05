@@ -124,8 +124,8 @@ module MatrixSdk
       raise MatrixUnexpectedResponseError, 'Upload succeeded, but no media URI returned'
     end
 
-    def listen_for_events(timeout = 30)
-      sync(timeout: timeout)
+    def listen_for_events(timeout = 30, arguments = {})
+      sync(arguments.merge(timeout: timeout))
     end
 
     def start_listener_thread(params = {})
