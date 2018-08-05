@@ -89,7 +89,7 @@ module MatrixSdk
     end
 
     def logger
-      @logger ||= Logging.logger['MatrixSdk::EventHandlerArray']
+      @logger ||= Logging.logger[self]
     end
   end
 

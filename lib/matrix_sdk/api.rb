@@ -44,7 +44,7 @@ module MatrixSdk
     end
 
     def logger
-      @logger ||= Logging.logger['MatrixSdk::Api']
+      @logger ||= Logging.logger[self]
     end
 
     def read_timeout=(seconds)

@@ -51,7 +51,7 @@ module MatrixSdk
     end
 
     def logger
-      @logger ||= Logging.logger['MatrixSdk::Client']
+      @logger ||= Logging.logger[self]
     end
 
     def mxid
