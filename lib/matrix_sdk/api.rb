@@ -16,7 +16,7 @@ module MatrixSdk
     attr_accessor :access_token, :device_id, :autoretry, :global_headers
     attr_reader :homeserver, :validate_certificate, :read_timeout
 
-    ignore_inspect :access_token
+    ignore_inspect :access_token, :logger
 
     def initialize(homeserver, params = {})
       @homeserver = homeserver
