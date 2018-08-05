@@ -7,9 +7,10 @@ require 'uri'
 
 module MatrixSdk
   class Api
+    USER_AGENT = "Ruby Matrix SDK v#{MatrixSdk::VERSION}".freeze
     DEFAULT_HEADERS = {
       'accept'     => 'application/json',
-      'user-agent' => "Ruby Matrix SDK v#{MatrixSdk::VERSION}"
+      'user-agent' => USER_AGENT
     }.freeze
 
     attr_accessor :access_token, :device_id, :autoretry, :global_headers
@@ -101,7 +102,7 @@ module MatrixSdk
 
       data = {
         type: params.delete(:login_type) { 'm.login.password' },
-        initial_device_display_name: params.delete(:initial_device_display_name) { user_agent }
+        initial_device_display_name: params.delete(:initial_device_display_name) { USER_AGENT }
       }.merge params
       data[:device_id] = device_id if device_id
 
