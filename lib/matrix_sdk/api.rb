@@ -55,21 +55,29 @@ module MatrixSdk
       @homeserver.userinfo = '' unless params[:skip_login]
     end
 
+    # Gets the logger for the API
+    # @return [Logging::Logger]
     def logger
       @logger ||= Logging.logger[self]
     end
 
+    # @param seconds [Numeric]
+    # @return [Numeric]
     def read_timeout=(seconds)
       @http.finish if @http && @read_timeout != seconds
       @read_timeout = seconds
     end
 
+    # @param validate [Boolean]
+    # @return [Boolean]
     def validate_certificate=(validate)
       # The HTTP connection needs to be reopened if this changes
       @http.finish if @http && validate != @validate_certificate
       @validate_certificate = validate
     end
 
+    # @param hs_info [URI]
+    # @return [URI]
     def homeserver=(hs_info)
       # TODO: DNS query for SRV information about HS?
       return unless hs_info.is_a? URI
@@ -77,10 +85,21 @@ module MatrixSdk
       @homeserver = hs_info
     end
 
+    # Gets the available client API versions
+    # @return [Array]
     def client_api_versions
       @client_api_versions ||= request(:get, :client, '/versions')[:versions]
     end
 
+    # Runs the client API /sync method
+    # @param params [Hash] The sync options to use
+    # @option params [Numeric] :timeout (30.0) The timeout in seconds for the sync
+    # @option params :since The value of the batch token to base the sync from
+    # @option params [String,Hash] :filter The filter to use on the sync
+    # @option params [Boolean] :full_state Should the sync include the full state
+    # @option params [Boolean] :set_presence Should the sync set the user status to online
+    # @see https://matrix.org/docs/spec/client_server/r0.3.0.html#get-matrix-client-r0-sync
+    #      For more information on the parameters and what they mean
     def sync(params = {})
       query = {
         timeout: 30.0
@@ -94,12 +113,25 @@ module MatrixSdk
       request(:get, :client_r0, '/sync', query: query)
     end
 
+    # Registers a user using the client API /register endpoint
+    # @param params [Hash] The registration options, all but :kind will be passed in the body
+    # @option params [String,Symbol] :kind ('user') The kind of registration to use
+    # @see https://matrix.org/docs/spec/client_server/r0.3.0.html#post-matrix-client-r0-register
+    #      For options that are permitted in this call
     def register(params = {})
       kind = params.delete(:kind) { 'user' }
 
       request(:post, :client_r0, '/register', body: params, query: { kind: kind })
     end
 
+    # Logs in using the client API /login endpoint, and optionally stores the resulting access for API usage
+    # @param params [Hash] The login options to use
+    # @option params [Boolean] :store_token (true) Should the resulting access token be stored for the API
+    # @option params [Boolean] :store_device_id (true) Should the resulting device ID be stored for the API
+    # @option params [String] :login_type ('m.login.password') The type of login to attempt
+    # @option params [String] :initial_device_display_name (USER_AGENT) The device display name to specify for this login attempt
+    # @option params [String] :device_id The device ID to set on the login
+    # @return Hash
     def login(params = {})
       options = {}
       options[:store_token] = params.delete(:store_token) { true }
