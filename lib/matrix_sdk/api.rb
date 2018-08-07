@@ -88,7 +88,7 @@ module MatrixSdk
     # Gets the available client API versions
     # @return [Array]
     def client_api_versions
-      @client_api_versions ||= request(:get, :client, '/versions')[:versions]
+      @client_api_versions ||= request(:get, :client, '/versions').versions
     end
 
     # Runs the client API /sync method
@@ -146,8 +146,8 @@ module MatrixSdk
       data[:device_id] = device_id if device_id
 
       request(:post, :client_r0, '/login', body: data).tap do |resp|
-        @access_token = resp[:token] if resp[:token] && options[:store_token]
-        @device_id = resp[:device_id] if resp[:device_id] && options[:store_device_id]
+        @access_token = resp.token if resp.key?(:token) && options[:store_token]
+        @device_id = resp.device_id if resp.key?(:device_id) && options[:store_device_id]
       end
     end
 
