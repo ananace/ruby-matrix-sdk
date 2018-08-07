@@ -98,6 +98,7 @@ module MatrixSdk
     # @option params [String,Hash] :filter The filter to use on the sync
     # @option params [Boolean] :full_state Should the sync include the full state
     # @option params [Boolean] :set_presence Should the sync set the user status to online
+    # @return [Response]
     # @see https://matrix.org/docs/spec/client_server/r0.3.0.html#get-matrix-client-r0-sync
     #      For more information on the parameters and what they mean
     def sync(params = {})
@@ -116,6 +117,7 @@ module MatrixSdk
     # Registers a user using the client API /register endpoint
     # @param params [Hash] The registration options, all but :kind will be passed in the body
     # @option params [String,Symbol] :kind ('user') The kind of registration to use
+    # @return [Response]
     # @see https://matrix.org/docs/spec/client_server/r0.3.0.html#post-matrix-client-r0-register
     #      For options that are permitted in this call
     def register(params = {})
@@ -131,7 +133,7 @@ module MatrixSdk
     # @option params [String] :login_type ('m.login.password') The type of login to attempt
     # @option params [String] :initial_device_display_name (USER_AGENT) The device display name to specify for this login attempt
     # @option params [String] :device_id The device ID to set on the login
-    # @return Hash
+    # @return [Response]
     def login(params = {})
       options = {}
       options[:store_token] = params.delete(:store_token) { true }
@@ -149,6 +151,8 @@ module MatrixSdk
       end
     end
 
+    # Logs out the currently logged in user
+    # @return [Response]
     def logout
       request(:post, :client_r0, '/logout')
     end
