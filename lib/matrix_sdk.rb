@@ -22,7 +22,7 @@ module MatrixSdk
   def self.logger
     @logger ||= Logging.logger[self].tap do |logger|
       logger.add_appenders Logging.appenders.stdout
-      logger.level = :warn
+      logger.level = :info
     end
   end
 end
