@@ -25,7 +25,14 @@ module MatrixSdk
 
       params[:user_id] ||= params[:mxid] if params[:mxid]
 
-      @api = Api.new hs_url, params
+      if hs_url.is_a? Api
+        @api = hs_url
+        params.each do |k, v|
+          @api.instance_variable_set("@#{k}", v) if @api.instance_variable_defined? "@#{k}"
+        end
+      else
+        @api = Api.new hs_url, params
+      end
 
       @rooms = {}
       @users = {}
