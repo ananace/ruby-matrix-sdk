@@ -115,8 +115,17 @@ module MatrixSdk
     end
 
     # Registers a user using the client API /register endpoint
-    # @param params [Hash] The registration options, all but :kind will be passed in the body
+    #
+    # @example Regular user registration and login
+    #   api.register(username: 'example', password: 'NotARealPass')
+    #   # => { user_id: '@example:matrix.org', access_token: '...', home_server: 'matrix.org', device_id: 'ABCD123' }
+    #   api.whoami?
+    #   # => { user_id: '@example:matrix.org' }
+    #
+    # @param params [Hash] The registration information, all not handled by Ruby will be passed as JSON in the body
     # @option params [String,Symbol] :kind ('user') The kind of registration to use
+    # @option params [Boolean] :store_token (true) Should the resulting access token be stored for the API
+    # @option params [Boolean] :store_device_id (store_token value) Should the resulting device ID be stored for the API
     # @return [Response]
     # @see https://matrix.org/docs/spec/client_server/r0.3.0.html#post-matrix-client-r0-register
     #      For options that are permitted in this call
