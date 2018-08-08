@@ -2,6 +2,7 @@
 
 A Ruby gem for easing the development of software that communicates with servers implementing the Matrix protocol.
 
+Live YARD documentation can be found at; http://aleol57.gitlab-pages.liu.se/ruby-matrix-sdk
 
 ## Example usage
 
