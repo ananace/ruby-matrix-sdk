@@ -3,6 +3,7 @@
 - Adds missing accessors for HTTP timeout
 - Adds methods for checking auth status to client API
 - Adds a wrapper class for API responses to ease use
+- Adds option (and defaults) to store login details on registration
 - Extends event handling
 
 - Fixes batch handling in sync
