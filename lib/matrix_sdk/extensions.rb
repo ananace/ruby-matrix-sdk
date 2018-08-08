@@ -52,7 +52,9 @@ end
 def ignore_inspect(*symbols)
   class_eval %*
     def inspect
-      "#<\#{self.class.name}:\#{"%016x" % (object_id << 1)} \#{instance_variables.reject { |f| %i[#{symbols.map { |s| "@#{s}" }.join ' '}].include? f }.map { |f| "\#{f}=\#{instance_variable_get(f).inspect}" }.join ' ' }>"
+      "\#{to_s[0..-2]} \#{instance_variables
+        .reject { |f| %i[#{symbols.map { |s| "@#{s}" }.join ' '}].include? f }
+        .map { |f| "\#{f}=\#{instance_variable_get(f).inspect}" }.join " " }}>"
     end
   *, __FILE__, __LINE__ - 4
 end
