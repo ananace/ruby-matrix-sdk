@@ -122,8 +122,13 @@ module MatrixSdk
     #      For options that are permitted in this call
     def register(params = {})
       kind = params.delete(:kind) { 'user' }
+      store_token = params.delete(:store_token) { true }
+      store_device_id = params.delete(:store_device_id) { store_token }
 
-      request(:post, :client_r0, '/register', body: params, query: { kind: kind })
+      request(:post, :client_r0, '/register', body: params, query: { kind: kind }).tap do |resp|
+        @access_token = resp.token if resp.key?(:token) && store_token
+        @device_id = resp.device_id if resp.key?(:device_id) && store_device_id
+      end
     end
 
     # Logs in using the client API /login endpoint, and optionally stores the resulting access for API usage
