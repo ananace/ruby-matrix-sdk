@@ -137,7 +137,7 @@ module MatrixSdk
     def login(params = {})
       options = {}
       options[:store_token] = params.delete(:store_token) { true }
-      options[:store_device_id] = params.delete(:store_device_id) { true }
+      options[:store_device_id] = params.delete(:store_device_id) { options[:store_token] }
 
       data = {
         type: params.delete(:login_type) { 'm.login.password' },
