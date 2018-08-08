@@ -28,7 +28,7 @@ module MatrixSdk
       if hs_url.is_a? Api
         @api = hs_url
         params.each do |k, v|
-          @api.instance_variable_set("@#{k}", v) if @api.instance_variable_defined? "@#{k}"
+          api.instance_variable_set("@#{k}", v) if api.instance_variable_defined? "@#{k}"
         end
       else
         @api = Api.new hs_url, params
@@ -36,7 +36,7 @@ module MatrixSdk
 
       @rooms = {}
       @users = {}
-      @cache = :all
+      @cache = params.fetch(:client_cache, :all)
 
       @sync_token = nil
       @sync_thread = nil
