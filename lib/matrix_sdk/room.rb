@@ -430,7 +430,7 @@ module MatrixSdk
 
     def invite_only=(invite_only)
       self.join_rule = invite_only ? :invite : :public
-      @join_rule == :invite # rubocop:disable Lint/Void
+      @join_rule == :invite
     end
 
     def join_rule=(join_rule)
@@ -442,7 +442,7 @@ module MatrixSdk
 
     def allow_guests=(allow_guests)
       self.guest_access = (allow_guests ? :can_join : :forbidden)
-      @guest_access == :can_join # rubocop:disable Lint/Void
+      @guest_access == :can_join
     end
 
     def guest_access=(guest_access)

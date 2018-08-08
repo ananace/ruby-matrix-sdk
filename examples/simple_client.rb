@@ -32,7 +32,9 @@ class SimpleClient < MatrixSdk::Client
     when 'm.room.message'
       user = get_user event.sender
       admin_level = get_user_level(room, user.id) || 0
-      prefix = (admin_level >= 100 ? '@' : (admin_level >= 50 ? '+' : ' '))
+      prefix = ' '
+      prefix = '+' if admin_level >= 50
+      prefix = '@' if admin_level >= 100
       if %w[m.text m.notice].include? event.content[:msgtype]
         notice = event.content[:msgtype] == 'm.notice'
         puts "[#{Time.now.strftime '%H:%M'}] <#{prefix}#{user.display_name}> #{"\033[1;30m" if notice}#{event.content[:body]}#{"\033[0m" if notice}"
@@ -89,7 +91,7 @@ if $PROGRAM_NAME == __FILE__
       end
     end
   rescue Interrupt
-    puts "Interrupted, exiting..."
+    puts 'Interrupted, exiting...'
   ensure
     client.logout if client && client.logged_in?
   end

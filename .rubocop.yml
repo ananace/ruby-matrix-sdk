@@ -8,6 +8,9 @@ AllCops:
 Style/Documentation:
   Enabled: false
 
+Metrics/ClassLength:
+  Enabled: false
+
 Metrics/MethodLength:
   Max: 40
 
