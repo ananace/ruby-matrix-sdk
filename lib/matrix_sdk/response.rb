@@ -1,4 +1,23 @@
 module MatrixSdk
+  # An usability wrapper for API responses as an extended [Hash]
+  # All results can be read as both hash keys and as read-only methods on the key
+  #
+  # @example Simple usage of the response wrapper to get the avatar URL
+  #   resp = api.get_avatar_url(api.whoami?.user_id)
+  #   # => { avatar_url: 'mxc://matrix.org/SDGdghriugerRg' }
+  #   resp.is_a? Hash
+  #   # => true
+  #   resp.key? :avatar_url
+  #   # => true
+  #   resp.avatar_url
+  #   # => 'mxc://matrix.org/SDGdghriugerRg'
+  #   resp.api.set_avatar_url(...)
+  #   # => {}
+  #
+  # @since 0.0.3
+  # @see Hash
+  # @!attribute [r] api
+  #   @return [Api] The API connection that returned the response
   module Response
     def self.new(api, data)
       data.extend(Extensions)

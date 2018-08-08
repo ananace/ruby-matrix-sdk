@@ -56,7 +56,7 @@ module MatrixSdk
     end
 
     # Gets the logger for the API
-    # @return [Logging::Logger]
+    # @return [Logging::Logger] The API-scope logger
     def logger
       @logger ||= Logging.logger[self]
     end
@@ -127,13 +127,30 @@ module MatrixSdk
     end
 
     # Logs in using the client API /login endpoint, and optionally stores the resulting access for API usage
-    # @param params [Hash] The login options to use
+    #
+    # @example Logging in with username and password
+    #   api.login(user: 'example', password: 'NotARealPass')
+    #   # => { user_id: '@example:matrix.org', access_token: '...', home_server: 'matrix.org', device_id: 'ABCD123' }
+    #   api.whoami?
+    #   # => { user_id: '@example:matrix.org' }
+    #
+    # @example Advanced login, without storing details
+    #   api.whoami?
+    #   # => { user_id: '@example:matrix.org' }
+    #   api.login(medium: 'email', address: 'someone@somewhere.net', password: '...', store_token: false)
+    #   # => { user_id: '@someone:matrix.org', access_token: ...
+    #   api.whoami?.user_id
+    #   # => '@example:matrix.org'
+    #
+    # @param params [Hash] The login information to use, along with options for said log in
     # @option params [Boolean] :store_token (true) Should the resulting access token be stored for the API
-    # @option params [Boolean] :store_device_id (true) Should the resulting device ID be stored for the API
+    # @option params [Boolean] :store_device_id (store_token value) Should the resulting device ID be stored for the API
     # @option params [String] :login_type ('m.login.password') The type of login to attempt
     # @option params [String] :initial_device_display_name (USER_AGENT) The device display name to specify for this login attempt
     # @option params [String] :device_id The device ID to set on the login
-    # @return [Response]
+    # @return [Response] A response hash with the parameters :user_id, :access_token, :home_server, and :device_id.
+    # @see https://matrix.org/docs/spec/client_server/r0.3.0.html#post-matrix-client-r0-login
+    #      The Matrix Spec, for more information about the call and response
     def login(params = {})
       options = {}
       options[:store_token] = params.delete(:store_token) { true }
