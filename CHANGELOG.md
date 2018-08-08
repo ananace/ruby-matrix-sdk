@@ -4,6 +4,7 @@
 - Adds methods for checking auth status to client API
 - Adds a wrapper class for API responses to ease use
 - Adds option (and defaults) to store login details on registration
+- Allows creating a MatrixSdk::Client off of an existing MatrixSdk::Api
 - Extends event handling
 
 - Fixes batch handling in sync
