@@ -91,6 +91,12 @@ module MatrixSdk
       @client_api_versions ||= request(:get, :client, '/versions').versions
     end
 
+    # Gets the server version
+    # @note This uses the unstable federation/v1 API
+    def server_version
+      Response.new self, request(:get, :federation_v1, '/version').server
+    end
+
     # Runs the client API /sync method
     # @param params [Hash] The sync options to use
     # @option params [Numeric] :timeout (30.0) The timeout in seconds for the sync
