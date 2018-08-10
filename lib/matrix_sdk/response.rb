@@ -28,7 +28,7 @@ module MatrixSdk
     module Extensions
       attr_reader :api
 
-      def respond_to_missing?(name)
+      def respond_to_missing?(name, *args)
         key? name
       end
 
