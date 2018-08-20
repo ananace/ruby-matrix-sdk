@@ -1,4 +1,4 @@
-## v0.0.3 - **Unreleased**
+## v0.0.3 - 2018-08-14
 
 - Adds missing accessors for HTTP timeout
 - Adds methods for checking auth status to client API
