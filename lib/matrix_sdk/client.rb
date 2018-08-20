@@ -79,11 +79,23 @@ module MatrixSdk
     end
 
     def register_with_password(username, password)
+      username = username.to_s unless username.is_a?(String)
+      password = password.to_s unless password.is_a?(String)
+
+      raise ArgumentError, "Username can't be nil or empty" if username.nil? || username.empty?
+      raise ArgumentError, "Password can't be nil or empty" if password.nil? || username.empty?
+
       data = api.register(auth: { type: 'm.login.dummy' }, username: username, password: password)
       post_authentication(data)
     end
 
     def login(username, password, params = {})
+      username = username.to_s unless username.is_a?(String)
+      password = password.to_s unless password.is_a?(String)
+
+      raise ArgumentError, "Username can't be nil or empty" if username.nil? || username.empty?
+      raise ArgumentError, "Password can't be nil or empty" if password.nil? || password.empty?
+
       data = api.login(user: username, password: password)
       post_authentication(data)
 
@@ -92,6 +104,19 @@ module MatrixSdk
       sync timeout: params.fetch(:sync_timeout, 15),
            full_state: params.fetch(:full_state, false),
            allow_sync_retry: params.fetch(:allow_sync_retry, nil)
+    end
+
+    def login_with_token(username, token, params = {})
+      username = username.to_s unless username.is_a?(String)
+      token = token.to_s unless token.is_a?(String)
+
+      raise ArgumentError, "Username can't be nil or empty" if username.nil? || username.empty?
+      raise ArgumentError, "Token can't be nil or empty" if token.nil? || token.empty?
+
+      data = api.login(user: username, token: token, type: 'm.login.token')
+      post_authentication(data)
+
+      sync(timeout: params.fetch(:sync_timeout, 15), full_state: params.fetch(:full_state, false)) unless params[:no_sync]
     end
 
     def logout
