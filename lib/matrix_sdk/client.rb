@@ -79,11 +79,23 @@ module MatrixSdk
     end
 
     def register_with_password(username, password)
+      username = username.to_s unless username.is_a?(String)
+      password = password.to_s unless password.is_a?(String)
+
+      raise ArgumentError, "Username can't be nil or empty" if username.nil? || username.empty?
+      raise ArgumentError, "Password can't be nil or empty" if password.nil? || username.empty?
+
       data = api.register(auth: { type: 'm.login.dummy' }, username: username, password: password)
       post_authentication(data)
     end
 
     def login(username, password, params = {})
+      username = username.to_s unless username.is_a?(String)
+      password = password.to_s unless password.is_a?(String)
+
+      raise ArgumentError, "Username can't be nil or empty" if username.nil? || username.empty?
+      raise ArgumentError, "Password can't be nil or empty" if password.nil? || password.empty?
+
       data = api.login(user: username, password: password)
       post_authentication(data)
 
