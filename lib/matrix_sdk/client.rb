@@ -257,7 +257,7 @@ module MatrixSdk
       data = loop do
         begin
           break api.sync params.merge(extra_params)
-        rescue MatrixConnectionError => ex
+        rescue MatrixTimeoutError => ex
           raise ex if (attempts += 1) > params.fetch(:allow_sync_retry, 0)
         end
       end
