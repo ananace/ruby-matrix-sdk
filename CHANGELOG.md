@@ -1,3 +1,11 @@
+## v0.0.4 **Unreleased**
+
+- Adds a parameter to the client abstraction to allow retrying syncs on timeouts
+- Adds support for token-based login in the client abstraction
+- Adds rudimentary username and password validation in the client abstraction
+- Extends the connection exceptions with a specific timeout error
+- Fixes an exception when null values end up in the body cleaner during debugging
+
 ## v0.0.3 - 2018-08-14
 
 - Adds missing accessors for HTTP timeout

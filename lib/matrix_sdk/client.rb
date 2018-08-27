@@ -99,7 +99,11 @@ module MatrixSdk
       data = api.login(user: username, password: password)
       post_authentication(data)
 
-      sync(timeout: params.fetch(:sync_timeout, 15), full_state: params.fetch(:full_state, false)) unless params[:no_sync]
+      return if params[:no_sync]
+
+      sync timeout: params.fetch(:sync_timeout, 15),
+           full_state: params.fetch(:full_state, false),
+           allow_sync_retry: params.fetch(:allow_sync_retry, nil)
     end
 
     def login_with_token(username, token, params = {})
@@ -112,7 +116,11 @@ module MatrixSdk
       data = api.login(user: username, token: token, type: 'm.login.token')
       post_authentication(data)
 
-      sync(timeout: params.fetch(:sync_timeout, 15), full_state: params.fetch(:full_state, false)) unless params[:no_sync]
+      return if params[:no_sync]
+
+      sync timeout: params.fetch(:sync_timeout, 15),
+           full_state: params.fetch(:full_state, false),
+           allow_sync_retry: params.fetch(:allow_sync_retry, nil)
     end
 
     def logout
@@ -245,7 +253,14 @@ module MatrixSdk
         filter: sync_filter.to_json
       }
       extra_params[:since] = @next_batch unless @next_batch.nil?
-      data = api.sync params.merge(extra_params)
+      attempts = 0
+      data = loop do
+        begin
+          break api.sync params.merge(extra_params)
+        rescue MatrixTimeoutError => ex
+          raise ex if (attempts += 1) > params.fetch(:allow_sync_retry, 0)
+        end
+      end
       @next_batch = data[:next_batch]
 
       data[:presence][:events].each do |presence_update|

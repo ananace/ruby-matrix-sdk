@@ -23,6 +23,13 @@ module MatrixSdk
 
   # An error raised when errors occur in the connection layer
   class MatrixConnectionError < MatrixError
+    def self.class_by_code(code)
+      return MatrixTimeoutError if code == 504
+      MatrixConnectionError
+    end
+  end
+
+  class MatrixTimeoutError < MatrixConnectionError
   end
 
   # An error raised when the homeserver returns an unexpected response to the client
