@@ -202,6 +202,14 @@ module MatrixSdk
       request(:post, :client_r0, '/logout')
     end
 
+    # Creates a new room
+    # @param params [Hash] The room creation details
+    # @option params [Symbol] :visibility (:public) The room visibility
+    # @option params [String] :room_alias A room alias to apply on creation
+    # @option params [Boolean] :invite Should the room be created invite-only
+    # @return [Response] A response hash with ...
+    # @see https://matrix.org/docs/spec/client_server/r0.3.0.html#post-matrix-client-r0-createroom
+    #      The Matrix Spec, for more information about the call and response
     def create_room(params = {})
       content = {
         visibility: params.fetch(:visibility, :public)
