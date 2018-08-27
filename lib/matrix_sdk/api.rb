@@ -195,7 +195,9 @@ module MatrixSdk
     end
 
     # Logs out the currently logged in user
-    # @return [Response]
+    # @return [Response] An empty response if the logout was successful
+    # @see https://matrix.org/docs/spec/client_server/r0.3.0.html#post-matrix-client-r0-logout
+    #      The Matrix Spec, for more information about the call and response
     def logout
       request(:post, :client_r0, '/logout')
     end
