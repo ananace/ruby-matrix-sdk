@@ -221,11 +221,14 @@ module MatrixSdk
     end
 
     # Joins a room
-    # @param id_or_alias [String] The room ID or Alias to join
+    # @param id_or_alias [MXID,String] The room ID or Alias to join
     # @return [Response] A response hash with the parameter :room_id
     # @see https://matrix.org/docs/spec/client_server/r0.3.0.html#post-matrix-client-r0-join-roomidoralias
     #      The Matrix Spec, for more information about the call and response
     def join_room(id_or_alias)
+      # id_or_alias = MXID.new id_or_alias.to_s unless id_or_alias.is_a? MXID
+      # raise ArgumentError, 'Not a room ID or alias' unless id_or_alias.room?
+
       id_or_alias = CGI.escape id_or_alias.to_s
 
       request(:post, :client_r0, "/join/#{id_or_alias}")
