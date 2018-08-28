@@ -234,6 +234,17 @@ module MatrixSdk
       request(:post, :client_r0, "/join/#{id_or_alias}")
     end
 
+    # Sends a state event to a room
+    # @param room_id [MXID,String] The room ID to send the state event to
+    # @param event_type [String] The event type to send
+    # @param content [Hash] The content of the state event
+    # @param params [Hash] Options for the request
+    # @option params [Integer] :timestamp The timestamp when the event was created, only used for AS events
+    # @option params [String] :state_key The state key of the event, if there is one
+    # @return [Response] A response hash with the parameter :event_id
+    # @see https://matrix.org/docs/spec/client_server/r0.3.0.html#put-matrix-client-r0-rooms-roomid-state-eventtype-statekey
+    #      https://matrix.org/docs/spec/client_server/r0.3.0.html#put-matrix-client-r0-rooms-roomid-state-eventtype
+    #      The Matrix Spec, for more information about the call and response
     def send_state_event(room_id, event_type, content, params = {})
       query = {}
       query[:ts] = params[:timestamp].to_i if params.key? :timestamp
