@@ -220,6 +220,11 @@ module MatrixSdk
       request(:post, :client_r0, '/createRoom', content)
     end
 
+    # Joins a room
+    # @param id_or_alias [String] The room ID or Alias to join
+    # @return [Response] A response hash with the parameter :room_id
+    # @see https://matrix.org/docs/spec/client_server/r0.3.0.html#post-matrix-client-r0-join-roomidoralias
+    #      The Matrix Spec, for more information about the call and response
     def join_room(id_or_alias)
       id_or_alias = CGI.escape id_or_alias.to_s
 
