@@ -256,6 +256,16 @@ module MatrixSdk
       request(:put, :client_r0, "/rooms/#{room_id}/state/#{event_type}#{"/#{state_key}" unless state_key.nil?}", body: content, query: query)
     end
 
+    # Sends a message event to a room
+    # @param room_id [MXID,String] The room ID to send the message event to
+    # @param event_type [String] The event type of the message
+    # @param content [Hash] The contents of the message
+    # @param params [Hash] Options for the request
+    # @option params [Integer] :timestamp The timestamp when the event was created, only used for AS events
+    # @option params [Integer] :txn_id The exact ID of the transaction, or automatically generated
+    # @return [Response] A response hash with the parameter :event_id
+    # @see https://matrix.org/docs/spec/client_server/r0.3.0.html#put-matrix-client-r0-rooms-roomid-send-eventtype-txnid
+    #      The Matrix Spec, for more information about the call and response
     def send_message_event(room_id, event_type, content, params = {})
       query = {}
       query[:ts] = params[:timestamp].to_i if params.key? :timestamp
