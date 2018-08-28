@@ -237,7 +237,7 @@ module MatrixSdk
     # Sends a state event to a room
     # @param room_id [MXID,String] The room ID to send the state event to
     # @param event_type [String] The event type to send
-    # @param content [Hash] The content of the state event
+    # @param content [Hash] The contents of the state event
     # @param params [Hash] Options for the request
     # @option params [Integer] :timestamp The timestamp when the event was created, only used for AS events
     # @option params [String] :state_key The state key of the event, if there is one
