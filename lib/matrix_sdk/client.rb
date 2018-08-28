@@ -7,7 +7,6 @@ module MatrixSdk
     extend Forwardable
 
     attr_reader :api
-    attr_writer :mxid
     attr_accessor :cache, :sync_filter
 
     events :event, :presence_event, :invite_event, :left_event, :ephemeral_event
@@ -65,6 +64,13 @@ module MatrixSdk
       @mxid ||= begin
         api.whoami?[:user_id] if api && api.access_token
       end
+    end
+
+    def mxid=(id)
+      id = MXID.new id.to_s unless id.is_a? MXID
+      raise ArgumentError, 'Must be a User ID' unless id.user?
+
+      @mxid = id
     end
 
     alias user_id mxid
