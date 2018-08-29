@@ -307,6 +307,47 @@ module MatrixSdk
       request(:put, :client_r0, "/rooms/#{room_id}/redact/#{event_id}/#{txn_id}", body: content, query: query)
     end
 
+    # Send a content message to a room
+    #
+    # @example Sending an image to a room
+    #   send_content('!abcd123:localhost',
+    #                'mxc://localhost/1234567',
+    #                'An image of a cat',
+    #                'm.image',
+    #                extra_information: {
+    #                  h: 128,
+    #                  w: 128,
+    #                  mimetype: 'image/png',
+    #                  size: 1024
+    #                })
+    #
+    # @example Sending a file to a room
+    #   send_content('!example:localhost',
+    #                'mxc://localhost/fileurl',
+    #                'Contract.pdf',
+    #                'm.file',
+    #                extra_content: {
+    #                  filename: 'contract.pdf'
+    #                },
+    #                extra_information: {
+    #                  mimetype: 'application/pdf',
+    #                  size: 96674
+    #                })
+    #
+    # @param room_id [MXID,String] The room ID to send the content to
+    # @param url [URI,String] The URL to the content
+    # @param name [String] The name of the content
+    # @param msg_type [String] The message type of the content
+    # @param params [Hash] Options for the request
+    # @option params [Hash] :extra_information ({}) Extra information for the content
+    # @option params [Hash] :extra_content Extra data to insert into the content hash
+    # @return [Response] A response hash with the parameter :event_id
+    # @see send_message_event For more information on the underlying call
+    # @see https://matrix.org/docs/spec/client_server/r0.3.0.html#m-image
+    #      https://matrix.org/docs/spec/client_server/r0.3.0.html#m-file
+    #      https://matrix.org/docs/spec/client_server/r0.3.0.html#m-video
+    #      https://matrix.org/docs/spec/client_server/r0.3.0.html#m-audio
+    #      The Matrix Spec, for more information about the call and response
     def send_content(room_id, url, name, msg_type, params = {})
       content = {
         url: url,
@@ -314,22 +355,47 @@ module MatrixSdk
         body: name,
         info: params.delete(:extra_information) { {} }
       }
+      content.merge!(params.fetch(:extra_content)) if params.key? :extra_content
 
       send_message_event(room_id, 'm.room.message', content, params)
     end
 
+    # Send a geographic location to a room
+    #
+    # @param room_id [MXID,String] The room ID to send the location to
+    # @param geo_uri [URI,String] The geographical URI to send
+    # @param name [String] The name of the location
+    # @param params [Hash] Options for the request
+    # @option params [Hash] :extra_information ({}) Extra information for the location
+    # @option params [URI,String] :thumbnail_url The URL to a thumbnail of the location
+    # @option params [Hash] :thumbnail_info Image information about the location thumbnail
+    # @return [Response] A response hash with the parameter :event_id
+    # @see send_message_event For more information on the underlying call
+    # @see https://matrix.org/docs/spec/client_server/r0.3.0.html#m-location
+    #      The Matrix Spec, for more information about the call and response
     def send_location(room_id, geo_uri, name, params = {})
       content = {
         geo_uri: geo_uri,
         msgtype: 'm.location',
-        body: name
+        body: name,
+        info: params.delete(:extra_information) { {} }
       }
-      content[:thumbnail_url] = params.delete(:thumbnail_url) if params.key? :thumbnail_url
-      content[:thumbnail_info] = params.delete(:thumbnail_info) if params.key? :thumbnail_info
+      content[:info][:thumbnail_url] = params.delete(:thumbnail_url) if params.key? :thumbnail_url
+      content[:info][:thumbnail_info] = params.delete(:thumbnail_info) if params.key? :thumbnail_info
 
       send_message_event(room_id, 'm.room.message', content, params)
     end
 
+    # Send a plaintext message to a room
+    #
+    # @param room_id [MXID,String] The room ID to send the message to
+    # @param message [String] The message to send
+    # @param params [Hash] Options for the request
+    # @option params [String] :msg_type ('m.text') The message type to send
+    # @return [Response] A response hash with the parameter :event_id
+    # @see send_message_event For more information on the underlying call
+    # @see https://matrix.org/docs/spec/client_server/r0.3.0.html#m-text
+    #      The Matrix Spec, for more information about the call and response
     def send_message(room_id, message, params = {})
       content = {
         msgtype: params.delete(:msg_type) { 'm.text' },
@@ -338,6 +404,16 @@ module MatrixSdk
       send_message_event(room_id, 'm.room.message', content, params)
     end
 
+    # Send a plaintext emote to a room
+    #
+    # @param room_id [MXID,String] The room ID to send the message to
+    # @param emote [String] The emote to send
+    # @param params [Hash] Options for the request
+    # @option params [String] :msg_type ('m.emote') The message type to send
+    # @return [Response] A response hash with the parameter :event_id
+    # @see send_message_event For more information on the underlying call
+    # @see https://matrix.org/docs/spec/client_server/r0.3.0.html#m-emote
+    #      The Matrix Spec, for more information about the call and response
     def send_emote(room_id, emote, params = {})
       content = {
         msgtype: params.delete(:msg_type) { 'm.emote' },
@@ -346,6 +422,16 @@ module MatrixSdk
       send_message_event(room_id, 'm.room.message', content, params)
     end
 
+    # Send a plaintext notice to a room
+    #
+    # @param room_id [MXID,String] The room ID to send the message to
+    # @param notice [String] The notice to send
+    # @param params [Hash] Options for the request
+    # @option params [String] :msg_type ('m.notice') The message type to send
+    # @return [Response] A response hash with the parameter :event_id
+    # @see send_message_event For more information on the underlying call
+    # @see https://matrix.org/docs/spec/client_server/r0.3.0.html#m-notice
+    #      The Matrix Spec, for more information about the call and response
     def send_notice(room_id, notice, params = {})
       content = {
         msgtype: params.delete(:msg_type) { 'm.notice' },
