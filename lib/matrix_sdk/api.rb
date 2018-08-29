@@ -262,7 +262,7 @@ module MatrixSdk
     # @param content [Hash] The contents of the message
     # @param params [Hash] Options for the request
     # @option params [Integer] :timestamp The timestamp when the event was created, only used for AS events
-    # @option params [Integer] :txn_id The exact ID of the transaction, or automatically generated
+    # @option params [Integer] :txn_id The ID of the transaction, or automatically generated
     # @return [Response] A response hash with the parameter :event_id
     # @see https://matrix.org/docs/spec/client_server/r0.3.0.html#put-matrix-client-r0-rooms-roomid-send-eventtype-txnid
     #      The Matrix Spec, for more information about the call and response
