@@ -280,7 +280,17 @@ module MatrixSdk
       request(:put, :client_r0, "/rooms/#{room_id}/send/#{event_type}/#{txn_id}", body: content, query: query)
     end
 
-    def redact_event(room_id, event_type, params = {})
+    # Redact an event in a room
+    # @param room_id [MXID,String] The room ID to send the message event to
+    # @param event_id [String] The event ID of the event to redact
+    # @param params [Hash] Options for the request
+    # @option params [Integer] :timestamp The timestamp when the event was created, only used for AS events
+    # @option params [String] :reason The reason for the redaction
+    # @option params [Integer] :txn_id The ID of the transaction, or automatically generated
+    # @return [Response] A response hash with the parameter :event_id
+    # @see https://matrix.org/docs/spec/client_server/r0.3.0.html#put-matrix-client-r0-rooms-roomid-redact-eventid-txnid
+    #      The Matrix Spec, for more information about the call and response
+    def redact_event(room_id, event_id, params = {})
       query = {}
       query[:ts] = params[:timestamp].to_i if params.key? :timestamp
 
@@ -291,10 +301,10 @@ module MatrixSdk
       txn_id = params.fetch(:txn_id, "#{txn_id}#{Time.now.to_i}")
 
       room_id = CGI.escape room_id.to_s
-      event_type = CGI.escape event_type.to_s
+      event_id = CGI.escape event_id.to_s
       txn_id = CGI.escape txn_id.to_s
 
-      request(:put, :client_r0, "/rooms/#{room_id}/redact/#{event_type}/#{txn_id}", body: content, query: query)
+      request(:put, :client_r0, "/rooms/#{room_id}/redact/#{event_id}/#{txn_id}", body: content, query: query)
     end
 
     def send_content(room_id, url, name, msg_type, params = {})
