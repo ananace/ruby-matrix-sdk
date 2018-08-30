@@ -13,13 +13,15 @@ module MatrixSdk
       'user-agent' => USER_AGENT
     }.freeze
 
-    attr_accessor :access_token, :device_id, :autoretry, :global_headers
+    attr_accessor :access_token, :connection_address, :connection_port, :device_id, :autoretry, :global_headers
     attr_reader :homeserver, :validate_certificate, :read_timeout
 
     ignore_inspect :access_token, :logger
 
     # @param homeserver [String,URI] The URL to the Matrix homeserver, without the /_matrix/ part
     # @param params [Hash] Additional parameters on creation
+    # @option params [String] :address The connection address to the homeserver, if different to the HS URL
+    # @option params [Integer] :port The connection port to the homeserver, if different to the HS URL
     # @option params [String] :access_token The access token to use for the connection
     # @option params [String] :device_id The ID of the logged in decide to use
     # @option params [Boolean] :autoretry (true) Should requests automatically be retried in case of rate limits
@@ -41,6 +43,8 @@ module MatrixSdk
       end
       raise 'Please use the base URL for your HS (without /_matrix/)' if @homeserver.path.include? '/_matrix/'
 
+      @connection_address = params.fetch(:address, nil)
+      @connection_port = params.fetch(:port, nil)
       @access_token = params.fetch(:access_token, nil)
       @device_id = params.fetch(:device_id, nil)
       @autoretry = params.fetch(:autoretry, true)
@@ -53,6 +57,42 @@ module MatrixSdk
 
       login(user: @homeserver.user, password: @homeserver.password) if @homeserver.user && @homeserver.password && !@access_token && !params[:skip_login]
       @homeserver.userinfo = '' unless params[:skip_login]
+    end
+
+    # Create an API connection to a domain entry
+    #
+    # This will follow the server discovery spec for federation
+    #
+    # @example Opening a Matrix API connection to a homeserver
+    #   hs = MatrixSdk::API.new_for_domain 'example.com'
+    #   hs.connection_address
+    #   # => 'matrix.example.com'
+    #   hs.connection_port
+    #   # => 443
+    #
+    # @param domain [String] The domain to set up the API connection for, can contain a ':' to denote a port
+    # @param params [Hash] Additional options to pass to .new
+    # @return [API] The API connection
+    def self.new_for_domain(domain, params = {})
+      srv = if domain.include? ':'
+              addr, port = domain.split ':'
+              Resolv::DNS::Resource::IN::SRV.new 10, 1, port.to_i, addr
+            else
+              require 'resolv'
+              resolver = Resolv::DNS.new
+              begin
+                resolver.getresource("_matrix._tcp.#{domain}")
+              rescue Resolv::ResolvError
+                Resolv::DNS::Resource::IN::SRV.new 10, 1, 8448, domain
+              end
+            end
+
+      domain = domain.split(':').first if domain.include? ':'
+      new("https://#{domain}",
+          params.merge(
+            address: srv.target.to_s,
+            port: srv.port
+          ))
     end
 
     # Gets the logger for the API
@@ -826,7 +866,7 @@ module MatrixSdk
     end
 
     def http
-      @http ||= Net::HTTP.new homeserver.host, homeserver.port
+      @http ||= Net::HTTP.new (@connection_address || homeserver.host), (@connection_port || homeserver.port)
       return @http if @http.active?
 
       @http.read_timeout = read_timeout
