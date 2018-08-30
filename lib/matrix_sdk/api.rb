@@ -467,6 +467,13 @@ module MatrixSdk
       request(:get, :client_r0, "/rooms/#{room_id}/messages", query: query)
     end
 
+    # Reads the latest instance of a room state event
+    #
+    # @param room_id [MXID,String] The room ID to read from
+    # @param state_type [String] The state type to read
+    # @return [Response] A response hash with the contents of the state event
+    # @see https://matrix.org/docs/spec/client_server/r0.3.0.html#get-matrix-client-r0-rooms-roomid-state-eventtype
+    #      The Matrix Spec, for more information about the call and response
     def get_room_state(room_id, state_type)
       room_id = CGI.escape room_id.to_s
       state_type = CGI.escape state_type.to_s
