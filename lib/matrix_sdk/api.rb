@@ -440,6 +440,18 @@ module MatrixSdk
       send_message_event(room_id, 'm.room.message', content, params)
     end
 
+    # Retrieve additional messages in a room
+    #
+    # @param room_id [MXID,String] The room ID to retrieve messages for
+    # @param token [String] The token to start retrieving from, can be from a sync or from an earlier get_room_messages call
+    # @param direction [:b,:f] The direction to retrieve messages
+    # @param params [Hash] Additional options for the request
+    # @option params [Integer] :limit (10) The limit of messages to retrieve
+    # @option params [String] :to A token to limit retrieval to
+    # @option params [String] :filter A filter to limit the retrieval to
+    # @return [Response] A response hash with the message information containing :start, :end, and :chunk fields
+    # @see https://matrix.org/docs/spec/client_server/r0.3.0.html#get-matrix-client-r0-rooms-roomid-messages
+    #      The Matrix Spec, for more information about the call and response
     def get_room_messages(room_id, token, direction, params = {})
       query = {
         roomId: room_id,
@@ -448,6 +460,7 @@ module MatrixSdk
         limit: params.fetch(:limit, 10)
       }
       query[:to] = params[:to] if params.key? :to
+      query[:filter] = params.fetch(:filter) if params.key? :filter
 
       room_id = CGI.escape room_id.to_s
 
