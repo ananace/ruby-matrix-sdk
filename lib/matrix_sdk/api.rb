@@ -481,6 +481,13 @@ module MatrixSdk
       request(:get, :client_r0, "/rooms/#{room_id}/state/#{state_type}")
     end
 
+    # Gets the display name of a room
+    #
+    # @param room_id [MXID,String] The room ID to look up
+    # @return [Response] A response hash with the parameter :name
+    # @see get_room_state
+    # @see https://matrix.org/docs/spec/client_server/r0.3.0.html#m-room-name
+    #      The Matrix Spec, for more information about the event and data
     def get_room_name(room_id)
       get_room_state(room_id, 'm.room.name')
     end
