@@ -4,6 +4,10 @@ AllCops:
     - '*.spec'
     - 'Rakefile'
 
+# Broken in CI
+Lint/Void:
+  Enabled: false
+
 # Don't enforce documentation
 Style/Documentation:
   Enabled: false
@@ -12,7 +16,7 @@ Metrics/ClassLength:
   Enabled: false
 
 Metrics/MethodLength:
-  Max: 40
+  Max: 50
 
 Metrics/LineLength:
   Max: 190

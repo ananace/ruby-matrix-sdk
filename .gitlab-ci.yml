@@ -14,7 +14,7 @@ rubocop:
   before_script: []
   script:
     - gem install rubocop --no-ri --no-rdoc
-    - rubocop
+    - rubocop lib
 
 # rspec:
 #   script:

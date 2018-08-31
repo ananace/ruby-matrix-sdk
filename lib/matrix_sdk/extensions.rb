@@ -56,7 +56,7 @@ def ignore_inspect(*symbols)
         .reject { |f| %i[#{symbols.map { |s| "@#{s}" }.join ' '}].include? f }
         .map { |f| "\#{f}=\#{instance_variable_get(f).inspect}" }.join " " }}>"
     end
-  *, __FILE__, __LINE__ - 4
+  *, __FILE__, __LINE__ - 6
 end
 
 module MatrixSdk

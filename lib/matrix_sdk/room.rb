@@ -149,7 +149,7 @@ module MatrixSdk
     #      Possible message types as defined by the spec
     def send_html(html, body = nil, msg_type = 'm.text')
       content = {
-        body: body ? body : html.gsub(/<\/?[^>]*>/, ''),
+        body: body || html.gsub(/<\/?[^>]*>/, ''),
         msgtype: msg_type,
         format: 'org.matrix.custom.html',
         formatted_body: html
