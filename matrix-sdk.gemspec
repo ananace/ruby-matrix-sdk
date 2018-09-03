@@ -21,4 +21,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'mocha'
   spec.add_development_dependency 'rake'
   spec.add_development_dependency 'test-unit'
+
+  # TODO: Put this in a better location
+  spec.add_development_dependency 'ci_reporter_test_unit'
 end
