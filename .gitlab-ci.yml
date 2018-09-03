@@ -18,6 +18,7 @@ rubocop:
 
 test:
   script:
+  - gem install ci_reporter_test_unit --no-ri --no-rdoc
   - GENERATE_REPORTS=true CI_REPORTS=reports rake test
   artifacts:
     reports:
