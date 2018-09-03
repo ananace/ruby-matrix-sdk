@@ -18,8 +18,8 @@ rubocop:
 
 test:
   script:
-  - gem install ci_reporter_test_unit mocha test-unit --no-ri --no-rdoc
-  - GENERATE_REPORTS=true CI_REPORTS=reports rake test
+  - gem install ci_reporter_test_unit --no-ri --no-rdoc
+  - GENERATE_REPORTS=true CI_REPORTS=reports bundle exec rake test
   artifacts:
     reports:
       junit: "reports/TEST-*.xml"
