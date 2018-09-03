@@ -34,13 +34,7 @@ module MatrixSdk
     def initialize(homeserver, params = {})
       @homeserver = homeserver
       @homeserver = URI.parse("#{'https://' unless @homeserver.start_with? 'http'}#{@homeserver}") unless @homeserver.is_a? URI
-      if @homeserver.path.end_with? '_matrix/'
-        @homeserver.path = begin
-          split = @homeserver.path.rpartition '_matrix/'
-          (split[(split.find_index '_matrix/')] = '/') rescue nil
-          split.join
-        end
-      end
+      @homeserver.path.gsub!(/\/?_matrix\/?/, '') if @homeserver.path =~ /_matrix\/?$/
       raise 'Please use the base URL for your HS (without /_matrix/)' if @homeserver.path.include? '/_matrix/'
 
       @connection_address = params.fetch(:address, nil)
