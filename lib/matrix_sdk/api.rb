@@ -55,7 +55,7 @@ module MatrixSdk
 
     # Create an API connection to a domain entry
     #
-    # This will follow the server discovery spec for federation
+    # This will follow the server discovery spec for client-server and federation
     #
     # @example Opening a Matrix API connection to a homeserver
     #   hs = MatrixSdk::API.new_for_domain 'example.com'
@@ -68,6 +68,7 @@ module MatrixSdk
     # @param params [Hash] Additional options to pass to .new
     # @return [API] The API connection
     def self.new_for_domain(domain, params = {})
+      # Attempt SRV record discovery
       srv = if domain.include? ':'
               addr, port = domain.split ':'
               Resolv::DNS::Resource::IN::SRV.new 10, 1, port.to_i, addr
@@ -77,9 +78,26 @@ module MatrixSdk
               begin
                 resolver.getresource("_matrix._tcp.#{domain}")
               rescue Resolv::ResolvError
-                Resolv::DNS::Resource::IN::SRV.new 10, 1, 8448, domain
+                nil
               end
             end
+
+      # Attempt .well-known discovery
+      if srv.nil?
+        well_known = begin
+                       data = Net::HTTP.get("https://#{domain}/.well-known/matrix/client")
+                       JSON.parse(data)
+                     rescue
+                       nil
+                     end
+
+        return new(well_known['m.homeserver']['base_url']) if well_known &&
+                                                              well_known.key?('m.homeserver') &&
+                                                              well_known['m.homerserver'].key?('base_url')
+      end
+
+      # Fall back to A record on domain
+      srv ||= Resolv::DNS::Resource::IN::SRV.new 10, 1, 8448, domain
 
       domain = domain.split(':').first if domain.include? ':'
       new("https://#{domain}",
