@@ -87,7 +87,7 @@ module MatrixSdk
         well_known = begin
                        data = Net::HTTP.get("https://#{domain}/.well-known/matrix/client")
                        JSON.parse(data)
-                     rescue
+                     rescue StandardError
                        nil
                      end
 
