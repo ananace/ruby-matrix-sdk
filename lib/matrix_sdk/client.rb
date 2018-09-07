@@ -19,7 +19,7 @@ module MatrixSdk
                    :access_token, :access_token=, :device_id, :device_id=, :homeserver, :homeserver=,
                    :validate_certificate, :validate_certificate=
 
-    # @param hs_url [String,URI] The URL to the Matrix homeserver, without the /_matrix/ part
+    # @param hs_url [String,URI,Api] The URL to the Matrix homeserver, without the /_matrix/ part, or an existing Api instance
     # @param params [Hash] Additional parameters on creation
     # @option params [String,MXID] :user_id The user ID of the logged-in user
     # @option params [:all,:some:non] :client_cache (:all) How much data should be cached in the client
