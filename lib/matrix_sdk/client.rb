@@ -19,6 +19,12 @@ module MatrixSdk
                    :access_token, :access_token=, :device_id, :device_id=, :homeserver, :homeserver=,
                    :validate_certificate, :validate_certificate=
 
+    # @param hs_url [String,URI] The URL to the Matrix homeserver, without the /_matrix/ part
+    # @param params [Hash] Additional parameters on creation
+    # @option params [String,MXID] :user_id The user ID of the logged-in user
+    # @option params [:all,:some:non] :client_cache (:all) How much data should be cached in the client
+    # @option params [Integer] :sync_filter_limit (20) Limit of timeline entries in syncs
+    # @see MatrixSdk::Api.new for additional usable params
     def initialize(hs_url, params = {})
       event_initialize
 
