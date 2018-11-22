@@ -13,8 +13,6 @@ module MatrixSdk
     ignore_inspect :api,
                    :on_event, :on_presence_event, :on_invite_event, :on_left_event, :on_ephemeral_event
 
-    alias user_id= mxid=
-
     def_delegators :@api,
                    :access_token, :access_token=, :device_id, :device_id=, :homeserver, :homeserver=,
                    :validate_certificate, :validate_certificate=
@@ -80,6 +78,7 @@ module MatrixSdk
     end
 
     alias user_id mxid
+    alias user_id= mxid=
 
     def rooms
       @rooms.values
@@ -197,16 +196,16 @@ module MatrixSdk
     private
 
     def listen_forever(params = {})
-      timeout = params.fetch(:timeout, 30)
-      params[:bad_sync_timeout] = params.fetch(:bad_sync_timeout, 5)
-      params[:sync_interval] = params.fetch(:sync_interval, 30)
+      timeout = params.delete(:timeout) { 30 }
+      bad_sync_timeout = params.delete(:bad_sync_timeout) { 5 }
+      sync_interval = params.delete(:sync_interval) { 30 }
 
-      bad_sync_timeout = params[:bad_sync_timeout]
       while @should_listen
         begin
-          sync(timeout: timeout)
+          sync(params.merge(timeout: timeout))
+
           bad_sync_timeout = params[:bad_sync_timeout]
-          sleep(params[:sync_interval]) if params[:sync_interval] > 0
+          sleep(sync_interval) if sync_interval > 0
         rescue MatrixRequestError => ex
           logger.warn("A #{ex.class} occurred during sync")
           if ex.httpstatus >= 500
@@ -265,16 +264,23 @@ module MatrixSdk
         filter: sync_filter.to_json
       }
       extra_params[:since] = @next_batch unless @next_batch.nil?
+      skip_store_batch = params.delete(:skip_store_batch) { false }
+
       attempts = 0
       data = loop do
         begin
-          break api.sync params.merge(extra_params)
+          break api.sync extra_params.merge(params)
         rescue MatrixTimeoutError => ex
           raise ex if (attempts += 1) > params.fetch(:allow_sync_retry, 0)
         end
       end
-      @next_batch = data[:next_batch]
 
+      @next_batch = data[:next_batch] unless skip_store_batch
+
+      handle_sync_response(data)
+    end
+
+    def handle_sync_response(data)
       data[:presence][:events].each do |presence_update|
         fire_presence_event(MatrixEvent.new(self, presence_update))
       end
