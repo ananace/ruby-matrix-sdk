@@ -12,7 +12,11 @@ ROOM_DISCOVERY_FILTER = {
     ephemeral: { senders: [], types: [] },
     state: {
       senders: [],
-      types: ['m.room.member']
+      types: [
+        'm.room.aliases',
+        'm.room.canonical_alias',
+        'm.room.member'
+      ]
     },
     timeline: { senders: [], types: [] },
     account_data: { senders: [], types: [] }
