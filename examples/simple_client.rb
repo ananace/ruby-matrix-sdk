@@ -3,19 +3,57 @@
 require 'io/console'
 require 'matrix_sdk'
 
+# A filter to only discover joined rooms
+ROOM_DISCOVERY_FILTER = {
+  event_fields: %w[sender membership],
+  presence: { senders: [], types: [] },
+  account_data: { senders: [], types: [] },
+  room: {
+    ephemeral: { senders: [], types: [] },
+    state: {
+      senders: [],
+      types: ['m.room.member']
+    },
+    timeline: { senders: [], types: [] },
+    account_data: { senders: [], types: [] }
+  }
+}.freeze
+
+# A filter to only retrieve messages from rooms
+ROOM_STATE_FILTER = {
+  presence: { senders: [], types: [] },
+  account_data: { senders: [], types: [] },
+  room: {
+    ephemeral: { senders: [], types: [] },
+    state: {
+      types: ['m.room.member']
+    },
+    timeline: {
+      types: ['m.room.message']
+    },
+    account_data: { senders: [], types: [] }
+  }
+}.freeze
+
+
 class SimpleClient < MatrixSdk::Client
   def initialize(hs_url)
     super hs_url, sync_filter_limit: 10
 
     @pls = {}
+    @tracked_rooms = []
+    @filter = ROOM_STATE_FILTER.dup
   end
 
   def add_listener(room)
     room.on_event.add_handler { |ev| on_message(room, ev) }
+    @tracked_rooms << room.id
   end
 
   def run
-    start_listener_thread
+    # Only track messages from the listened rooms
+    @filter[:room][:rooms] = @tracked_rooms
+    start_listener_thread(filter: @filter.to_json)
   end
 
   private
@@ -64,7 +102,12 @@ if $PROGRAM_NAME == __FILE__
     password = STDIN.noecho(&:gets).strip
 
     puts 'Logging in...'
-    client.login(user, password, sync_timeout: 5)
+    client.login(user, password, no_sync: true)
+
+    # Only retrieve list of joined room in first sync
+    sync_filter = client.sync_filter.merge(ROOM_DISCOVERY_FILTER)
+    sync_filter[:room][:state][:senders] << client.mxid
+    client.listen_for_events(5, filter: sync_filter.to_json)
 
     puts 'Finding room...'
     room = client.find_room(ARGV.last)
