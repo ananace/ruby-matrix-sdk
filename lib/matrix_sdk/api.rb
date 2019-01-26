@@ -685,9 +685,12 @@ module MatrixSdk
       request(:put, :client_r0, "/user/#{user_id}/rooms/#{room_id}/tags/#{tag}", body: content)
     end
 
-    # def get_account_data(user_id, type)
-    #   request(:get, :client_r0, "/user/#{user_id}/account_data/#{type}")
-    # end
+    def get_account_data(user_id, type_key)
+      user_id = CGI.escape user_id.to_s
+      type_key = CGI.escape type_key.to_s
+
+      request(:get, :client_r0, "/user/#{user_id}/account_data/#{type_key}")
+    end
 
     def set_account_data(user_id, type_key, account_data)
       user_id = CGI.escape user_id.to_s
@@ -696,9 +699,13 @@ module MatrixSdk
       request(:put, :client_r0, "/user/#{user_id}/account_data/#{type_key}", body: account_data)
     end
 
-    # def get_room_account_data(user_id, room_id, type)
-    #   request(:get, :client_r0, "/user/#{user_id}/rooms/#{room_id}/account_data/#{type}")
-    # end
+    def get_room_account_data(user_id, room_id, type_key)
+      user_id = CGI.escape user_id.to_s
+      room_id = CGI.escape room_id.to_s
+      type_key = CGI.escape type_key.to_s
+
+      request(:get, :client_r0, "/user/#{user_id}/rooms/#{room_id}/account_data/#{type_key}")
+    end
 
     def set_room_account_data(user_id, room_id, type_key, account_data)
       user_id = CGI.escape user_id.to_s
