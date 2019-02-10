@@ -21,6 +21,7 @@ module MatrixSdk
 
     # @param homeserver [String,URI] The URL to the Matrix homeserver, without the /_matrix/ part
     # @param params [Hash] Additional parameters on creation
+    # @option params [Symbol[]] :protocols The protocols to include (:AS, :CS, :IS, :SS), defaults to :CS
     # @option params [String] :address The connection address to the homeserver, if different to the HS URL
     # @option params [Integer] :port The connection port to the homeserver, if different to the HS URL
     # @option params [String] :access_token The access token to use for the connection
@@ -38,6 +39,11 @@ module MatrixSdk
       @homeserver = URI.parse("#{'https://' unless @homeserver.start_with? 'http'}#{@homeserver}") unless @homeserver.is_a? URI
       @homeserver.path.gsub!(/\/?_matrix\/?/, '') if @homeserver.path =~ /_matrix\/?$/
       raise 'Please use the base URL for your HS (without /_matrix/)' if @homeserver.path.include? '/_matrix/'
+
+      @protocols = params.fetch(:protocols, %i[CS])
+      @protocols.sort.reverse.each do |prot|
+        extend MatrixSdk::Protocols.const_get(prot)
+      end
 
       @connection_address = params.fetch(:address, nil)
       @connection_port = params.fetch(:port, nil)
