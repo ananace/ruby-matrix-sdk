@@ -15,7 +15,7 @@ module MatrixSdk
     }.freeze
 
     attr_accessor :access_token, :connection_address, :connection_port, :device_id, :autoretry, :global_headers
-    attr_reader :homeserver, :validate_certificate, :read_timeout, :well_known
+    attr_reader :homeserver, :validate_certificate, :read_timeout, :protocols, :well_known
 
     ignore_inspect :access_token, :logger
 
@@ -138,6 +138,10 @@ module MatrixSdk
             address: target_uri.host,
             port: target_uri.port
           ))
+    end
+
+    def protocol?(protocol)
+      protocols.include? protocol
     end
 
     # Gets the logger for the API

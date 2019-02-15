@@ -42,6 +42,7 @@ module MatrixSdk::Protocols::CS
 
     query[:timeout] = ((query[:timeout] || 30) * 1000).to_i
     query[:timeout] = params.delete(:timeout_ms).to_i if params.key? :timeout_ms
+    query[:user_id] = params.delete(:user_id) if protocols?(:AS) && params.key?(:user_id)
 
     request(:get, :client_r0, '/sync', query: query)
   end
@@ -63,7 +64,7 @@ module MatrixSdk::Protocols::CS
   #      For options that are permitted in this call
   def register(params = {})
     kind = params.delete(:kind) { 'user' }
-    store_token = params.delete(:store_token) { true }
+    store_token = params.delete(:store_token) { !protocol?(:AS) }
     store_device_id = params.delete(:store_device_id) { store_token }
 
     request(:post, :client_r0, '/register', body: params, query: { kind: kind }).tap do |resp|
@@ -159,7 +160,6 @@ module MatrixSdk::Protocols::CS
   # @param event_type [String] The event type to send
   # @param content [Hash] The contents of the state event
   # @param params [Hash] Options for the request
-  # @option params [Integer] :timestamp The timestamp when the event was created, only used for AS events
   # @option params [String] :state_key The state key of the event, if there is one
   # @return [Response] A response hash with the parameter :event_id
   # @see https://matrix.org/docs/spec/client_server/r0.3.0.html#put-matrix-client-r0-rooms-roomid-state-eventtype-statekey
@@ -167,7 +167,7 @@ module MatrixSdk::Protocols::CS
   #      The Matrix Spec, for more information about the call and response
   def send_state_event(room_id, event_type, content, params = {})
     query = {}
-    query[:ts] = params[:timestamp].to_i if params.key? :timestamp
+    query[:user_id] = params.delete(:user_id) if protocols?(:AS) && params.key?(:user_id)
 
     room_id = CGI.escape room_id.to_s
     event_type = CGI.escape event_type.to_s
@@ -181,14 +181,13 @@ module MatrixSdk::Protocols::CS
   # @param event_type [String] The event type of the message
   # @param content [Hash] The contents of the message
   # @param params [Hash] Options for the request
-  # @option params [Integer] :timestamp The timestamp when the event was created, only used for AS events
   # @option params [Integer] :txn_id The ID of the transaction, or automatically generated
   # @return [Response] A response hash with the parameter :event_id
   # @see https://matrix.org/docs/spec/client_server/r0.3.0.html#put-matrix-client-r0-rooms-roomid-send-eventtype-txnid
   #      The Matrix Spec, for more information about the call and response
   def send_message_event(room_id, event_type, content, params = {})
     query = {}
-    query[:ts] = params[:timestamp].to_i if params.key? :timestamp
+    query[:user_id] = params.delete(:user_id) if protocols?(:AS) && params.key?(:user_id)
 
     txn_id = transaction_id
     txn_id = params.fetch(:txn_id, "#{txn_id}#{Time.now.to_i}")
@@ -204,7 +203,6 @@ module MatrixSdk::Protocols::CS
   # @param room_id [MXID,String] The room ID to send the message event to
   # @param event_id [String] The event ID of the event to redact
   # @param params [Hash] Options for the request
-  # @option params [Integer] :timestamp The timestamp when the event was created, only used for AS events
   # @option params [String] :reason The reason for the redaction
   # @option params [Integer] :txn_id The ID of the transaction, or automatically generated
   # @return [Response] A response hash with the parameter :event_id
@@ -212,7 +210,7 @@ module MatrixSdk::Protocols::CS
   #      The Matrix Spec, for more information about the call and response
   def redact_event(room_id, event_id, params = {})
     query = {}
-    query[:ts] = params[:timestamp].to_i if params.key? :timestamp
+    query[:user_id] = params.delete(:user_id) if protocols?(:AS) && params.key?(:user_id)
 
     content = {}
     content[:reason] = params[:reason] if params[:reason]
@@ -381,6 +379,7 @@ module MatrixSdk::Protocols::CS
     }
     query[:to] = params[:to] if params.key? :to
     query[:filter] = params.fetch(:filter) if params.key? :filter
+    query[:user_id] = params.delete(:user_id) if protocols?(:AS) && params.key?(:user_id)
 
     room_id = CGI.escape room_id.to_s
 
@@ -488,20 +487,24 @@ module MatrixSdk::Protocols::CS
       user_id: user_id,
       reason: params[:reason] || ''
     }
+    query = {}
+    query[:user_id] = params.delete(:user_id) if protocols?(:AS) && params.key?(:user_id)
 
     room_id = CGI.escape room_id.to_s
 
-    request(:post, :client_r0, "/rooms/#{room_id}/ban", body: content)
+    request(:post, :client_r0, "/rooms/#{room_id}/ban", body: content, query: query)
   end
 
   def unban_user(room_id, user_id)
     content = {
       user_id: user_id
     }
+    query = {}
+    query[:user_id] = params.delete(:user_id) if protocols?(:AS) && params.key?(:user_id)
 
     room_id = CGI.escape room_id.to_s
 
-    request(:post, :client_r0, "/rooms/#{room_id}/unban", body: content)
+    request(:post, :client_r0, "/rooms/#{room_id}/unban", body: content, query: query)
   end
 
   def get_user_tags(user_id, room_id)
@@ -633,16 +636,21 @@ module MatrixSdk::Protocols::CS
     content = {
       room_id: room_id
     }
+    query = {}
+    query[:user_id] = params.delete(:user_id) if protocols?(:AS) && params.key?(:user_id)
 
     room_alias = CGI.escape room_alias.to_s
 
-    request(:put, :client_r0, "/directory/room/#{room_alias}", body: content)
+    request(:put, :client_r0, "/directory/room/#{room_alias}", body: content, query: query)
   end
 
   def remove_room_alias(room_alias)
+    query = {}
+    query[:user_id] = params.delete(:user_id) if protocols?(:AS) && params.key?(:user_id)
+
     room_alias = CGI.escape room_alias.to_s
 
-    request(:delete, :client_r0, "/directory/room/#{room_alias}")
+    request(:delete, :client_r0, "/directory/room/#{room_alias}", query: query)
   end
 
   def get_room_members(room_id)
@@ -667,7 +675,10 @@ module MatrixSdk::Protocols::CS
     send_state_event(room_id, 'm.room.guest_access', content)
   end
 
-  def whoami?
-    request(:get, :client_r0, '/account/whoami')
+  def whoami?(params = {})
+    query = {}
+    query[:user_id] = params.delete(:user_id) if protocols?(:AS) && params.key?(:user_id)
+
+    request(:get, :client_r0, '/account/whoami', query: query)
   end
 end

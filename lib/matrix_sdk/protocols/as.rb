@@ -1,3 +1,5 @@
 module MatrixSdk::Protocols::AS
-  raise 'Not implemented yet'
+  def self.extended(_klass)
+    # XXX
+  end
 end
