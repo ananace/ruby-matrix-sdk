@@ -7,20 +7,20 @@ cache:
     - vendor/ruby
 
 before_script:
-  - gem install bundler --no-ri --no-rdoc
+  - gem install bundler -N
   - bundle install -j $(nproc) --path vendor
 
 rubocop:
   before_script: []
   script:
-    - gem install rubocop --no-ri --no-rdoc
+    - gem install rubocop -N
     - rubocop lib
 
 test:
   script:
-  # Remove deprecation warning for ci_reporter
-  - sed -e 's/File.exists?/File.exist?/' -i vendor/ruby/*/gems/ci_reporter-*/lib/ci/reporter/report_manager.rb
-  - GENERATE_REPORTS=true CI_REPORTS=reports bundle exec rake test
+    # Remove deprecation warning for ci_reporter
+    - sed -e 's/File.exists?/File.exist?/' -i 'vendor/ruby/*/gems/ci_reporter-*/lib/ci/reporter/report_manager.rb'
+    - GENERATE_REPORTS=true CI_REPORTS=reports bundle exec rake test
   artifacts:
     reports:
       junit: "reports/TEST-*.xml"
@@ -29,7 +29,7 @@ pages:
   stage: deploy
   before_script: []
   script:
-    - gem install yard
+    - gem install yard -N
     - yard doc -o public/
   artifacts:
     paths:
