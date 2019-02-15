@@ -18,8 +18,6 @@ rubocop:
 
 test:
   script:
-    # Remove deprecation warning for ci_reporter
-    - sed -e 's/File.exists?/File.exist?/' -i 'vendor/ruby/*/gems/ci_reporter-*/lib/ci/reporter/report_manager.rb'
     - GENERATE_REPORTS=true CI_REPORTS=reports bundle exec rake test
   artifacts:
     reports:
