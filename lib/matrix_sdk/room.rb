@@ -348,7 +348,21 @@ module MatrixSdk
     end
 
     def tags
-      client.api.get_user_tags(client.mxid, id)
+      client.api.get_user_tags(client.mxid, id)[:tags].tap do |tag_obj|
+        tag_obj.instance_variable_set(:@room, self)
+        tag_obj.define_singleton_method(:room) do
+          @room
+        end
+        tag_obj.define_singleton_method(:add) do |tag, params = {}|
+          @room.add_tag(tag.to_s.to_sym, params)
+          self[tag.to_s.to_sym] = params
+          self
+        end
+        tag_obj.define_singleton_method(:remove) do |tag|
+          @room.remove_tag(tag.to_s.to_sym)
+          delete tag.to_s.to_sym
+        end
+      end
     end
 
     def remove_tag(tag)
