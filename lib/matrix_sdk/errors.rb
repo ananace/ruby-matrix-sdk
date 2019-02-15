@@ -25,6 +25,7 @@ module MatrixSdk
   class MatrixConnectionError < MatrixError
     def self.class_by_code(code)
       return MatrixTimeoutError if code == 504
+
       MatrixConnectionError
     end
   end

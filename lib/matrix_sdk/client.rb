@@ -57,6 +57,7 @@ module MatrixSdk
       raise ArgumentError, 'Cache value must be one of of [:all, :some, :none]' unless %i[all some none].include? @cache
 
       return unless params[:user_id]
+
       @mxid = params[:user_id]
     end
 
@@ -172,6 +173,7 @@ module MatrixSdk
     def upload(content, content_type)
       data = api.media_upload(content, content_type)
       return data[:content_uri] if data.key? :content_uri
+
       raise MatrixUnexpectedResponseError, 'Upload succeeded, but no media URI returned'
     end
 
@@ -188,6 +190,7 @@ module MatrixSdk
 
     def stop_listener_thread
       return unless @sync_thread
+
       @should_listen = false
       @sync_thread.join if @sync_thread.alive?
       @sync_thread = nil

@@ -34,6 +34,7 @@ module MatrixSdk
 
       def method_missing(name, *args)
         return fetch(name) if key?(name) && args.empty?
+
         super
       end
     end
