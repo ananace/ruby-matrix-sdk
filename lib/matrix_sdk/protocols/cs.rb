@@ -132,13 +132,16 @@ module MatrixSdk::Protocols::CS
   # @see https://matrix.org/docs/spec/client_server/r0.3.0.html#post-matrix-client-r0-createroom
   #      The Matrix Spec, for more information about the call and response
   def create_room(params = {})
+    query = {}
+    query[:user_id] = params.delete(:user_id) if protocols?(:AS) && params.key?(:user_id)
+
     content = {
       visibility: params.fetch(:visibility, :public)
     }
     content[:room_alias_name] = params[:room_alias] if params[:room_alias]
     content[:invite] = [params[:invite]].flatten if params[:invite]
 
-    request(:post, :client_r0, '/createRoom', content)
+    request(:post, :client_r0, '/createRoom', content, query: query)
   end
 
   # Joins a room
@@ -146,13 +149,16 @@ module MatrixSdk::Protocols::CS
   # @return [Response] A response hash with the parameter :room_id
   # @see https://matrix.org/docs/spec/client_server/r0.3.0.html#post-matrix-client-r0-join-roomidoralias
   #      The Matrix Spec, for more information about the call and response
-  def join_room(id_or_alias)
+  def join_room(id_or_alias, params = {})
+    query = {}
+    query[:user_id] = params.delete(:user_id) if protocols?(:AS) && params.key?(:user_id)
+
     # id_or_alias = MXID.new id_or_alias.to_s unless id_or_alias.is_a? MXID
     # raise ArgumentError, 'Not a room ID or alias' unless id_or_alias.room?
 
     id_or_alias = CGI.escape id_or_alias.to_s
 
-    request(:post, :client_r0, "/join/#{id_or_alias}")
+    request(:post, :client_r0, "/join/#{id_or_alias}", query: query)
   end
 
   # Sends a state event to a room
@@ -393,11 +399,14 @@ module MatrixSdk::Protocols::CS
   # @return [Response] A response hash with the contents of the state event
   # @see https://matrix.org/docs/spec/client_server/r0.3.0.html#get-matrix-client-r0-rooms-roomid-state-eventtype
   #      The Matrix Spec, for more information about the call and response
-  def get_room_state(room_id, state_type)
+  def get_room_state(room_id, state_type, params = {})
+    query = {}
+    query[:user_id] = params.delete(:user_id) if protocols?(:AS) && params.key?(:user_id)
+
     room_id = CGI.escape room_id.to_s
     state_type = CGI.escape state_type.to_s
 
-    request(:get, :client_r0, "/rooms/#{room_id}/state/#{state_type}")
+    request(:get, :client_r0, "/rooms/#{room_id}/state/#{state_type}", query: query)
   end
 
   # Gets the display name of a room
@@ -407,8 +416,8 @@ module MatrixSdk::Protocols::CS
   # @see get_room_state
   # @see https://matrix.org/docs/spec/client_server/r0.3.0.html#m-room-name
   #      The Matrix Spec, for more information about the event and data
-  def get_room_name(room_id)
-    get_room_state(room_id, 'm.room.name')
+  def get_room_name(room_id, params = {})
+    get_room_state(room_id, 'm.room.name', params)
   end
 
   def set_room_name(room_id, name, params = {})
@@ -418,8 +427,8 @@ module MatrixSdk::Protocols::CS
     send_state_event(room_id, 'm.room.name', content, params)
   end
 
-  def get_room_topic(room_id)
-    get_room_state(room_id, 'm.room.topic')
+  def get_room_topic(room_id, params = {})
+    get_room_state(room_id, 'm.room.topic', params)
   end
 
   def set_room_topic(room_id, topic, params = {})
@@ -429,46 +438,58 @@ module MatrixSdk::Protocols::CS
     send_state_event(room_id, 'm.room.topic', content, params)
   end
 
-  def get_power_levels(room_id)
-    get_room_state(room_id, 'm.room.power_levels')
+  def get_power_levels(room_id, params = {})
+    get_room_state(room_id, 'm.room.power_levels', params)
   end
 
-  def set_power_levels(room_id, content)
+  def set_power_levels(room_id, content, params = {})
     content[:events] = {} unless content.key? :events
-    send_state_event(room_id, 'm.room.power_levels', content)
+    send_state_event(room_id, 'm.room.power_levels', content, params)
   end
 
-  def leave_room(room_id)
+  def leave_room(room_id, params = {})
+    query = {}
+    query[:user_id] = params.delete(:user_id) if protocols?(:AS) && params.key?(:user_id)
+
     room_id = CGI.escape room_id.to_s
 
-    request(:post, :client_r0, "/rooms/#{room_id}/leave")
+    request(:post, :client_r0, "/rooms/#{room_id}/leave", query: query)
   end
 
-  def forget_room(room_id)
+  def forget_room(room_id, params = {})
+    query = {}
+    query[:user_id] = params.delete(:user_id) if protocols?(:AS) && params.key?(:user_id)
+
     room_id = CGI.escape room_id.to_s
 
-    request(:post, :client_r0, "/rooms/#{room_id}/forget")
+    request(:post, :client_r0, "/rooms/#{room_id}/forget", query: query)
   end
 
-  def invite_user(room_id, user_id)
+  def invite_user(room_id, user_id, params = {})
+    query = {}
+    query[:user_id] = params.delete(:user_id) if protocols?(:AS) && params.key?(:user_id)
+
     content = {
       user_id: user_id
     }
 
     room_id = CGI.escape room_id.to_s
 
-    request(:post, :client_r0, "/rooms/#{room_id}/invite", body: content)
+    request(:post, :client_r0, "/rooms/#{room_id}/invite", body: content, query: query)
   end
 
   def kick_user(room_id, user_id, params = {})
     set_membership(room_id, user_id, 'leave', params)
   end
 
-  def get_membership(room_id, user_id)
+  def get_membership(room_id, user_id, params = {})
+    query = {}
+    query[:user_id] = params.delete(:user_id) if protocols?(:AS) && params.key?(:user_id)
+
     room_id = CGI.escape room_id.to_s
     user_id = CGI.escape user_id.to_s
 
-    request(:get, :client_r0, "/rooms/#{room_id}/state/m.room.member/#{user_id}")
+    request(:get, :client_r0, "/rooms/#{room_id}/state/m.room.member/#{user_id}", query: query)
   end
 
   def set_membership(room_id, user_id, membership, params = {})
@@ -483,46 +504,55 @@ module MatrixSdk::Protocols::CS
   end
 
   def ban_user(room_id, user_id, params = {})
+    query = {}
+    query[:user_id] = params.delete(:user_id) if protocols?(:AS) && params.key?(:user_id)
+
     content = {
       user_id: user_id,
       reason: params[:reason] || ''
     }
-    query = {}
-    query[:user_id] = params.delete(:user_id) if protocols?(:AS) && params.key?(:user_id)
-
     room_id = CGI.escape room_id.to_s
 
     request(:post, :client_r0, "/rooms/#{room_id}/ban", body: content, query: query)
   end
 
-  def unban_user(room_id, user_id)
-    content = {
-      user_id: user_id
-    }
+  def unban_user(room_id, user_id, params = {})
     query = {}
     query[:user_id] = params.delete(:user_id) if protocols?(:AS) && params.key?(:user_id)
 
+    content = {
+      user_id: user_id
+    }
     room_id = CGI.escape room_id.to_s
 
     request(:post, :client_r0, "/rooms/#{room_id}/unban", body: content, query: query)
   end
 
-  def get_user_tags(user_id, room_id)
+  def get_user_tags(user_id, room_id, params = {})
+    query = {}
+    query[:user_id] = params.delete(:user_id) if protocols?(:AS) && params.key?(:user_id)
+
     room_id = CGI.escape room_id.to_s
     user_id = CGI.escape user_id.to_s
 
-    request(:get, :client_r0, "/user/#{user_id}/rooms/#{room_id}/tags")
+    request(:get, :client_r0, "/user/#{user_id}/rooms/#{room_id}/tags", query: query)
   end
 
-  def remove_user_tag(user_id, room_id, tag)
+  def remove_user_tag(user_id, room_id, tag, params = {})
+    query = {}
+    query[:user_id] = params.delete(:user_id) if protocols?(:AS) && params.key?(:user_id)
+
     room_id = CGI.escape room_id.to_s
     user_id = CGI.escape user_id.to_s
     tag = CGI.escape tag.to_s
 
-    request(:delete, :client_r0, "/user/#{user_id}/rooms/#{room_id}/tags/#{tag}")
+    request(:delete, :client_r0, "/user/#{user_id}/rooms/#{room_id}/tags/#{tag}", query: query)
   end
 
   def add_user_tag(user_id, room_id, tag, params = {})
+    query = {}
+    query[:user_id] = params.delete(:user_id) if protocols?(:AS) && params.key?(:user_id)
+
     if params[:body]
       content = params[:body]
     else
@@ -534,89 +564,122 @@ module MatrixSdk::Protocols::CS
     user_id = CGI.escape user_id.to_s
     tag = CGI.escape tag.to_s
 
-    request(:put, :client_r0, "/user/#{user_id}/rooms/#{room_id}/tags/#{tag}", body: content)
+    request(:put, :client_r0, "/user/#{user_id}/rooms/#{room_id}/tags/#{tag}", body: content, query: query)
   end
 
-  def get_account_data(user_id, type_key)
+  def get_account_data(user_id, type_key, params = {})
+    query = {}
+    query[:user_id] = params.delete(:user_id) if protocols?(:AS) && params.key?(:user_id)
+
     user_id = CGI.escape user_id.to_s
     type_key = CGI.escape type_key.to_s
 
-    request(:get, :client_r0, "/user/#{user_id}/account_data/#{type_key}")
+    request(:get, :client_r0, "/user/#{user_id}/account_data/#{type_key}", query: query)
   end
 
-  def set_account_data(user_id, type_key, account_data)
+  def set_account_data(user_id, type_key, account_data, params = {})
+    query = {}
+    query[:user_id] = params.delete(:user_id) if protocols?(:AS) && params.key?(:user_id)
+
     user_id = CGI.escape user_id.to_s
     type_key = CGI.escape type_key.to_s
 
-    request(:put, :client_r0, "/user/#{user_id}/account_data/#{type_key}", body: account_data)
+    request(:put, :client_r0, "/user/#{user_id}/account_data/#{type_key}", body: account_data, query: query)
   end
 
-  def get_room_account_data(user_id, room_id, type_key)
+  def get_room_account_data(user_id, room_id, type_key, params = {})
+    query = {}
+    query[:user_id] = params.delete(:user_id) if protocols?(:AS) && params.key?(:user_id)
+
     user_id = CGI.escape user_id.to_s
     room_id = CGI.escape room_id.to_s
     type_key = CGI.escape type_key.to_s
 
-    request(:get, :client_r0, "/user/#{user_id}/rooms/#{room_id}/account_data/#{type_key}")
+    request(:get, :client_r0, "/user/#{user_id}/rooms/#{room_id}/account_data/#{type_key}", query: query)
   end
 
-  def set_room_account_data(user_id, room_id, type_key, account_data)
+  def set_room_account_data(user_id, room_id, type_key, account_data, params = {})
+    query = {}
+    query[:user_id] = params.delete(:user_id) if protocols?(:AS) && params.key?(:user_id)
+
     user_id = CGI.escape user_id.to_s
     room_id = CGI.escape room_id.to_s
     type_key = CGI.escape type_key.to_s
 
-    request(:put, :client_r0, "/user/#{user_id}/rooms/#{room_id}/account_data/#{type_key}", body: account_data)
+    request(:put, :client_r0, "/user/#{user_id}/rooms/#{room_id}/account_data/#{type_key}", body: account_data, query: query)
   end
 
-  def get_filter(user_id, filter_id)
+  def get_filter(user_id, filter_id, params = {})
+    query = {}
+    query[:user_id] = params.delete(:user_id) if protocols?(:AS) && params.key?(:user_id)
+
     user_id = CGI.escape user_id.to_s
     filter_id = CGI.escape filter_id.to_s
 
-    request(:get, :client_r0, "/user/#{user_id}/filter/#{filter_id}")
+    request(:get, :client_r0, "/user/#{user_id}/filter/#{filter_id}", query: query)
   end
 
-  def create_filter(user_id, filter_params)
+  def create_filter(user_id, filter_params, params = {})
+    query = {}
+    query[:user_id] = params.delete(:user_id) if protocols?(:AS) && params.key?(:user_id)
+
     user_id = CGI.escape user_id.to_s
 
-    request(:post, :client_r0, "/user/#{user_id}/filter", body: filter_params)
+    request(:post, :client_r0, "/user/#{user_id}/filter", body: filter_params, query: query)
   end
 
-  def media_upload(content, content_type)
-    request(:post, :media_r0, '/upload', body: content, headers: { 'content-type' => content_type })
+  def media_upload(content, content_type, params = {})
+    query = {}
+    query[:user_id] = params.delete(:user_id) if protocols?(:AS) && params.key?(:user_id)
+
+    request(:post, :media_r0, '/upload', body: content, headers: { 'content-type' => content_type }, query: query)
   end
 
-  def get_display_name(user_id)
+  def get_display_name(user_id, params = {})
+    query = {}
+    query[:user_id] = params.delete(:user_id) if protocols?(:AS) && params.key?(:user_id)
+
     user_id = CGI.escape user_id.to_s
 
-    request(:get, :client_r0, "/profile/#{user_id}/displayname")
+    request(:get, :client_r0, "/profile/#{user_id}/displayname", query: query)
   end
 
-  def set_display_name(user_id, display_name)
+  def set_display_name(user_id, display_name, params = {})
+    query = {}
+    query[:user_id] = params.delete(:user_id) if protocols?(:AS) && params.key?(:user_id)
+
     content = {
       displayname: display_name
     }
 
     user_id = CGI.escape user_id.to_s
 
-    request(:put, :client_r0, "/profile/#{user_id}/displayname", body: content)
+    request(:put, :client_r0, "/profile/#{user_id}/displayname", body: content, query: query)
   end
 
-  def get_avatar_url(user_id)
+  def get_avatar_url(user_id, params = {})
+    query = {}
+    query[:user_id] = params.delete(:user_id) if protocols?(:AS) && params.key?(:user_id)
+
     user_id = CGI.escape user_id.to_s
 
-    request(:get, :client_r0, "/profile/#{user_id}/avatar_url")
+    request(:get, :client_r0, "/profile/#{user_id}/avatar_url", query: query)
   end
 
-  def set_avatar_url(user_id, url)
+  def set_avatar_url(user_id, url, params = {})
+    query = {}
+    query[:user_id] = params.delete(:user_id) if protocols?(:AS) && params.key?(:user_id)
+
     content = {
       avatar_url: url
     }
 
     user_id = CGI.escape user_id.to_s
 
-    request(:put, :client_r0, "/profile/#{user_id}/avatar_url", body: content)
+    request(:put, :client_r0, "/profile/#{user_id}/avatar_url", body: content, query: query)
   end
 
-  def get_download_url(mxcurl)
+  def get_download_url(mxcurl, _params = {})
     mxcurl = URI.parse(mxcurl.to_s) unless mxcurl.is_a? URI
     raise 'Not a mxc:// URL' unless mxcurl.is_a? URI::MATRIX
 
@@ -626,25 +689,28 @@ module MatrixSdk::Protocols::CS
     end
   end
 
-  def get_room_id(room_alias)
-    room_alias = CGI.escape room_alias.to_s
-
-    request(:get, :client_r0, "/directory/room/#{room_alias}")
-  end
-
-  def set_room_alias(room_id, room_alias)
-    content = {
-      room_id: room_id
-    }
+  def get_room_id(room_alias, params = {})
     query = {}
     query[:user_id] = params.delete(:user_id) if protocols?(:AS) && params.key?(:user_id)
 
     room_alias = CGI.escape room_alias.to_s
 
+    request(:get, :client_r0, "/directory/room/#{room_alias}", query: query)
+  end
+
+  def set_room_alias(room_id, room_alias, params = {})
+    query = {}
+    query[:user_id] = params.delete(:user_id) if protocols?(:AS) && params.key?(:user_id)
+
+    content = {
+      room_id: room_id
+    }
+    room_alias = CGI.escape room_alias.to_s
+
     request(:put, :client_r0, "/directory/room/#{room_alias}", body: content, query: query)
   end
 
-  def remove_room_alias(room_alias)
+  def remove_room_alias(room_alias, params = {})
     query = {}
     query[:user_id] = params.delete(:user_id) if protocols?(:AS) && params.key?(:user_id)
 
@@ -653,26 +719,30 @@ module MatrixSdk::Protocols::CS
     request(:delete, :client_r0, "/directory/room/#{room_alias}", query: query)
   end
 
-  def get_room_members(room_id)
+  def get_room_members(room_id, params = {})
+    query = {}
+    query[:user_id] = params.delete(:user_id) if protocols?(:AS) && params.key?(:user_id)
+
     room_id = CGI.escape room_id.to_s
 
-    request(:get, :client_r0, "/rooms/#{room_id}/members")
+    request(:get, :client_r0, "/rooms/#{room_id}/members", query: query)
   end
 
-  def set_join_rule(room_id, join_rule)
+  def set_join_rule(room_id, join_rule, params = {})
     content = {
       join_rule: join_rule
     }
 
-    send_state_event(room_id, 'm.room.join_rules', content)
+    send_state_event(room_id, 'm.room.join_rules', params.merge(content))
   end
 
-  def set_guest_access(room_id, guest_access)
+  def set_guest_access(room_id, guest_access, params = {})
     # raise ArgumentError, '`guest_access` must be one of [:can_join, :forbidden]' unless %i[can_join forbidden].include? guest_access
     content = {
       guest_access: guest_access
     }
-    send_state_event(room_id, 'm.room.guest_access', content)
+
+    send_state_event(room_id, 'm.room.guest_access', params.merge(content))
   end
 
   def whoami?(params = {})
