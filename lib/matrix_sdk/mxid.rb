@@ -1,21 +1,21 @@
 module MatrixSdk
   class MXID
-    attr_accessor :sigil, :localpart, :domain
+    attr_accessor :sigil, :localpart, :domain, :port
 
     # @param identifier [String] The Matrix ID string in the format of '&<localpart>:<domain>' where '&' is the sigil
     def initialize(identifier)
       raise ArugmentError, 'Identifier must be a String' unless identifier.is_a? String
       raise ArgumentError, 'Identifier is too long' if identifier.size > 255
-      raise ArugmentError, 'Identifier lacks required data' unless identifier =~ %r{^[@!$+#][^:]+:[^:]+(?::\d+)$}
+      raise ArgumentError, 'Identifier lacks required data' unless identifier =~ %r{^([@!$+#][^:]+:[^:]+(?::\d+)?)|(\$[A-Za-z0-9+/]+)$}
 
       @sigil = identifier[0]
-      @localpart, @domain = identifier[1..-1].split(':')
+      @localpart, @domain, @port = identifier[1..-1].split(':')
 
       raise ArgumentError, 'Identifier is not a valid MXID' unless valid?
     end
 
     def to_s
-      "#{sigil}#{localpart}:#{domain}"
+      "#{sigil}#{localpart}#{domain ? ':' + domain : ''}"
     end
 
     # Returns the type of the ID
