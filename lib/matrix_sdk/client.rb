@@ -18,12 +18,12 @@ module MatrixSdk
                    :validate_certificate, :validate_certificate=
 
     # @param hs_url [String,URI,Api] The URL to the Matrix homeserver, without the /_matrix/ part, or an existing Api instance
+    # @param client_cache [:all,:some,:none] (:all) How much data should be cached in the client
     # @param params [Hash] Additional parameters on creation
     # @option params [String,MXID] :user_id The user ID of the logged-in user
-    # @option params [:all,:some:non] :client_cache (:all) How much data should be cached in the client
     # @option params [Integer] :sync_filter_limit (20) Limit of timeline entries in syncs
     # @see MatrixSdk::Api.new for additional usable params
-    def initialize(hs_url, params = {})
+    def initialize(hs_url, client_cache: :all, **params)
       event_initialize
 
       params[:user_id] ||= params[:mxid] if params[:mxid]
@@ -39,7 +39,7 @@ module MatrixSdk
 
       @rooms = {}
       @users = {}
-      @cache = params.fetch(:client_cache, :all)
+      @cache = client_cache
 
       @sync_token = nil
       @sync_thread = nil
@@ -101,7 +101,7 @@ module MatrixSdk
       post_authentication(data)
     end
 
-    def login(username, password, params = {})
+    def login(username, password, sync_timeout: 15, full_state: false, **params)
       username = username.to_s unless username.is_a?(String)
       password = password.to_s unless password.is_a?(String)
 
@@ -113,12 +113,12 @@ module MatrixSdk
 
       return if params[:no_sync]
 
-      sync timeout: params.fetch(:sync_timeout, 15),
-           full_state: params.fetch(:full_state, false),
+      sync timeout: sync_timeout,
+           full_state: full_state,
            allow_sync_retry: params.fetch(:allow_sync_retry, nil)
     end
 
-    def login_with_token(username, token, params = {})
+    def login_with_token(username, token, sync_timeout: 15, full_state: false, **params)
       username = username.to_s unless username.is_a?(String)
       token = token.to_s unless token.is_a?(String)
 
@@ -130,8 +130,8 @@ module MatrixSdk
 
       return if params[:no_sync]
 
-      sync timeout: params.fetch(:sync_timeout, 15),
-           full_state: params.fetch(:full_state, false),
+      sync timeout: sync_timeout,
+           full_state: full_state,
            allow_sync_retry: params.fetch(:allow_sync_retry, nil)
     end
 
@@ -177,7 +177,7 @@ module MatrixSdk
       raise MatrixUnexpectedResponseError, 'Upload succeeded, but no media URI returned'
     end
 
-    def listen_for_events(timeout = 30, arguments = {})
+    def listen_for_events(timeout: 30, **arguments)
       sync(arguments.merge(timeout: timeout))
     end
 
@@ -198,16 +198,13 @@ module MatrixSdk
 
     private
 
-    def listen_forever(params = {})
-      timeout = params.delete(:timeout) { 30 }
-      bad_sync_timeout = params.delete(:bad_sync_timeout) { 5 }
-      sync_interval = params.delete(:sync_interval) { 30 }
-
+    def listen_forever(timeout: 30, bad_sync_timeout: 5, sync_interval: 30, **params)
+      orig_bad_sync_timeout = bad_sync_timeout.dup
       while @should_listen
         begin
           sync(params.merge(timeout: timeout))
 
-          bad_sync_timeout = params[:bad_sync_timeout]
+          bad_sync_timeout = orig_bad_sync_timeout
           sleep(sync_interval) if sync_interval > 0
         rescue MatrixRequestError => ex
           logger.warn("A #{ex.class} occurred during sync")
@@ -262,12 +259,11 @@ module MatrixSdk
       end
     end
 
-    def sync(params = {})
+    def sync(skip_store_batch: false, **params)
       extra_params = {
         filter: sync_filter.to_json
       }
       extra_params[:since] = @next_batch unless @next_batch.nil?
-      skip_store_batch = params.delete(:skip_store_batch) { false }
 
       attempts = 0
       data = loop do
