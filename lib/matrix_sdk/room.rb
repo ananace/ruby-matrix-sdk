@@ -115,6 +115,7 @@ module MatrixSdk
 
       client.api.get_room_members(id)[:chunk].each do |chunk|
         next unless chunk [:content][:membership] == 'join'
+
         ensure_member(User.new(client, chunk[:state_key], display_name: chunk[:content].fetch(:displayname)))
       end
       members
@@ -338,6 +339,7 @@ module MatrixSdk
     # @note the avatar URL should be a mxc:// URI
     def set_user_profile(params = {})
       return nil unless params[:display_name] || params[:avatar_url]
+
       data = client.api.get_membership(id, client.mxid)
       raise "Can't set profile if you haven't joined the room" unless data[:membership] == 'join'
 
@@ -348,7 +350,21 @@ module MatrixSdk
     end
 
     def tags
-      client.api.get_user_tags(client.mxid, id)
+      client.api.get_user_tags(client.mxid, id)[:tags].tap do |tag_obj|
+        tag_obj.instance_variable_set(:@room, self)
+        tag_obj.define_singleton_method(:room) do
+          @room
+        end
+        tag_obj.define_singleton_method(:add) do |tag, params = {}|
+          @room.add_tag(tag.to_s.to_sym, params)
+          self[tag.to_s.to_sym] = params
+          self
+        end
+        tag_obj.define_singleton_method(:remove) do |tag|
+          @room.remove_tag(tag.to_s.to_sym)
+          delete tag.to_s.to_sym
+        end
+      end
     end
 
     def remove_tag(tag)
@@ -458,6 +474,7 @@ module MatrixSdk
     # @return [Boolean] if the change was successful
     def modify_user_power_levels(users = nil, users_default = nil)
       return false if users.nil? && users_default.nil?
+
       data = client.api.get_power_levels(id)
       data[:users_default] = users_default unless users_default.nil?
 
@@ -479,6 +496,7 @@ module MatrixSdk
     # @return [Boolean] if the change was successful
     def modify_required_power_levels(events = nil, params = {})
       return false if events.nil? && (params.nil? || params.empty?)
+
       data = client.api.get_power_levels(id)
       data.merge!(params)
       data.delete_if { |_k, v| v.nil? }

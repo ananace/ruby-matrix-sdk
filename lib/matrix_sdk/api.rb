@@ -10,7 +10,7 @@ module MatrixSdk
   class Api
     USER_AGENT = "Ruby Matrix SDK v#{MatrixSdk::VERSION}".freeze
     DEFAULT_HEADERS = {
-      'accept'     => 'application/json',
+      'accept' => 'application/json',
       'user-agent' => USER_AGENT
     }.freeze
 
@@ -134,6 +134,7 @@ module MatrixSdk
     def homeserver=(hs_info)
       # TODO: DNS query for SRV information about HS?
       return unless hs_info.is_a? URI
+
       @http.finish if @http
       @homeserver = hs_info
     end
@@ -857,6 +858,7 @@ module MatrixSdk
 
         if response.is_a? Net::HTTPTooManyRequests
           raise MatrixRequestError.new(data, response.code) unless autoretry
+
           failures += 1
           waittime = data[:retry_after_ms] || data[:error][:retry_after_ms] || @backoff_time
           sleep(waittime.to_f / 1000.0)
@@ -865,6 +867,7 @@ module MatrixSdk
 
         return MatrixSdk::Response.new self, data if response.is_a? Net::HTTPSuccess
         raise MatrixRequestError.new(data, response.code) if data
+
         raise MatrixConnectionError.class_by_code(response.code), response
       end
     end

@@ -146,6 +146,7 @@ module MatrixSdk
 
     def method_missing(method, *args)
       return event[method] if event.key? method
+
       super
     end
 
