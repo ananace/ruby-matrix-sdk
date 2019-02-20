@@ -1,4 +1,4 @@
-## v0.0.4 **Unreleased**
+## v0.0.4 - 2019-02-20
 
 - Adds a parameter to the client abstraction to allow retrying syncs on timeouts
 - Adds support for token-based login in the client abstraction
