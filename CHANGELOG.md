@@ -3,8 +3,15 @@
 - Adds a parameter to the client abstraction to allow retrying syncs on timeouts
 - Adds support for token-based login in the client abstraction
 - Adds rudimentary username and password validation in the client abstraction
+- Adds MXID validation in the client abstraction
+- Adds a method to discover a homeserver address based on a domain.
+    - Supporting both SRV and .well-known lookups
+- Adds methods from the r0.4.0 spec
+- Adds support for version 3 event IDs
 - Extends the connection exceptions with a specific timeout error
+- Sets a series of filters in the simple client example to skip unhandled event
 - Fixes an exception when null values end up in the body cleaner during debugging
+- Fixes an error with CGI not being required correctly
 
 ## v0.0.3 - 2018-08-14
 
