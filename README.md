@@ -2,6 +2,8 @@
 
 A Ruby gem for easing the development of software that communicates with servers implementing the Matrix protocol.
 
+There is a Matrix room for the discussion about usage and development at [#ruby-matrix-sdk:kittenface.studio](https://matrix.to/#/#ruby-matrix-sdk:kittenface.studio).
+
 Live YARD documentation can be found at; http://aleol57.gitlab-pages.liu.se/ruby-matrix-sdk
 
 ## Example usage
