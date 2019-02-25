@@ -15,7 +15,7 @@ module MatrixSdk
     }.freeze
 
     attr_accessor :access_token, :connection_address, :connection_port, :device_id, :autoretry, :global_headers
-    attr_reader :homeserver, :validate_certificate, :read_timeout
+    attr_reader :homeserver, :validate_certificate, :read_timeout, :well_known
 
     ignore_inspect :access_token, :logger
 
@@ -32,6 +32,7 @@ module MatrixSdk
     # @option params [Numeric] :read_timeout (240) The timeout in seconds for reading responses
     # @option params [Hash] :global_headers Additional headers to set for all requests
     # @option params [Boolean] :skip_login Should the API skip logging in if the HS URL contains user information
+    # @option params [Hash] :well_known The .well-known object that the server was discovered through, should not be set manually
     def initialize(homeserver, params = {})
       @homeserver = homeserver
       @homeserver = URI.parse("#{'https://' unless @homeserver.start_with? 'http'}#{@homeserver}") unless @homeserver.is_a? URI
@@ -47,6 +48,7 @@ module MatrixSdk
       @transaction_id = params.fetch(:transaction_id, 0)
       @backoff_time = params.fetch(:backoff_time, 5000)
       @read_timeout = params.fetch(:read_timeout, 240)
+      @well_known = params.fetch(:well_known, {})
       @global_headers = DEFAULT_HEADERS.dup
       @global_headers.merge!(params.fetch(:global_headers)) if params.key? :global_headers
 
@@ -67,11 +69,13 @@ module MatrixSdk
     #
     # @param domain [String] The domain to set up the API connection for, can contain a ':' to denote a port
     # @param target [:client,:identity,:server] The target for the domain lookup
+    # @param keep_wellknown [Boolean] Should the .well-known response be kept for further handling
     # @param params [Hash] Additional options to pass to .new
     # @return [API] The API connection
-    def self.new_for_domain(domain, target: :client, ssl: true, **params)
+    def self.new_for_domain(domain, target: :client, keep_wellknown: false, ssl: true, **params)
       domain, port = domain.split(':')
       uri = URI("http#{ssl ? 's' : ''}://#{domain}")
+      well_known = nil
       target_uri = nil
 
       if !port.nil? && !port.empty?
@@ -120,6 +124,8 @@ module MatrixSdk
 
       # Fall back to direct domain connection
       target_uri ||= URI("https://#{domain}:8448")
+
+      params[:well_known] = well_known if keep_wellknown
 
       new(uri,
           params.merge(
