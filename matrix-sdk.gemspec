@@ -6,8 +6,8 @@ Gem::Specification.new do |spec|
   spec.authors       = ['Alexander Olofsson']
   spec.email         = ['ace@haxalot.com']
 
-  spec.summary       = ''
-  spec.description   = ''
+  spec.summary       = 'SDK for applications using the Matrix protocol'
+  spec.description   = spec.summary
   spec.homepage      = 'https://github.com/ananace/ruby_matrix_sdk'
   spec.license       = 'MIT'
 
