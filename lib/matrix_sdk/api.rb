@@ -79,12 +79,12 @@ module MatrixSdk
       elsif target == :server
         # Attempt SRV record discovery
         target_uri = begin
-                   require 'resolv'
-                   resolver = Resolv::DNS.new
-                   resolver.getresource("_matrix._tcp.#{domain}")
-                 rescue StandardError
-                   nil
-                 end
+                       require 'resolv'
+                       resolver = Resolv::DNS.new
+                       resolver.getresource("_matrix._tcp.#{domain}")
+                     rescue StandardError
+                       nil
+                     end
 
         if target_uri.nil?
           well_known = begin
