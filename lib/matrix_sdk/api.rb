@@ -98,7 +98,7 @@ module MatrixSdk
         else
           target_uri = URI("https://#{target_uri.target}:#{target_uri.port}")
         end
-      elsif %i[client identity].include? target_uri
+      elsif %i[client identity].include? target
         # Attempt .well-known discovery
         well_known = begin
                        data = Net::HTTP.get("https://#{domain}/.well-known/matrix/client")
@@ -112,7 +112,7 @@ module MatrixSdk
           key = 'm.identity_server' if target == :identity
 
           if well_known.key?(key) && well_known[key].key?('base_url')
-            uri = well_known[key]['base_url']
+            uri = URI(well_known[key]['base_url'])
             target_uri = uri
           end
         end

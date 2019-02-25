@@ -1,5 +1,6 @@
 require 'test_helper'
 
+require 'net/http'
 require 'resolv'
 
 class ApiTest < Test::Unit::TestCase
@@ -19,6 +20,24 @@ class ApiTest < Test::Unit::TestCase
     api = MatrixSdk::Api.new 'https://user:pass@matrix.example.com/_matrix/'
 
     assert_equal URI('https://matrix.example.com'), api.homeserver
+  end
+
+  def test_client_creation_for_domain
+    ::Resolv::DNS
+      .any_instance
+      .expects(:getresource)
+      .never
+
+    ::Net::HTTP
+      .expects(:get)
+      .with('https://example.com/.well-known/matrix/client')
+      .returns('{"m.homeserver":{"base_url":"https://matrix.example.com"}}')
+
+    MatrixSdk::Api
+      .expects(:new)
+      .with(URI('https://matrix.example.com'), address: 'matrix.example.com', port: 443)
+
+    MatrixSdk::Api.new_for_domain 'example.com', target: :client
   end
 
   def test_server_creation_for_domain
