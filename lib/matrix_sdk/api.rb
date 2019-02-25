@@ -72,13 +72,13 @@ module MatrixSdk
     def self.new_for_domain(domain, target: :client, ssl: true, **params)
       domain, port = domain.split(':')
       uri = URI("http#{ssl ? 's' : ''}://#{domain}")
-      target = nil
+      target_uri = nil
 
       if !port.empty?
-        target = URI("https://#{domain}:#{port}")
+        target_uri = URI("https://#{domain}:#{port}")
       elsif target == :server
         # Attempt SRV record discovery
-        target = begin
+        target_uri = begin
                    require 'resolv'
                    resolver = Resolv::DNS.new
                    resolver.getresource("_matrix._tcp.#{domain}")
@@ -86,7 +86,7 @@ module MatrixSdk
                    nil
                  end
 
-        if target.nil?
+        if target_uri.nil?
           well_known = begin
                          data = Net::HTTP.get("https://#{domain}/.well-known/matrix/server")
                          JSON.parse(data)
@@ -94,13 +94,11 @@ module MatrixSdk
                          nil
                        end
 
-          if well_known && well_known.key?('m.server')
-            target = well_known['m.server']
-          end
+          target_uri = well_known['m.server'] if well_known && well_known.key?('m.server')
         else
-          target = URI("https://#{target.target}:#{target.port}")
+          target_uri = URI("https://#{target_uri.target}:#{target.port}")
         end
-      elsif %i[client identity].include? target
+      elsif %i[client identity].include? target_uri
         # Attempt .well-known discovery
         well_known = begin
                        data = Net::HTTP.get("https://#{domain}/.well-known/matrix/client")
@@ -115,18 +113,18 @@ module MatrixSdk
 
           if well_known.key?(key) && well_known[key].key?('base_url')
             uri = well_known[key]['base_url']
-            target = uri
+            target_uri = uri
           end
         end
       end
 
       # Fall back to direct domain connection
-      target ||= URI("https://#{domain}:8448")
+      target_uri ||= URI("https://#{domain}:8448")
 
-      new("https://#{domain}",
+      new(uri,
           params.merge(
-            address: target.host,
-            port: target.port
+            address: target_uri.host,
+            port: target_uri.port
           ))
     end
 
