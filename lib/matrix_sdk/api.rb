@@ -1,7 +1,6 @@
 require 'matrix_sdk'
 
 require 'cgi'
-require 'json'
 require 'net/http'
 require 'openssl'
 require 'uri'

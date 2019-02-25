@@ -1,10 +1,13 @@
 require 'matrix_sdk/extensions'
 require 'matrix_sdk/version'
 
+require 'json'
+
 autoload :Logging, 'logging'
 
 module MatrixSdk
   autoload :Api, 'matrix_sdk/api'
+  autoload :ApplicationService, 'matrix_sdk/application_service'
   autoload :Client, 'matrix_sdk/client'
   autoload :MXID, 'matrix_sdk/mxid'
   autoload :Response, 'matrix_sdk/response'
