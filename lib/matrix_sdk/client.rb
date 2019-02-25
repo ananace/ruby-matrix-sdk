@@ -17,6 +17,14 @@ module MatrixSdk
                    :access_token, :access_token=, :device_id, :device_id=, :homeserver, :homeserver=,
                    :validate_certificate, :validate_certificate=
 
+    def self.new_for_domain(domain, **params)
+      api = MatrixSdk::Api.new_for_domain(domain, keep_wellknown: true)
+      return new(api, params) unless api.well_known.key? 'm.identity_server'
+
+      identity_server = api.new(api.well_know['m.identity_server']['base_url'], protocols: %i[IS])
+      new(api, params.merge(identity_server: identity_server))
+    end
+
     # @param hs_url [String,URI,Api] The URL to the Matrix homeserver, without the /_matrix/ part, or an existing Api instance
     # @param client_cache [:all,:some,:none] (:all) How much data should be cached in the client
     # @param params [Hash] Additional parameters on creation
@@ -40,6 +48,7 @@ module MatrixSdk
       @rooms = {}
       @users = {}
       @cache = client_cache
+      @identity_server = params.fetch(:identity_server, nil)
 
       @sync_token = nil
       @sync_thread = nil
