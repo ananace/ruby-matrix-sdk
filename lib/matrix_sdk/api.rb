@@ -66,25 +66,42 @@ module MatrixSdk
     #   # => 443
     #
     # @param domain [String] The domain to set up the API connection for, can contain a ':' to denote a port
+    # @param target [:client,:identity,:server] The target for the domain lookup
     # @param params [Hash] Additional options to pass to .new
     # @return [API] The API connection
-    def self.new_for_domain(domain, params = {})
-      # Attempt SRV record discovery
-      srv = if domain.include? ':'
-              addr, port = domain.split ':'
-              Resolv::DNS::Resource::IN::SRV.new 10, 1, port.to_i, addr
-            else
-              require 'resolv'
-              resolver = Resolv::DNS.new
-              begin
-                resolver.getresource("_matrix._tcp.#{domain}")
-              rescue Resolv::ResolvError
-                nil
-              end
-            end
+    def self.new_for_domain(domain, target: :client, ssl: true, **params)
+      domain, port = domain.split(':')
+      uri = URI("http#{ssl ? 's' : ''}://#{domain}")
+      target = nil
 
-      # Attempt .well-known discovery
-      if srv.nil?
+      if !port.empty?
+        target = URI("https://#{domain}:#{port}")
+      elsif target == :server
+        # Attempt SRV record discovery
+        target = begin
+                   require 'resolv'
+                   resolver = Resolv::DNS.new
+                   resolver.getresource("_matrix._tcp.#{domain}")
+                 rescue StandardError
+                   nil
+                 end
+
+        if target.nil?
+          well_known = begin
+                         data = Net::HTTP.get("https://#{domain}/.well-known/matrix/server")
+                         JSON.parse(data)
+                       rescue StandardError
+                         nil
+                       end
+
+          if well_known && well_known.key?('m.server')
+            target = well_known['m.server']
+          end
+        else
+          target = URI("https://#{target.target}:#{target.port}")
+        end
+      elsif %i[client identity].include? target
+        # Attempt .well-known discovery
         well_known = begin
                        data = Net::HTTP.get("https://#{domain}/.well-known/matrix/client")
                        JSON.parse(data)
@@ -92,19 +109,24 @@ module MatrixSdk
                        nil
                      end
 
-        return new(well_known['m.homeserver']['base_url']) if well_known &&
-                                                              well_known.key?('m.homeserver') &&
-                                                              well_known['m.homerserver'].key?('base_url')
+        if well_known
+          key = 'm.homeserver'
+          key = 'm.identity_server' if target == :identity
+
+          if well_known.key?(key) && well_known[key].key?('base_url')
+            uri = well_known[key]['base_url']
+            target = uri
+          end
+        end
       end
 
-      # Fall back to A record on domain
-      srv ||= Resolv::DNS::Resource::IN::SRV.new 10, 1, 8448, domain
+      # Fall back to direct domain connection
+      target ||= URI("https://#{domain}:8448")
 
-      domain = domain.split(':').first if domain.include? ':'
       new("https://#{domain}",
           params.merge(
-            address: srv.target.to_s,
-            port: srv.port
+            address: target.host,
+            port: target.port
           ))
     end
 
