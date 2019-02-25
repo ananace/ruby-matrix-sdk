@@ -74,7 +74,7 @@ module MatrixSdk
       uri = URI("http#{ssl ? 's' : ''}://#{domain}")
       target_uri = nil
 
-      if !port.empty?
+      if !port.nil? && !port.empty?
         target_uri = URI("https://#{domain}:#{port}")
       elsif target == :server
         # Attempt SRV record discovery
@@ -96,7 +96,7 @@ module MatrixSdk
 
           target_uri = well_known['m.server'] if well_known && well_known.key?('m.server')
         else
-          target_uri = URI("https://#{target_uri.target}:#{target.port}")
+          target_uri = URI("https://#{target_uri.target}:#{target_uri.port}")
         end
       elsif %i[client identity].include? target_uri
         # Attempt .well-known discovery
