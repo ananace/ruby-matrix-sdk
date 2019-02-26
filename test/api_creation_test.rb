@@ -10,12 +10,42 @@ class ApiTest < Test::Unit::TestCase
     assert_equal URI('https://matrix.example.com'), api.homeserver
   end
 
+  def test_creation_with_as_protocol
+    api = MatrixSdk::Api.new 'https://matrix.example.com', protocols: :AS
+
+    assert api.protocol? :AS
+    # Ensure CS protocol is also provided
+    assert api.respond_to? :join_room
+  end
+
+  def test_creation_with_cs_protocol
+    api = MatrixSdk::Api.new 'https://matrix.example.com'
+
+    assert api.respond_to? :join_room
+    assert !api.respond_to?(:identity_status)
+  end
+
+  def test_creation_with_is_protocol
+    api = MatrixSdk::Api.new 'https://matrix.example.com', protocols: :IS
+
+    assert !api.respond_to?(:join_room)
+    assert api.respond_to? :identity_status
+  end
+
+  # This test is more complicated due to testing protocol extensions and auto-login all in the initializer
   def test_creation_with_login
     MatrixSdk::Api
       .any_instance
-      .expects(:login)
-      .with(user: 'user', password: 'pass')
-      .returns true
+      .expects(:request)
+      .with(:post, :client_r0, '/login',
+            body: {
+              type: 'm.login.password',
+              initial_device_display_name: MatrixSdk::Api::USER_AGENT,
+              user: 'user',
+              password: 'pass'
+            },
+            query: {})
+      .returns(MatrixSdk::Response.new(nil, token: 'token', device_id: 'device id'))
 
     api = MatrixSdk::Api.new 'https://user:pass@matrix.example.com/_matrix/'
 
