@@ -109,6 +109,21 @@ module MatrixSdk
       raise NotImplementedError
     end
 
+    def start_server
+      @server = WEBrick::HTTPServer.new Port: port
+
+      @server.mount_proc '/', &:handle_request
+
+      @server.start
+
+      logger.info "Application Service is now running on port #{port}"
+    end
+
+    def stop_server
+      @server.shutdown if @server
+      @server = nil
+    end
+
     private
 
     def handle_request(request, response)
@@ -130,21 +145,6 @@ module MatrixSdk
       else
         method.call match_hash
       end
-    end
-
-    def start_server
-      @server = WEBrick::HTTPServer.new Port: @port
-
-      @server.mount_proc '/', &:handle_request
-
-      @server.start
-
-      logger.info "Application Service is now running on port #{@port}"
-    end
-
-    def stop_server
-      @server.shutdown if @server
-      @server = nil
     end
   end
 end
