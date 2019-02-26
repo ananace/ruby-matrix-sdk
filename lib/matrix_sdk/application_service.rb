@@ -118,17 +118,17 @@ module MatrixSdk
       map = @method_map[req_method]
       raise WEBrick::HTTPStatus[405], {}.to_json if map.nil?
 
-      method = map.find { |k, _v| k =~ req_uri }.last
+      method = map.find { |k, _v| k =~ req_uri.path }.last
       match = Regexp.last_match
-      match = Hash[match.names.zip(match.captures)].merge(
+      match_hash = Hash[match.names.zip(match.captures)].merge(
         request: request,
         response: response
       )
 
       if method.is_a? Symbol
-        send method, match
+        send method, match_hash
       else
-        method.call match
+        method.call match_hash
       end
     end
 
