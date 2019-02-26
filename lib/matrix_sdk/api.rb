@@ -59,7 +59,7 @@ module MatrixSdk
       @global_headers = DEFAULT_HEADERS.dup
       @global_headers.merge!(params.fetch(:global_headers)) if params.key? :global_headers
 
-      login(user: @homeserver.user, password: @homeserver.password) if @homeserver.user && @homeserver.password && !@access_token && !params[:skip_login]
+      login(user: @homeserver.user, password: @homeserver.password) if @homeserver.user && @homeserver.password && !@access_token && !params[:skip_login] && protocol?(:CS)
       @homeserver.userinfo = '' unless params[:skip_login]
     end
 
