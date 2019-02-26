@@ -138,6 +138,8 @@ module MatrixSdk
       @server.mount_proc '/', &:handle_request
 
       @server.start
+
+      logger.info "Application Service is now running on port #{@port}"
     end
 
     def stop_server
