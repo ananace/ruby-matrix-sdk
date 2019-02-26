@@ -27,16 +27,29 @@ module MatrixSdk
 
       add_method(:GET, %r{^/_matrix/app/v1/users/(?<user>@.+:.+)$}, :do_get_user)
       add_method(:GET, %r{^/_matrix/app/v1/rooms/(?<room>#.+:.+)$}, :do_get_room)
+
       add_method(:GET, %r{^/_matrix/app/v1/thirdparty/protocol/(?<protocol>.+)$}, :do_get_3p_protocol_p)
       add_method(:GET, %r{^/_matrix/app/v1/thirdparty/user/(?<protocol>.+)$}, :do_get_3p_user_p)
       add_method(:GET, %r{^/_matrix/app/v1/thirdparty/location/(?<protocol>.+)$}, :do_get_3p_location_p)
-      add_method(:GET, %r{^/_matrix/app/v1/thirdparty/location$}, :do_get_3p_location)
       add_method(:GET, %r{^/_matrix/app/v1/thirdparty/user$}, :do_get_3p_user)
+      add_method(:GET, %r{^/_matrix/app/v1/thirdparty/location$}, :do_get_3p_location)
 
       add_method(:PUT, %r{^/_matrix/app/v1/transactions/(?<txn_id>.+)$}, :do_put_transaction)
 
-      return unless legacy_routes
-      add_method(:PUT, %r{^/transactions/(?<txn_id>[^/]+)$}, :do_put_transaction)
+      if legacy_routes
+        add_method(:GET, %r{^/users/(?<user>@.+:.+)$}, :do_get_user)
+        add_method(:GET, %r{^/rooms/(?<room>#.+:.+)$}, :do_get_room)
+
+        add_method(:GET, %r{^/_matrix/app/unstable/thirdparty/protocol/(?<protocol>.+)$}, :do_get_3p_protocol_p)
+        add_method(:GET, %r{^/_matrix/app/unstable/thirdparty/user/(?<protocol>.+)$}, :do_get_3p_user_p)
+        add_method(:GET, %r{^/_matrix/app/unstable/thirdparty/location/(?<protocol>.+)$}, :do_get_3p_location_p)
+        add_method(:GET, %r{^/_matrix/app/unstable/thirdparty/user$}, :do_get_3p_user)
+        add_method(:GET, %r{^/_matrix/app/unstable/thirdparty/location$}, :do_get_3p_location)
+
+        add_method(:PUT, %r{^/transactions/(?<txn_id>[^/]+)$}, :do_put_transaction)
+      end
+
+      start_server
     end
 
     def logger
