@@ -111,7 +111,7 @@ module MatrixSdk::Protocols::CS
 
     data = {
       type: login_type,
-      initial_device_display_name: params.delete(:initial_device_display_name) { USER_AGENT }
+      initial_device_display_name: params.delete(:initial_device_display_name) { MatrixSdk::Api::USER_AGENT }
     }.merge params
     data[:device_id] = device_id if device_id
 
