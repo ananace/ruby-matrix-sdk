@@ -65,6 +65,7 @@ module MatrixSdk
 
     def add_method(method, regex, proc = nil, &block)
       proc ||= block
+      raise ArgumentError, 'No method specified' if proc.nil?
       (@method_map[method] ||= {})[regex] = proc
     end
 
