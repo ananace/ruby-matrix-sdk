@@ -111,7 +111,7 @@ if $PROGRAM_NAME == __FILE__
     # Only retrieve list of joined room in first sync
     sync_filter = client.sync_filter.merge(ROOM_DISCOVERY_FILTER)
     sync_filter[:room][:state][:senders] << client.mxid
-    client.listen_for_events(5, filter: sync_filter.to_json)
+    client.listen_for_events(timeout: 5, filter: sync_filter.to_json)
 
     puts 'Finding room...'
     room = client.find_room(ARGV.last)
