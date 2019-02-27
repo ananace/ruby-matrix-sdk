@@ -21,7 +21,7 @@ module MatrixSdk
       api = MatrixSdk::Api.new_for_domain(domain, keep_wellknown: true)
       return new(api, params) unless api.well_known.key? 'm.identity_server'
 
-      identity_server = api.new(api.well_know['m.identity_server']['base_url'], protocols: %i[IS])
+      identity_server = MatrixSdk::Api.new(api.well_known['m.identity_server']['base_url'], protocols: %i[IS])
       new(api, params.merge(identity_server: identity_server))
     end
 
