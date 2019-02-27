@@ -17,6 +17,7 @@ module MatrixSdk
   autoload :MatrixError, 'matrix_sdk/errors'
   autoload :MatrixRequestError, 'matrix_sdk/errors'
   autoload :MatrixConnectionError, 'matrix_sdk/errors'
+  autoload :MatrixTimeoutError, 'matrix_sdk/errors'
   autoload :MatrixUnexpectedResponseError, 'matrix_sdk/errors'
 
   module Protocols
