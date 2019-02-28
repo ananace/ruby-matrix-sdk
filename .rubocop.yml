@@ -8,6 +8,9 @@ AllCops:
 Lint/Void:
   Enabled: false
 
+Style/ClassAndModuleChildren:
+  Enabled: false
+
 # Don't enforce documentation
 Style/Documentation:
   Enabled: false
@@ -17,6 +20,10 @@ Metrics/ClassLength:
 
 Metrics/MethodLength:
   Max: 50
+
+# Matrix has a lot of methods in the CS API
+Metrics/ModuleLength:
+  Max: 500
 
 Metrics/LineLength:
   Max: 190

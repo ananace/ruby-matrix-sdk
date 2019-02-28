@@ -42,7 +42,7 @@ module MatrixSdk
       @protocols = params.fetch(:protocols, %i[CS])
       @protocols = [@protocols] unless @protocols.is_a? Array
       @protocols << :CS if @protocols.include?(:AS) && !@protocols.include?(:CS)
-      @protocols.sort.reverse.each do |prot|
+      @protocols.sort.reverse_each do |prot|
         extend MatrixSdk::Protocols.const_get(prot)
       end
 
