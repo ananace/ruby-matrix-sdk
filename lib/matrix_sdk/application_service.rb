@@ -8,10 +8,10 @@ module MatrixSdk
                    :access_token, :access_token=, :device_id, :device_id=, :homeserver, :homeserver=,
                    :validate_certificate, :validate_certificate=
 
-    def initialize(hs_url, application_secret:, legacy_routes: false, **params)
+    def initialize(hs_url, as_token:, hs_token:, legacy_routes: false, **params)
       logger.warning 'This abstraction is still under HEAVY development, expect errors'
 
-      params = { protocols: %i[AS CS] }.merge(params).merge(access_token: application_secret)
+      params = { protocols: %i[AS CS] }.merge(params).merge(access_token: as_token)
       if hs_url.is_a? Api
         @api = hs_url
         params.each do |k, v|
@@ -21,7 +21,11 @@ module MatrixSdk
         @api = Api.new hs_url, params
       end
 
+      @id = params.fetch(:id, MatrixSdk::Api::USER_AGENT)
       @port = params.fetch(:port, 8888)
+      @url = params.fetch(:url, URI("http://localhost:#{@port}"))
+      @as_token = as_token
+      @hs_token = hs_token
 
       @method_map = {}
 
@@ -54,6 +58,23 @@ module MatrixSdk
 
     def logger
       @logger ||= Logging.logger[self]
+    end
+
+    def registration
+      {
+        id: @id,
+        url: @url,
+        as_token: @as_token,
+        hs_token: @hs_token,
+        sender_localpart: '',
+        namespaces: {
+          users: [],
+          aliases: [],
+          rooms: []
+        },
+        rate_limited: false,
+        protocols: []
+      }
     end
 
     def port=(port)
