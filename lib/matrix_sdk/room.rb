@@ -66,6 +66,7 @@ module MatrixSdk
       @guest_access = nil
       @members = []
       @events = []
+      @members_loaded = false
       @event_history_limit = 10
 
       @prev_batch = nil
@@ -111,13 +112,14 @@ module MatrixSdk
 
     # Populates and returns the #members array
     def joined_members
-      return members unless members.empty?
+      return members if @members_loaded && !members.empty?
 
       client.api.get_room_members(id)[:chunk].each do |chunk|
         next unless chunk [:content][:membership] == 'join'
 
-        ensure_member(User.new(client, chunk[:state_key], display_name: chunk[:content].fetch(:displayname)))
+        ensure_member(User.new(client, chunk[:state_key], display_name: chunk[:content].fetch(:displayname, nil)))
       end
+      @members_loaded = true
       members
     end
 
