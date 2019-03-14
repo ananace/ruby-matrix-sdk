@@ -52,7 +52,7 @@ module MatrixSdk
 
       @sync_token = nil
       @sync_thread = nil
-      @sync_filter = { room: { timeline: { limit: params.fetch(:sync_filter_limit, 20) } } }
+      @sync_filter = { room: { timeline: { limit: params.fetch(:sync_filter_limit, 20) }, state: { lazy_load_members: true } } }
 
       @should_listen = false
       @next_batch = nil
