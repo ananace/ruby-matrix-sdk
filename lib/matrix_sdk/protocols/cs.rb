@@ -757,6 +757,39 @@ module MatrixSdk::Protocols::CS
     send_state_event(room_id, 'm.room.guest_access', params.merge(content))
   end
 
+  def get_devices
+    request(:get, :client_r0, '/devices')
+  end
+
+  def get_device(device_id)
+    device_id = CGI.escape device_id.to_s
+
+    request(:get, :client_r0, "/devices/#{device_id}")
+  end
+
+  def set_device(device_id, display_name:)
+    device_id = CGI.escape device_id.to_s
+
+    request(:put, :client_r0, "/devices/#{device_id}", body: { display_name: display_name })
+  end
+
+  def delete_device(device_id, auth:)
+    device_id = CGI.escape device_id.to_s
+
+    request(:delete, :client_r0, "/devices/#{device_id}", body: { auth: auth })
+  end
+
+  def keys_query(timeout: nil, device_keys:, token: nil, **params)
+    body = {
+      timeout: (timeout || 10) * 1000,
+      device_keys: device_keys
+    }
+    body[:timeout] = params[:timeout_ms] if params.key? :timeout_ms
+    body[:token] = token if token
+
+    request(:post, :client_r0, '/keys/query', body: body)
+  end
+
   def whoami?(**params)
     query = {}
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
