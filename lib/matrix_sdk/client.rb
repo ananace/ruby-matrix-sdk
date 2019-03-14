@@ -213,7 +213,7 @@ module MatrixSdk
     private
 
     def listen_forever(timeout: 30, bad_sync_timeout: 5, sync_interval: 30, **params)
-      orig_bad_sync_timeout = bad_sync_timeout.dup
+      orig_bad_sync_timeout = bad_sync_timeout + 0
       while @should_listen
         begin
           sync(params.merge(timeout: timeout))
