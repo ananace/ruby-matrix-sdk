@@ -309,6 +309,8 @@ module MatrixSdk
       data[:rooms][:join].each do |room_id, join|
         room = ensure_room(room_id)
         room.instance_variable_set '@prev_batch', join[:timeline][:prev_batch]
+        room.instance_variable_set :@members_loaded, true unless sync_filter.fetch(:room, {}).fetch(:state, {}).fetch(:lazy_load_members, false)
+
         join[:state][:events].each do |event|
           event[:room_id] = room_id
           handle_state(room_id, event)
