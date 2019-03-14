@@ -61,5 +61,11 @@ module MatrixSdk
     rescue MatrixError
       nil
     end
+
+    def device_keys
+      @device_keys ||= client.api.keys_query(device_keys: { id => [] }).yield_self do |resp|
+        resp[:device_keys][id.to_sym]
+      end
+    end
   end
 end
