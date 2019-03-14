@@ -10,6 +10,14 @@ module URI
   @@schemes['MXC'] = MATRIX
 end
 
+unless Object.respond_to? :yield_self
+  class Object
+    def yield_self
+      yield(self)
+    end
+  end
+end
+
 def events(*symbols)
   module_name = "#{name}Events"
 
