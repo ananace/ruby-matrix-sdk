@@ -275,14 +275,16 @@ module MatrixSdk
 
     def sync(skip_store_batch: false, **params)
       extra_params = {
-        filter: sync_filter.to_json
+        filter: sync_filter
       }
       extra_params[:since] = @next_batch unless @next_batch.nil?
+      extra_params.merge!(params)
+      extra_params[:filter] = extra_params[:filter].to_json unless extra_params[:filter].is_a? String
 
       attempts = 0
       data = loop do
         begin
-          break api.sync extra_params.merge(params)
+          break api.sync extra_params
         rescue MatrixSdk::MatrixTimeoutError => ex
           raise ex if (attempts += 1) > params.fetch(:allow_sync_retry, 0)
         end
