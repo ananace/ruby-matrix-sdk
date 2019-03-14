@@ -48,7 +48,7 @@ module MatrixSdk
     #   An inspect method that skips a handful of instance variables to avoid
     #   flooding the terminal with debug data.
     #   @return [String] a regular inspect string without the data for some variables
-    ignore_inspect :client, :members, :events, :prev_batch,
+    ignore_inspect :client, :members, :events, :prev_batch, :logger,
                    :on_event, :on_state_event, :on_ephemeral_event
 
     alias room_id id
