@@ -16,7 +16,8 @@ ROOM_DISCOVERY_FILTER = {
         'm.room.aliases',
         'm.room.canonical_alias',
         'm.room.member'
-      ]
+      ],
+      lazy_load_members: true
     },
     timeline: { senders: [], types: [] },
     account_data: { senders: [], types: [] }
@@ -30,7 +31,8 @@ ROOM_STATE_FILTER = {
   room: {
     ephemeral: { senders: [], types: [] },
     state: {
-      types: ['m.room.member']
+      types: ['m.room.member'],
+      lazy_load_members: true
     },
     timeline: {
       types: ['m.room.message']
