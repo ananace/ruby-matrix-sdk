@@ -163,8 +163,13 @@ module MatrixSdk
       ensure_room(data.fetch(:room_id, room_id_or_alias))
     end
 
-    def find_room(room_id_or_alias)
-      @rooms.fetch(room_id_or_alias, @rooms.values.find { |r| r.canonical_alias == room_id_or_alias })
+    def find_room(room_id_or_alias, only_canonical: false)
+      room_id_or_alias = MXID.new(room_id_or_alias.to_s) unless room_id_or_alias.is_a? MXID
+      raise ArgumentError, 'Must be a room id or alias' unless %i[room_id room_alias].include? room_id_or_alias.type
+
+      return @rooms.fetch(room_id_or_alias, nil) if room_id_or_alias.room_id?
+      return @rooms.values.find { |r| r.canonical_alias == room_id_or_alias.to_s } if only_canonical
+      @rooms.values.find { |r| r.aliases.include? room_id_or_alias.to_s }
     end
 
     def get_user(user_id)
