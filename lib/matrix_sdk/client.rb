@@ -191,10 +191,6 @@ module MatrixSdk
       raise MatrixUnexpectedResponseError, 'Upload succeeded, but no media URI returned'
     end
 
-    def listen_for_events(timeout: 30, **arguments)
-      sync(arguments.merge(timeout: timeout))
-    end
-
     def start_listener_thread(params = {})
       @should_listen = true
       thread = Thread.new { listen_forever(params) }
@@ -209,6 +205,31 @@ module MatrixSdk
       @sync_thread.join if @sync_thread.alive?
       @sync_thread = nil
     end
+
+    def sync(skip_store_batch: false, **params)
+      extra_params = {
+        filter: sync_filter,
+        timeout: 30
+      }
+      extra_params[:since] = @next_batch unless @next_batch.nil?
+      extra_params.merge!(params)
+      extra_params[:filter] = extra_params[:filter].to_json unless extra_params[:filter].is_a? String
+
+      attempts = 0
+      data = loop do
+        begin
+          break api.sync extra_params
+        rescue MatrixSdk::MatrixTimeoutError => ex
+          raise ex if (attempts += 1) > params.fetch(:allow_sync_retry, 0)
+        end
+      end
+
+      @next_batch = data[:next_batch] unless skip_store_batch
+
+      handle_sync_response(data)
+    end
+
+    alias listen_for_events sync
 
     private
 
@@ -271,28 +292,6 @@ module MatrixSdk
           room.members.delete_if { |m| m.id == state_event[:state_key] }
         end
       end
-    end
-
-    def sync(skip_store_batch: false, **params)
-      extra_params = {
-        filter: sync_filter
-      }
-      extra_params[:since] = @next_batch unless @next_batch.nil?
-      extra_params.merge!(params)
-      extra_params[:filter] = extra_params[:filter].to_json unless extra_params[:filter].is_a? String
-
-      attempts = 0
-      data = loop do
-        begin
-          break api.sync extra_params
-        rescue MatrixSdk::MatrixTimeoutError => ex
-          raise ex if (attempts += 1) > params.fetch(:allow_sync_retry, 0)
-        end
-      end
-
-      @next_batch = data[:next_batch] unless skip_store_batch
-
-      handle_sync_response(data)
     end
 
     def handle_sync_response(data)
