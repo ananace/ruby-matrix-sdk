@@ -27,21 +27,26 @@ class ApiTest < Test::Unit::TestCase
     @http.expects(:request).with do |req|
       req.path == '/_matrix/client/r0/sync?timeout=30000'
     end.returns(mock_success('{}'))
-    assert_not_nil @api.sync.nil?
+    assert @api.sync
   end
 
   def test_send_message
     @api.expects(:request).with(:put, :client_r0, '/rooms/%21room%3Aexample.com/send/m.room.message/42', body: { msgtype: 'm.text', body: 'this is a message' }, query: {}).returns({})
-    assert_not_nil @api.send_message('!room:example.com', 'this is a message', txn_id: 42)
+    assert @api.send_message('!room:example.com', 'this is a message', txn_id: 42)
   end
 
   def test_send_emote
     @api.expects(:request).with(:put, :client_r0, '/rooms/%21room%3Aexample.com/send/m.room.message/42', body: { msgtype: 'm.emote', body: 'this is an emote' }, query: {}).returns({})
-    assert_not_nil @api.send_emote('!room:example.com', 'this is an emote', txn_id: 42)
+    assert @api.send_emote('!room:example.com', 'this is an emote', txn_id: 42)
   end
 
   def test_redact_event
     @api.expects(:request).with(:put, :client_r0, '/rooms/%21room%3Aexample.com/redact/%24eventid%3Aexample.com/42', body: {}, query: {}).returns({})
-    assert_not_nil @api.redact_event('!room:example.com', '$eventid:example.com', txn_id: 42)
+    assert @api.redact_event('!room:example.com', '$eventid:example.com', txn_id: 42)
+  end
+
+  def test_redact_event_w_reason
+    @api.expects(:request).with(:put, :client_r0, '/rooms/%21room%3Aexample.com/redact/%24eventid%3Aexample.com/42', body: { reason: 'oops' }, query: {}).returns({})
+    assert @api.redact_event('!room:example.com', '$eventid:example.com', txn_id: 42, reason: 'oops')
   end
 end
