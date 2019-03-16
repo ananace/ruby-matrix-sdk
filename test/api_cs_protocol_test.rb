@@ -39,4 +39,9 @@ class ApiTest < Test::Unit::TestCase
     @api.expects(:request).with(:put, :client_r0, '/rooms/%21room%3Aexample.com/send/m.room.message/42', body: { msgtype: 'm.emote', body: 'this is an emote' }, query: {}).returns({})
     assert_not_nil @api.send_emote('!room:example.com', 'this is an emote', txn_id: 42)
   end
+
+  def test_redact_event
+    @api.expects(:request).with(:put, :client_r0, '/rooms/%21room%3Aexample.com/redact/%24eventid%3Aexample.com/42', body: {}, query: {}).returns({})
+    assert_not_nil @api.redact_event('!room:example.com', '$eventid:example.com', txn_id: 42)
+  end
 end
