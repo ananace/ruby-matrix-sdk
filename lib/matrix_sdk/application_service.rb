@@ -29,28 +29,28 @@ module MatrixSdk
 
       @method_map = {}
 
-      add_method(:GET, %r{^/_matrix/app/v1/users/(?<user>@.+:.+)$}, :do_get_user)
-      add_method(:GET, %r{^/_matrix/app/v1/rooms/(?<room>#.+:.+)$}, :do_get_room)
+      add_method(:GET, '/_matrix/app/v1/users/', %r{^/_matrix/app/v1/users/(?<user>@.+:.+)$}, :do_get_user)
+      add_method(:GET, '/_matrix/app/v1/rooms/', %r{^/_matrix/app/v1/rooms/(?<room>#.+:.+)$}, :do_get_room)
 
-      add_method(:GET, %r{^/_matrix/app/v1/thirdparty/protocol/(?<protocol>.+)$}, :do_get_3p_protocol_p)
-      add_method(:GET, %r{^/_matrix/app/v1/thirdparty/user/(?<protocol>.+)$}, :do_get_3p_user_p)
-      add_method(:GET, %r{^/_matrix/app/v1/thirdparty/location/(?<protocol>.+)$}, :do_get_3p_location_p)
-      add_method(:GET, %r{^/_matrix/app/v1/thirdparty/user$}, :do_get_3p_user)
-      add_method(:GET, %r{^/_matrix/app/v1/thirdparty/location$}, :do_get_3p_location)
+      add_method(:GET, '/_matrix/app/v1/thirdparty/protocol/', %r{^/_matrix/app/v1/thirdparty/protocol/(?<protocol>.+)$}, :do_get_3p_protocol_p)
+      add_method(:GET, '/_matrix/app/v1/thirdparty/user/', %r{^/_matrix/app/v1/thirdparty/user/(?<protocol>.+)$}, :do_get_3p_user_p)
+      add_method(:GET, '/_matrix/app/v1/thirdparty/location/', %r{^/_matrix/app/v1/thirdparty/location/(?<protocol>.+)$}, :do_get_3p_location_p)
+      add_method(:GET, '/_matrix/app/v1/thirdparty/user', %r{^/_matrix/app/v1/thirdparty/user$}, :do_get_3p_user)
+      add_method(:GET, '/_matrix/app/v1/thirdparty/location', %r{^/_matrix/app/v1/thirdparty/location$}, :do_get_3p_location)
 
-      add_method(:PUT, %r{^/_matrix/app/v1/transactions/(?<txn_id>.+)$}, :do_put_transaction)
+      add_method(:PUT, '/_matrix/app/v1/transactions/', %r{^/_matrix/app/v1/transactions/(?<txn_id>.+)$}, :do_put_transaction)
 
       if legacy_routes
-        add_method(:GET, %r{^/users/(?<user>@.+:.+)$}, :do_get_user)
-        add_method(:GET, %r{^/rooms/(?<room>#.+:.+)$}, :do_get_room)
+        add_method(:GET, '/users/', %r{^/users/(?<user>@.+:.+)$}, :do_get_user)
+        add_method(:GET, '/rooms/', %r{^/rooms/(?<room>#.+:.+)$}, :do_get_room)
 
-        add_method(:GET, %r{^/_matrix/app/unstable/thirdparty/protocol/(?<protocol>.+)$}, :do_get_3p_protocol_p)
-        add_method(:GET, %r{^/_matrix/app/unstable/thirdparty/user/(?<protocol>.+)$}, :do_get_3p_user_p)
-        add_method(:GET, %r{^/_matrix/app/unstable/thirdparty/location/(?<protocol>.+)$}, :do_get_3p_location_p)
-        add_method(:GET, %r{^/_matrix/app/unstable/thirdparty/user$}, :do_get_3p_user)
-        add_method(:GET, %r{^/_matrix/app/unstable/thirdparty/location$}, :do_get_3p_location)
+        add_method(:GET, '/_matrix/app/unstable/thirdparty/protocol/', %r{^/_matrix/app/unstable/thirdparty/protocol/(?<protocol>.+)$}, :do_get_3p_protocol_p)
+        add_method(:GET, '/_matrix/app/unstable/thirdparty/user/', %r{^/_matrix/app/unstable/thirdparty/user/(?<protocol>.+)$}, :do_get_3p_user_p)
+        add_method(:GET, '/_matrix/app/unstable/thirdparty/location/', %r{^/_matrix/app/unstable/thirdparty/location/(?<protocol>.+)$}, :do_get_3p_location_p)
+        add_method(:GET, '/_matrix/app/unstable/thirdparty/user', %r{^/_matrix/app/unstable/thirdparty/user$}, :do_get_3p_user)
+        add_method(:GET, '/_matrix/app/unstable/thirdparty/location', %r{^/_matrix/app/unstable/thirdparty/location$}, :do_get_3p_location)
 
-        add_method(:PUT, %r{^/transactions/(?<txn_id>[^/]+)$}, :do_put_transaction)
+        add_method(:PUT, '/transactions/', %r{^/transactions/(?<txn_id>[^/]+)$}, :do_put_transaction)
       end
 
       start_server
@@ -80,16 +80,22 @@ module MatrixSdk
     def port=(port)
       raise ArgumentError, 'Port must be a number' unless port.is_a? Numeric
 
+      raise NotImplementedError, "Can't change port of a running server" if server.status != :Stop
+
       @port = port
     end
 
     protected
 
-    def add_method(method, regex, proc = nil, &block)
+    def add_method(method, prefix, regex, proc = nil, &block)
       proc ||= block
       raise ArgumentError, 'No method specified' if proc.nil?
 
-      (@method_map[method] ||= {})[regex] = proc
+      (@method_map[method] ||= {})[regex] = {
+        verb: method,
+        prefix: prefix,
+        proc: proc
+      }
     end
 
     def do_get_user(user:, **params)
@@ -133,11 +139,27 @@ module MatrixSdk
     end
 
     def start_server
-      @server = WEBrick::HTTPServer.new Port: port
+      server.start
 
-      @server.mount_proc '/', &:handle_request
+      @method_map.each do |verb, method_entry|
+        #break if verb != method_entry[:verb]
 
-      @server.start
+        method = method_entry[:proc]
+        server.mount_proc method.prefix do |req, res|
+          logger.debug "Received request for #{verb} #{method_entry}"
+          match = regex.match(req.request_uri.path)
+          match_hash = Hash[match.names.zip(match.captures)].merge(
+            request: req,
+            response: res
+          )
+
+          if method.is_a? Symbol
+            send method, match_hash
+          else
+            method.call match_hash
+          end
+        end
+      end
 
       logger.info "Application Service is now running on port #{port}"
     end
@@ -149,14 +171,25 @@ module MatrixSdk
 
     private
 
+    def server
+      @server ||= WEBrick::HTTPServer.new(Port: port, ServerSoftware: "#{MatrixSdk::Api::USER_AGENT} (Ruby #{RUBY_VERSION})").tap do |server|
+        server.mount_proc '/', &:handle_request
+      end
+    end
+
     def handle_request(request, response)
+      logger.debug "Received request #{request.inspect}"
+
       req_method = request.request_method.to_s.to_sym
       req_uri = request.request_uri
 
       map = @method_map[req_method]
-      raise WEBrick::HTTPStatus[405], {}.to_json if map.nil?
+      raise WEBrick::HTTPStatus[405], { message: 'Unsupported verb' }.to_json if map.nil?
 
-      method = map.find { |k, _v| k =~ req_uri.path }.last
+      discovered = map.find { |k, _v| k =~ req_uri.path }
+      raise WEBrick::HTTPStatus[404], { message: 'Unknown request' }.to_json if discovered.nil?
+
+      method = discovered.last
       match = Regexp.last_match
       match_hash = Hash[match.names.zip(match.captures)].merge(
         request: request,
