@@ -8,7 +8,7 @@ Gem::Specification.new do |spec|
 
   spec.summary       = 'SDK for applications using the Matrix protocol'
   spec.description   = spec.summary
-  spec.homepage      = 'https://github.com/ananace/ruby_matrix_sdk'
+  spec.homepage      = 'https://github.com/ananace/ruby-matrix-sdk'
   spec.license       = 'MIT'
 
   spec.files         = `git ls-files -z`.split("\x0").reject do |f|
