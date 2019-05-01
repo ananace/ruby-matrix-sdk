@@ -1,6 +1,6 @@
 require 'matrix_sdk'
 
-require 'cgi'
+require 'erb'
 require 'net/http'
 require 'openssl'
 require 'uri'
