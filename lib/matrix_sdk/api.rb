@@ -7,6 +7,11 @@ require 'uri'
 
 module MatrixSdk
   class Api
+    extend MatrixSdk::Protocols::AS
+    extend MatrixSdk::Protocols::CS
+    extend MatrixSdk::Protocols::IS
+    extend MatrixSdk::Protocols::CS
+
     USER_AGENT = "Ruby Matrix SDK v#{MatrixSdk::VERSION}".freeze
     DEFAULT_HEADERS = {
       'accept' => 'application/json',
@@ -42,9 +47,6 @@ module MatrixSdk
       @protocols = params.fetch(:protocols, %i[CS])
       @protocols = [@protocols] unless @protocols.is_a? Array
       @protocols << :CS if @protocols.include?(:AS) && !@protocols.include?(:CS)
-      @protocols.sort.reverse_each do |prot|
-        extend MatrixSdk::Protocols.const_get(prot)
-      end
 
       @connection_address = params.fetch(:address, nil)
       @connection_port = params.fetch(:port, nil)
@@ -174,18 +176,6 @@ module MatrixSdk
 
       @http.finish if @http
       @homeserver = hs_info
-    end
-
-    # Gets the server version
-    # @note This uses the unstable federation/v1 API
-    def server_version
-      Response.new(self, request(:get, :federation_v1, '/version').server).tap do |resp|
-        resp.instance_eval <<-'CODE', __FILE__, __LINE__ + 1
-          def to_s
-            "#{name} #{version}"
-          end
-        CODE
-      end
     end
 
     def request(method, api, path, options = {})
