@@ -8,7 +8,7 @@ module MatrixSdk
                    :access_token, :access_token=, :device_id, :device_id=, :homeserver, :homeserver=,
                    :validate_certificate, :validate_certificate=
 
-    def initialize(hs_url, as_token:, hs_token:, legacy_routes: false, **params)
+    def initialize(hs_url, as_token:, hs_token:, default_routes: true, **params)
       logger.warning 'This abstraction is still under HEAVY development, expect errors'
 
       params = { protocols: %i[AS CS] }.merge(params).merge(access_token: as_token)
@@ -29,28 +29,30 @@ module MatrixSdk
 
       @method_map = {}
 
-      add_method(:GET, '/_matrix/app/v1/users/', %r{^/_matrix/app/v1/users/(?<user>@.+:.+)$}, :do_get_user)
-      add_method(:GET, '/_matrix/app/v1/rooms/', %r{^/_matrix/app/v1/rooms/(?<room>#.+:.+)$}, :do_get_room)
+      if default_routes
+        add_method(:GET, '/_matrix/app/v1/users/', %r{^/_matrix/app/v1/users/(?<user>[^/]+)$}, :do_get_user)
+        add_method(:GET, '/_matrix/app/v1/rooms/', %r{^/_matrix/app/v1/rooms/(?<room>[^/]+)$}, :do_get_room)
 
-      add_method(:GET, '/_matrix/app/v1/thirdparty/protocol/', %r{^/_matrix/app/v1/thirdparty/protocol/(?<protocol>.+)$}, :do_get_3p_protocol_p)
-      add_method(:GET, '/_matrix/app/v1/thirdparty/user/', %r{^/_matrix/app/v1/thirdparty/user/(?<protocol>.+)$}, :do_get_3p_user_p)
-      add_method(:GET, '/_matrix/app/v1/thirdparty/location/', %r{^/_matrix/app/v1/thirdparty/location/(?<protocol>.+)$}, :do_get_3p_location_p)
-      add_method(:GET, '/_matrix/app/v1/thirdparty/user', %r{^/_matrix/app/v1/thirdparty/user$}, :do_get_3p_user)
-      add_method(:GET, '/_matrix/app/v1/thirdparty/location', %r{^/_matrix/app/v1/thirdparty/location$}, :do_get_3p_location)
+        add_method(:GET, '/_matrix/app/v1/thirdparty/protocol/', %r{^/_matrix/app/v1/thirdparty/protocol/(?<protocol>[^/]+)$}, :do_get_3p_protocol_p)
+        add_method(:GET, '/_matrix/app/v1/thirdparty/user/', %r{^/_matrix/app/v1/thirdparty/user/(?<protocol>[^/]+)$}, :do_get_3p_user_p)
+        add_method(:GET, '/_matrix/app/v1/thirdparty/location/', %r{^/_matrix/app/v1/thirdparty/location/(?<protocol>[^/]+)$}, :do_get_3p_location_p)
+        add_method(:GET, '/_matrix/app/v1/thirdparty/user', %r{^/_matrix/app/v1/thirdparty/user$}, :do_get_3p_user)
+        add_method(:GET, '/_matrix/app/v1/thirdparty/location', %r{^/_matrix/app/v1/thirdparty/location$}, :do_get_3p_location)
 
-      add_method(:PUT, '/_matrix/app/v1/transactions/', %r{^/_matrix/app/v1/transactions/(?<txn_id>.+)$}, :do_put_transaction)
+        add_method(:PUT, '/_matrix/app/v1/transactions/', %r{^/_matrix/app/v1/transactions/(?<txn_id>[^/]+)$}, :do_put_transaction)
 
-      if legacy_routes
-        add_method(:GET, '/users/', %r{^/users/(?<user>@.+:.+)$}, :do_get_user)
-        add_method(:GET, '/rooms/', %r{^/rooms/(?<room>#.+:.+)$}, :do_get_room)
+        if params.fetch(:legacy_routes, false)
+          add_method(:GET, '/users/', %r{^/users/(?<user>[^/]+)$}, :do_get_user)
+          add_method(:GET, '/rooms/', %r{^/rooms/(?<room>[^/]+)$}, :do_get_room)
 
-        add_method(:GET, '/_matrix/app/unstable/thirdparty/protocol/', %r{^/_matrix/app/unstable/thirdparty/protocol/(?<protocol>.+)$}, :do_get_3p_protocol_p)
-        add_method(:GET, '/_matrix/app/unstable/thirdparty/user/', %r{^/_matrix/app/unstable/thirdparty/user/(?<protocol>.+)$}, :do_get_3p_user_p)
-        add_method(:GET, '/_matrix/app/unstable/thirdparty/location/', %r{^/_matrix/app/unstable/thirdparty/location/(?<protocol>.+)$}, :do_get_3p_location_p)
-        add_method(:GET, '/_matrix/app/unstable/thirdparty/user', %r{^/_matrix/app/unstable/thirdparty/user$}, :do_get_3p_user)
-        add_method(:GET, '/_matrix/app/unstable/thirdparty/location', %r{^/_matrix/app/unstable/thirdparty/location$}, :do_get_3p_location)
+          add_method(:GET, '/_matrix/app/unstable/thirdparty/protocol/', %r{^/_matrix/app/unstable/thirdparty/protocol/(?<protocol>[^/]+)$}, :do_get_3p_protocol_p)
+          add_method(:GET, '/_matrix/app/unstable/thirdparty/user/', %r{^/_matrix/app/unstable/thirdparty/user/(?<protocol>[^/]+)$}, :do_get_3p_user_p)
+          add_method(:GET, '/_matrix/app/unstable/thirdparty/location/', %r{^/_matrix/app/unstable/thirdparty/location/(?<protocol>[^/]+)$}, :do_get_3p_location_p)
+          add_method(:GET, '/_matrix/app/unstable/thirdparty/user', %r{^/_matrix/app/unstable/thirdparty/user$}, :do_get_3p_user)
+          add_method(:GET, '/_matrix/app/unstable/thirdparty/location', %r{^/_matrix/app/unstable/thirdparty/location$}, :do_get_3p_location)
 
-        add_method(:PUT, '/transactions/', %r{^/transactions/(?<txn_id>[^/]+)$}, :do_put_transaction)
+          add_method(:PUT, '/transactions/', %r{^/transactions/(?<txn_id>[^/]+)$}, :do_put_transaction)
+        end
       end
 
       start_server
@@ -87,15 +89,18 @@ module MatrixSdk
 
     protected
 
-    def add_method(method, prefix, regex, proc = nil, &block)
+    def add_method(verb, prefix, regex, proc = nil, &block)
       proc ||= block
       raise ArgumentError, 'No method specified' if proc.nil?
 
-      (@method_map[method] ||= {})[regex] = {
-        verb: method,
+      method_entry = (@method_map[verb] ||= {})[regex] = {
+        verb: verb,
         prefix: prefix,
         proc: proc
       }
+      return true unless @server
+
+      server.mount_proc method.prefix { |req, res| _handle_proc(verb, method_entry, req, res) }
     end
 
     def do_get_user(user:, **params)
@@ -145,19 +150,7 @@ module MatrixSdk
         #break if verb != method_entry[:verb]
 
         method = method_entry[:proc]
-        server.mount_proc method.prefix do |req, res|
-          logger.debug "Received request for #{verb} #{method_entry}"
-          match = regex.match(req.request_uri.path)
-          match_hash = Hash[match.names.zip(match.captures)].merge(
-            request: req,
-            response: res
-          )
-
-          if method.is_a? Symbol
-            send method, match_hash
-          else
-            method.call match_hash
-          end
+        server.mount_proc method.prefix { |req, res| _handle_proc(verb, method_entry, req, res) }
         end
       end
 
@@ -170,6 +163,21 @@ module MatrixSdk
     end
 
     private
+
+    def _handle_proc(verb, method_entry, req, res)
+      logger.debug "Received request for #{verb} #{method_entry}"
+      match = regex.match(req.request_uri.path)
+      match_hash = Hash[match.names.zip(match.captures)].merge(
+        request: req,
+        response: res
+      )
+
+      if method.is_a? Symbol
+        send method, match_hash
+      else
+        method.call match_hash
+      end
+    end
 
     def server
       @server ||= WEBrick::HTTPServer.new(Port: port, ServerSoftware: "#{MatrixSdk::Api::USER_AGENT} (Ruby #{RUBY_VERSION})").tap do |server|
