@@ -4,7 +4,7 @@ module MatrixSdk::Protocols::IS
   end
 
   def identity_get_pubkey(id)
-    id = CGI.escape id.to_s
+    id = ERB::Util.url_encode id.to_s
 
     request(:get, :identity_api_v1, "/pubkey/#{id}")
   end

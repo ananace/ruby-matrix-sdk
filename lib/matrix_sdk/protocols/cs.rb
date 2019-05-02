@@ -168,7 +168,7 @@ module MatrixSdk::Protocols::CS
     # id_or_alias = MXID.new id_or_alias.to_s unless id_or_alias.is_a? MXID
     # raise ArgumentError, 'Not a room ID or alias' unless id_or_alias.room?
 
-    id_or_alias = CGI.escape id_or_alias.to_s
+    id_or_alias = ERB::Util.url_encode id_or_alias.to_s
 
     request(:post, :client_r0, "/join/#{id_or_alias}", query: query)
   end
@@ -187,9 +187,9 @@ module MatrixSdk::Protocols::CS
     query = {}
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
 
-    room_id = CGI.escape room_id.to_s
-    event_type = CGI.escape event_type.to_s
-    state_key = CGI.escape params[:state_key].to_s if params.key? :state_key
+    room_id = ERB::Util.url_encode room_id.to_s
+    event_type = ERB::Util.url_encode event_type.to_s
+    state_key = ERB::Util.url_encode params[:state_key].to_s if params.key? :state_key
 
     request(:put, :client_r0, "/rooms/#{room_id}/state/#{event_type}#{"/#{state_key}" unless state_key.nil?}", body: content, query: query)
   end
@@ -210,9 +210,9 @@ module MatrixSdk::Protocols::CS
     txn_id = transaction_id
     txn_id = params.fetch(:txn_id, "#{txn_id}#{Time.now.to_i}")
 
-    room_id = CGI.escape room_id.to_s
-    event_type = CGI.escape event_type.to_s
-    txn_id = CGI.escape txn_id.to_s
+    room_id = ERB::Util.url_encode room_id.to_s
+    event_type = ERB::Util.url_encode event_type.to_s
+    txn_id = ERB::Util.url_encode txn_id.to_s
 
     request(:put, :client_r0, "/rooms/#{room_id}/send/#{event_type}/#{txn_id}", body: content, query: query)
   end
@@ -236,9 +236,9 @@ module MatrixSdk::Protocols::CS
     txn_id = transaction_id
     txn_id = params.fetch(:txn_id, "#{txn_id}#{Time.now.to_i}")
 
-    room_id = CGI.escape room_id.to_s
-    event_id = CGI.escape event_id.to_s
-    txn_id = CGI.escape txn_id.to_s
+    room_id = ERB::Util.url_encode room_id.to_s
+    event_id = ERB::Util.url_encode event_id.to_s
+    txn_id = ERB::Util.url_encode txn_id.to_s
 
     request(:put, :client_r0, "/rooms/#{room_id}/redact/#{event_id}/#{txn_id}", body: content, query: query)
   end
@@ -399,7 +399,7 @@ module MatrixSdk::Protocols::CS
     query[:filter] = params.fetch(:filter) if params.key? :filter
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
 
-    room_id = CGI.escape room_id.to_s
+    room_id = ERB::Util.url_encode room_id.to_s
 
     request(:get, :client_r0, "/rooms/#{room_id}/messages", query: query)
   end
@@ -415,8 +415,8 @@ module MatrixSdk::Protocols::CS
     query = {}
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
 
-    room_id = CGI.escape room_id.to_s
-    state_type = CGI.escape state_type.to_s
+    room_id = ERB::Util.url_encode room_id.to_s
+    state_type = ERB::Util.url_encode state_type.to_s
 
     request(:get, :client_r0, "/rooms/#{room_id}/state/#{state_type}", query: query)
   end
@@ -463,7 +463,7 @@ module MatrixSdk::Protocols::CS
     query = {}
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
 
-    room_id = CGI.escape room_id.to_s
+    room_id = ERB::Util.url_encode room_id.to_s
 
     request(:post, :client_r0, "/rooms/#{room_id}/leave", query: query)
   end
@@ -472,7 +472,7 @@ module MatrixSdk::Protocols::CS
     query = {}
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
 
-    room_id = CGI.escape room_id.to_s
+    room_id = ERB::Util.url_encode room_id.to_s
 
     request(:post, :client_r0, "/rooms/#{room_id}/forget", query: query)
   end
@@ -485,7 +485,7 @@ module MatrixSdk::Protocols::CS
       user_id: user_id
     }
 
-    room_id = CGI.escape room_id.to_s
+    room_id = ERB::Util.url_encode room_id.to_s
 
     request(:post, :client_r0, "/rooms/#{room_id}/invite", body: content, query: query)
   end
@@ -498,8 +498,8 @@ module MatrixSdk::Protocols::CS
     query = {}
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
 
-    room_id = CGI.escape room_id.to_s
-    user_id = CGI.escape user_id.to_s
+    room_id = ERB::Util.url_encode room_id.to_s
+    user_id = ERB::Util.url_encode user_id.to_s
 
     request(:get, :client_r0, "/rooms/#{room_id}/state/m.room.member/#{user_id}", query: query)
   end
@@ -523,7 +523,7 @@ module MatrixSdk::Protocols::CS
       user_id: user_id,
       reason: reason
     }
-    room_id = CGI.escape room_id.to_s
+    room_id = ERB::Util.url_encode room_id.to_s
 
     request(:post, :client_r0, "/rooms/#{room_id}/ban", body: content, query: query)
   end
@@ -535,7 +535,7 @@ module MatrixSdk::Protocols::CS
     content = {
       user_id: user_id
     }
-    room_id = CGI.escape room_id.to_s
+    room_id = ERB::Util.url_encode room_id.to_s
 
     request(:post, :client_r0, "/rooms/#{room_id}/unban", body: content, query: query)
   end
@@ -544,8 +544,8 @@ module MatrixSdk::Protocols::CS
     query = {}
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
 
-    room_id = CGI.escape room_id.to_s
-    user_id = CGI.escape user_id.to_s
+    room_id = ERB::Util.url_encode room_id.to_s
+    user_id = ERB::Util.url_encode user_id.to_s
 
     request(:get, :client_r0, "/user/#{user_id}/rooms/#{room_id}/tags", query: query)
   end
@@ -554,9 +554,9 @@ module MatrixSdk::Protocols::CS
     query = {}
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
 
-    room_id = CGI.escape room_id.to_s
-    user_id = CGI.escape user_id.to_s
-    tag = CGI.escape tag.to_s
+    room_id = ERB::Util.url_encode room_id.to_s
+    user_id = ERB::Util.url_encode user_id.to_s
+    tag = ERB::Util.url_encode tag.to_s
 
     request(:delete, :client_r0, "/user/#{user_id}/rooms/#{room_id}/tags/#{tag}", query: query)
   end
@@ -572,9 +572,9 @@ module MatrixSdk::Protocols::CS
       content[:order] = params[:order] if params.key? :order
     end
 
-    room_id = CGI.escape room_id.to_s
-    user_id = CGI.escape user_id.to_s
-    tag = CGI.escape tag.to_s
+    room_id = ERB::Util.url_encode room_id.to_s
+    user_id = ERB::Util.url_encode user_id.to_s
+    tag = ERB::Util.url_encode tag.to_s
 
     request(:put, :client_r0, "/user/#{user_id}/rooms/#{room_id}/tags/#{tag}", body: content, query: query)
   end
@@ -583,8 +583,8 @@ module MatrixSdk::Protocols::CS
     query = {}
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
 
-    user_id = CGI.escape user_id.to_s
-    type_key = CGI.escape type_key.to_s
+    user_id = ERB::Util.url_encode user_id.to_s
+    type_key = ERB::Util.url_encode type_key.to_s
 
     request(:get, :client_r0, "/user/#{user_id}/account_data/#{type_key}", query: query)
   end
@@ -593,8 +593,8 @@ module MatrixSdk::Protocols::CS
     query = {}
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
 
-    user_id = CGI.escape user_id.to_s
-    type_key = CGI.escape type_key.to_s
+    user_id = ERB::Util.url_encode user_id.to_s
+    type_key = ERB::Util.url_encode type_key.to_s
 
     request(:put, :client_r0, "/user/#{user_id}/account_data/#{type_key}", body: account_data, query: query)
   end
@@ -603,9 +603,9 @@ module MatrixSdk::Protocols::CS
     query = {}
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
 
-    user_id = CGI.escape user_id.to_s
-    room_id = CGI.escape room_id.to_s
-    type_key = CGI.escape type_key.to_s
+    user_id = ERB::Util.url_encode user_id.to_s
+    room_id = ERB::Util.url_encode room_id.to_s
+    type_key = ERB::Util.url_encode type_key.to_s
 
     request(:get, :client_r0, "/user/#{user_id}/rooms/#{room_id}/account_data/#{type_key}", query: query)
   end
@@ -614,9 +614,9 @@ module MatrixSdk::Protocols::CS
     query = {}
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
 
-    user_id = CGI.escape user_id.to_s
-    room_id = CGI.escape room_id.to_s
-    type_key = CGI.escape type_key.to_s
+    user_id = ERB::Util.url_encode user_id.to_s
+    room_id = ERB::Util.url_encode room_id.to_s
+    type_key = ERB::Util.url_encode type_key.to_s
 
     request(:put, :client_r0, "/user/#{user_id}/rooms/#{room_id}/account_data/#{type_key}", body: account_data, query: query)
   end
@@ -625,8 +625,8 @@ module MatrixSdk::Protocols::CS
     query = {}
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
 
-    user_id = CGI.escape user_id.to_s
-    filter_id = CGI.escape filter_id.to_s
+    user_id = ERB::Util.url_encode user_id.to_s
+    filter_id = ERB::Util.url_encode filter_id.to_s
 
     request(:get, :client_r0, "/user/#{user_id}/filter/#{filter_id}", query: query)
   end
@@ -635,7 +635,7 @@ module MatrixSdk::Protocols::CS
     query = {}
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
 
-    user_id = CGI.escape user_id.to_s
+    user_id = ERB::Util.url_encode user_id.to_s
 
     request(:post, :client_r0, "/user/#{user_id}/filter", body: filter_params, query: query)
   end
@@ -651,7 +651,7 @@ module MatrixSdk::Protocols::CS
     query = {}
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
 
-    user_id = CGI.escape user_id.to_s
+    user_id = ERB::Util.url_encode user_id.to_s
 
     request(:get, :client_r0, "/profile/#{user_id}/displayname", query: query)
   end
@@ -664,7 +664,7 @@ module MatrixSdk::Protocols::CS
       displayname: display_name
     }
 
-    user_id = CGI.escape user_id.to_s
+    user_id = ERB::Util.url_encode user_id.to_s
 
     request(:put, :client_r0, "/profile/#{user_id}/displayname", body: content, query: query)
   end
@@ -673,7 +673,7 @@ module MatrixSdk::Protocols::CS
     query = {}
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
 
-    user_id = CGI.escape user_id.to_s
+    user_id = ERB::Util.url_encode user_id.to_s
 
     request(:get, :client_r0, "/profile/#{user_id}/avatar_url", query: query)
   end
@@ -686,7 +686,7 @@ module MatrixSdk::Protocols::CS
       avatar_url: url
     }
 
-    user_id = CGI.escape user_id.to_s
+    user_id = ERB::Util.url_encode user_id.to_s
 
     request(:put, :client_r0, "/profile/#{user_id}/avatar_url", body: content, query: query)
   end
@@ -696,7 +696,7 @@ module MatrixSdk::Protocols::CS
     raise 'Not a mxc:// URL' unless mxcurl.is_a? URI::MATRIX
 
     homeserver.dup.tap do |u|
-      full_path = CGI.escape mxcurl.full_path.to_s
+      full_path = ERB::Util.url_encode mxcurl.full_path.to_s
       u.path = "/_matrix/media/r0/download/#{full_path}"
     end
   end
@@ -705,7 +705,7 @@ module MatrixSdk::Protocols::CS
     query = {}
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
 
-    room_alias = CGI.escape room_alias.to_s
+    room_alias = ERB::Util.url_encode room_alias.to_s
 
     request(:get, :client_r0, "/directory/room/#{room_alias}", query: query)
   end
@@ -717,7 +717,7 @@ module MatrixSdk::Protocols::CS
     content = {
       room_id: room_id
     }
-    room_alias = CGI.escape room_alias.to_s
+    room_alias = ERB::Util.url_encode room_alias.to_s
 
     request(:put, :client_r0, "/directory/room/#{room_alias}", body: content, query: query)
   end
@@ -726,7 +726,7 @@ module MatrixSdk::Protocols::CS
     query = {}
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
 
-    room_alias = CGI.escape room_alias.to_s
+    room_alias = ERB::Util.url_encode room_alias.to_s
 
     request(:delete, :client_r0, "/directory/room/#{room_alias}", query: query)
   end
@@ -735,7 +735,7 @@ module MatrixSdk::Protocols::CS
     query = {}
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
 
-    room_id = CGI.escape room_id.to_s
+    room_id = ERB::Util.url_encode room_id.to_s
 
     request(:get, :client_r0, "/rooms/#{room_id}/members", query: query)
   end
@@ -762,19 +762,19 @@ module MatrixSdk::Protocols::CS
   end
 
   def get_device(device_id)
-    device_id = CGI.escape device_id.to_s
+    device_id = ERB::Util.url_encode device_id.to_s
 
     request(:get, :client_r0, "/devices/#{device_id}")
   end
 
   def set_device(device_id, display_name:)
-    device_id = CGI.escape device_id.to_s
+    device_id = ERB::Util.url_encode device_id.to_s
 
     request(:put, :client_r0, "/devices/#{device_id}", body: { display_name: display_name })
   end
 
   def delete_device(device_id, auth:)
-    device_id = CGI.escape device_id.to_s
+    device_id = ERB::Util.url_encode device_id.to_s
 
     request(:delete, :client_r0, "/devices/#{device_id}", body: { auth: auth })
   end
