@@ -8,10 +8,10 @@ require 'uri'
 module MatrixSdk
   class Api
     include MatrixSdk::Logging
-    extend MatrixSdk::Protocols::AS
-    extend MatrixSdk::Protocols::CS
-    extend MatrixSdk::Protocols::IS
-    extend MatrixSdk::Protocols::CS
+    include MatrixSdk::Protocols::AS
+    include MatrixSdk::Protocols::CS
+    include MatrixSdk::Protocols::IS
+    include MatrixSdk::Protocols::CS
 
     USER_AGENT = "Ruby Matrix SDK v#{MatrixSdk::VERSION}".freeze
     DEFAULT_HEADERS = {

@@ -1,5 +1,5 @@
 module MatrixSdk::Protocols::AS
-  def self.extended(_klass)
+  def self.included(_klass)
     # XXX
   end
 end
