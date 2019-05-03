@@ -3,6 +3,8 @@ require 'matrix_sdk'
 module MatrixSdk
   # A class for tracking the information about a room on Matrix
   class Room
+    include MatrixSdk::Logging
+
     # @!attribute [rw] canonical_alias
     #   @return [String, nil] the canonical alias of the room
     # @!attribute [rw] event_history_limit
@@ -76,10 +78,6 @@ module MatrixSdk
       end
 
       logger.debug "Created room #{room_id}"
-    end
-
-    def logger
-      @logger ||= Logging.logger[self]
     end
 
     #

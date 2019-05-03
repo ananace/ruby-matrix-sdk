@@ -7,6 +7,7 @@ require 'uri'
 
 module MatrixSdk
   class Api
+    include MatrixSdk::Logging
     extend MatrixSdk::Protocols::AS
     extend MatrixSdk::Protocols::CS
     extend MatrixSdk::Protocols::IS
@@ -145,12 +146,6 @@ module MatrixSdk
 
     def protocol?(protocol)
       protocols.include? protocol
-    end
-
-    # Gets the logger for the API
-    # @return [Logging::Logger] The API-scope logger
-    def logger
-      @logger ||= Logging.logger[self]
     end
 
     # @param seconds [Numeric]

@@ -2,6 +2,7 @@ require 'matrix_sdk'
 
 module MatrixSdk
   class ApplicationService
+    include MatrixSdk::Logging
     attr_reader :api, :port
 
     def_delegators :@api,
@@ -56,10 +57,6 @@ module MatrixSdk
       end
 
       start_server
-    end
-
-    def logger
-      @logger ||= Logging.logger[self]
     end
 
     def registration

@@ -68,7 +68,14 @@ def ignore_inspect(*symbols)
 end
 
 module MatrixSdk
+  module Logging
+    def logger
+      @logger ||= ::Logging.logger[self]
+    end
+  end
+
   class EventHandlerArray < Hash
+    include MatrixSdk::Logging
     attr_accessor :reraise_exceptions
 
     def initialize(*args)
@@ -96,10 +103,6 @@ module MatrixSdk
           raise ex if @reraise_exceptions
         end
       end
-    end
-
-    def logger
-      @logger ||= Logging.logger[self]
     end
   end
 

@@ -4,6 +4,7 @@ require 'forwardable'
 
 module MatrixSdk
   class Client
+    include MatrixSdk::Logging
     extend Forwardable
 
     attr_reader :api
@@ -68,10 +69,6 @@ module MatrixSdk
       return unless params[:user_id]
 
       @mxid = params[:user_id]
-    end
-
-    def logger
-      @logger ||= Logging.logger[self]
     end
 
     def mxid
