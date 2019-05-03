@@ -242,6 +242,7 @@ module MatrixSdk
     # @param reason [String,nil] the reason for the redaction
     def redact_message(event_id, reason = nil)
       client.api.redact_event(id, event_id, reason: reason)
+      true
     end
 
     # Backfills messages into the room history
@@ -256,6 +257,7 @@ module MatrixSdk
       events.each do |ev|
         put_event(ev)
       end
+      true
     end
 
     #
@@ -269,8 +271,6 @@ module MatrixSdk
       user_id = user_id.id if user_id.is_a? MatrixSdk::User
       client.api.invite_user(id, user_id)
       true
-    rescue MatrixError
-      false
     end
 
     # Kicks a user from the room
@@ -281,8 +281,6 @@ module MatrixSdk
       user_id = user_id.id if user_id.is_a? MatrixSdk::User
       client.api.kick_user(id, user_id, reason: reason)
       true
-    rescue MatrixError
-      false
     end
 
     # Bans a user from the room
@@ -293,8 +291,6 @@ module MatrixSdk
       user_id = user_id.id if user_id.is_a? MatrixSdk::User
       client.api.ban_user(id, user_id, reason: reason)
       true
-    rescue MatrixError
-      false
     end
 
     # Unbans a user from the room
@@ -304,8 +300,6 @@ module MatrixSdk
       user_id = user_id.id if user_id.is_a? MatrixSdk::User
       client.api.unban_user(id, user_id)
       true
-    rescue MatrixError
-      false
     end
 
     # Requests to be removed from the room
@@ -314,8 +308,6 @@ module MatrixSdk
       client.api.leave_room(id)
       client.rooms.delete id
       true
-    rescue MatrixError
-      false
     end
 
     # Retrieves a custom entry from the room-specific account data
@@ -330,6 +322,7 @@ module MatrixSdk
     # @param account_data [Hash] the data to store
     def set_account_data(type, account_data)
       client.api.set_room_account_data(client.mxid, id, type, account_data)
+      true
     end
 
     # Changes the room-specific user profile
@@ -347,6 +340,7 @@ module MatrixSdk
       data[:avatar_url] = params[:avatar_url] unless params[:avatar_url].nil?
 
       client.api.set_membership(id, client.mxid, 'join', params.fetch(:reason, 'Updating room profile information'), data)
+      true
     end
 
     def tags
@@ -369,10 +363,12 @@ module MatrixSdk
 
     def remove_tag(tag)
       client.api.remove_user_tag(client.mxid, id, tag)
+      true
     end
 
     def add_tag(tag, params = {})
       client.api.add_user_tag(client.mxid, id, tag, params)
+      true
     end
 
     #
@@ -382,8 +378,6 @@ module MatrixSdk
     def name=(name)
       client.api.set_room_name(id, name)
       @name = name
-    rescue MatrixError
-      nil
     end
 
     # Reloads the name of the room
@@ -393,15 +387,11 @@ module MatrixSdk
       changed = data[:name] != name
       @name = data[:name] if changed
       changed
-    rescue MatrixError
-      false
     end
 
     def topic=(topic)
       client.api.set_room_topic(id, topic)
       @topic = topic
-    rescue MatrixError
-      nil
     end
 
     # Reloads the topic of the room
@@ -411,8 +401,6 @@ module MatrixSdk
       changed = data[:topic] != topic
       @topic = data[:topic] if changed
       changed
-    rescue MatrixError
-      false
     end
 
     # Add an alias to the room
@@ -421,8 +409,6 @@ module MatrixSdk
       client.api.set_room_alias(id, room_alias)
       @aliases << room_alias
       true
-    rescue MatrixError
-      false
     end
 
     # Reloads the list of aliases by an API query
@@ -440,8 +426,6 @@ module MatrixSdk
       changed = new_aliases != aliases
       @aliases = new_aliases if changed
       changed
-    rescue MatrixError
-      false
     end
 
     def invite_only=(invite_only)
@@ -452,8 +436,6 @@ module MatrixSdk
     def join_rule=(join_rule)
       client.api.set_join_rule(id, join_rule)
       @join_rule = join_rule
-    rescue MatrixError
-      nil
     end
 
     def allow_guests=(allow_guests)
@@ -464,8 +446,6 @@ module MatrixSdk
     def guest_access=(guest_access)
       client.api.set_guest_access(id, guest_access)
       @guest_access = guest_access
-    rescue MatrixError
-      nil
     end
 
     # Modifies the power levels of the room
@@ -486,8 +466,6 @@ module MatrixSdk
 
       client.api.set_power_levels(id, data)
       true
-    rescue MatrixError
-      false
     end
 
     # Modifies the required power levels for actions in the room
@@ -508,8 +486,7 @@ module MatrixSdk
       end
 
       client.api.set_power.levels(id, data)
-    rescue MatrixError
-      false
+      true
     end
 
     private

@@ -39,8 +39,6 @@ module MatrixSdk
     def display_name=(name)
       client.api.set_display_name(id, name)
       @display_name = name
-    rescue MatrixError
-      nil
     end
 
     # Gets a friendly name of the user
@@ -58,8 +56,6 @@ module MatrixSdk
     def avatar_url=(url)
       client.api.set_avatar_url(id, url)
       @avatar_url = url
-    rescue MatrixError
-      nil
     end
 
     def device_keys
