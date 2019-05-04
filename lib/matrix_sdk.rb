@@ -32,8 +32,8 @@ module MatrixSdk
   end
 
   def self.logger
-    @logger ||= Logging.logger[self].tap do |logger|
-      logger.add_appenders Logging.appenders.stdout
+    @logger ||= ::Logging.logger[self].tap do |logger|
+      logger.add_appenders ::Logging.appenders.stdout
       logger.level = :info
     end
   end
