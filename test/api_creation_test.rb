@@ -22,13 +22,13 @@ class ApiTest < Test::Unit::TestCase
     api = MatrixSdk::Api.new 'https://matrix.example.com'
 
     assert api.respond_to? :join_room
-    assert !api.respond_to?(:identity_status)
+    # assert !api.respond_to?(:identity_status) # No longer true since the definite include
   end
 
   def test_creation_with_is_protocol
     api = MatrixSdk::Api.new 'https://matrix.example.com', protocols: :IS
 
-    assert !api.respond_to?(:join_room)
+    # assert !api.respond_to?(:join_room) # No longer true since the definite include
     assert api.respond_to? :identity_status
   end
 
