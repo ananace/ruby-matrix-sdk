@@ -60,9 +60,10 @@ end
 def ignore_inspect(*symbols)
   class_eval %*
     def inspect
+      reentrant = caller_locations.any? { |l| l.absolute_path == __FILE__ && l.label == 'inspect' }
       "\#{to_s[0..-2]} \#{instance_variables
         .reject { |f| %i[#{symbols.map { |s| "@#{s}" }.join ' '}].include? f }
-        .map { |f| "\#{f}=\#{instance_variable_get(f).inspect}" }.join " " }}>"
+        .map { |f| "\#{f}=\#{reentrant ? instance_variable_get(f) : instance_variable_get(f).inspect}" }.join " " }}>"
     end
   *, __FILE__, __LINE__ - 6
 end
