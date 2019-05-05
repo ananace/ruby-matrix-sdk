@@ -49,4 +49,9 @@ class ApiTest < Test::Unit::TestCase
     @api.expects(:request).with(:put, :client_r0, '/rooms/%21room%3Aexample.com/redact/%24eventid%3Aexample.com/42', body: { reason: 'oops' }, query: {}).returns({})
     assert @api.redact_event('!room:example.com', '$eventid:example.com', txn_id: 42, reason: 'oops')
   end
+
+  def test_eventv3_slashes
+    @api.expects(:request).with(:put, :client_r0, '/rooms/%21room%3Aexample.com/redact/%24acR1l0raoZnm60CBwAVgqbZqoO%2FmYU81xysh1u7XcJk/42', body: { reason: 'oops' }, query: {}).returns({})
+    assert @api.redact_event('!room:example.com', '$acR1l0raoZnm60CBwAVgqbZqoO/mYU81xysh1u7XcJk', txn_id: 42, reason: 'oops')
+  end
 end
