@@ -259,7 +259,11 @@ module MatrixSdk
 
     def ensure_room(room_id)
       room_id = room_id.to_s unless room_id.is_a? String
-      @rooms.fetch(room_id) { @rooms[room_id] = Room.new(self, room_id) }
+      @rooms.fetch(room_id) do
+        room = Room.new(self, room_id)
+        @rooms[room_id] = room unless cache == :none
+        room
+      end
     end
 
     def handle_state(room_id, state_event)
@@ -284,7 +288,9 @@ module MatrixSdk
         return unless cache == :all
 
         if content[:membership] == 'join'
-          room.send :ensure_member, User.new(self, state_event[:state_key], display_name: content[:displayname])
+          room.send(:ensure_member, get_user(state_event[:state_key]).dup.tap do |u|
+            u.instance_variable_set :@display_name, content[:displayname]
+          end)
         elsif %w[leave kick invite].include? content[:membership]
           room.members.delete_if { |m| m.id == state_event[:state_key] }
         end
