@@ -241,8 +241,8 @@ module MatrixSdk
       clean_body = JSON.parse(http.body) rescue nil if http.body
       clean_body.keys.each { |k| clean_body[k] = '[ REDACTED ]' if %w[password access_token].include?(k) }.to_json if clean_body
       logger.debug "#{dir} #{clean_body.length < 200 ? clean_body : clean_body.slice(0..200) + "... [truncated, #{clean_body.length} Bytes]"}" if clean_body
-    rescue StandardError => ex
-      logger.warn "#{ex.class} occured while printing request debug; #{ex.message}\n#{ex.backtrace.join "\n"}"
+    rescue StandardError => e
+      logger.warn "#{e.class} occured while printing request debug; #{e.message}\n#{e.backtrace.join "\n"}"
     end
 
     def transaction_id

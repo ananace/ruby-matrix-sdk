@@ -65,7 +65,7 @@ def ignore_inspect(*symbols)
         .reject { |f| %i[#{symbols.map { |s| "@#{s}" }.join ' '}].include? f }
         .map { |f| "\#{f}=\#{reentrant ? instance_variable_get(f) : instance_variable_get(f).inspect}" }.join " " }}>"
     end
-  *, __FILE__, __LINE__ - 6
+  *, __FILE__, __LINE__ - 7
 end
 
 module MatrixSdk
@@ -98,10 +98,10 @@ module MatrixSdk
       reverse_each do |_k, h|
         begin
           h[:block].call(event) if event.matches?(h[:filter], filter)
-        rescue StandardError => ex
-          logger.error "#{ex.class.name} occurred when firing event (#{event})\n#{ex}"
+        rescue StandardError => e
+          logger.error "#{e.class.name} occurred when firing event (#{event})\n#{e}"
 
-          raise ex if @reraise_exceptions
+          raise e if @reraise_exceptions
         end
       end
     end

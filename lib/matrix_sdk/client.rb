@@ -165,7 +165,9 @@ module MatrixSdk
       raise ArgumentError, 'Must be a room id or alias' unless %i[room_id room_alias].include? room_id_or_alias.type
 
       return @rooms.fetch(room_id_or_alias, nil) if room_id_or_alias.room_id?
+
       return @rooms.values.find { |r| r.canonical_alias == room_id_or_alias.to_s } if only_canonical
+
       @rooms.values.find { |r| r.aliases.include? room_id_or_alias.to_s }
     end
 
@@ -216,8 +218,8 @@ module MatrixSdk
       data = loop do
         begin
           break api.sync extra_params
-        rescue MatrixSdk::MatrixTimeoutError => ex
-          raise ex if (attempts += 1) > params.fetch(:allow_sync_retry, 0)
+        rescue MatrixSdk::MatrixTimeoutError => e
+          raise e if (attempts += 1) > params.fetch(:allow_sync_retry, 0)
         end
       end
 
@@ -238,9 +240,9 @@ module MatrixSdk
 
           bad_sync_timeout = orig_bad_sync_timeout
           sleep(sync_interval) if sync_interval > 0
-        rescue MatrixRequestError => ex
-          logger.warn("A #{ex.class} occurred during sync")
-          if ex.httpstatus >= 500
+        rescue MatrixRequestError => e
+          logger.warn("A #{e.class} occurred during sync")
+          if e.httpstatus >= 500
             logger.warn("Serverside error, retrying in #{bad_sync_timeout} seconds...")
             sleep params[:bad_sync_timeout]
             bad_sync_timeout = [bad_sync_timeout * 2, @bad_sync_timeout_limit].min

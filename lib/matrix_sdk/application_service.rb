@@ -97,7 +97,7 @@ module MatrixSdk
       }
       return true unless @server
 
-      server.mount_proc method.prefix { |req, res| _handle_proc(verb, method_entry, req, res) }
+      server.mount_proc(method.prefix) { |req, res| _handle_proc(verb, method_entry, req, res) }
     end
 
     def do_get_user(user:, **params)
@@ -144,11 +144,10 @@ module MatrixSdk
       server.start
 
       @method_map.each do |verb, method_entry|
-        #break if verb != method_entry[:verb]
+        # break if verb != method_entry[:verb]
 
         method = method_entry[:proc]
-        server.mount_proc method.prefix { |req, res| _handle_proc(verb, method_entry, req, res) }
-        end
+        server.mount_proc(method.prefix) { |req, res| _handle_proc(verb, method_entry, req, res) }
       end
 
       logger.info "Application Service is now running on port #{port}"
