@@ -47,7 +47,7 @@ class ClientTest < Test::Unit::TestCase
     cl = MatrixSdk::Client.new 'https://example.com'
     cl.api.expects(:sync)
       .times(2).raises(MatrixSdk::MatrixTimeoutError)
-      .returns(presence: { events: [] }, rooms: { invite: [], leave: [], join: [] }, next_batch: '0')
+      .then.returns(presence: { events: [] }, rooms: { invite: [], leave: [], join: [] }, next_batch: '0')
 
     cl.sync(allow_sync_retry: 5)
   end
