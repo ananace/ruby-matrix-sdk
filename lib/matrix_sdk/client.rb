@@ -10,9 +10,9 @@ module MatrixSdk
     attr_reader :api
     attr_accessor :cache, :sync_filter
 
-    events :event, :presence_event, :invite_event, :left_event, :ephemeral_event
+    events :event, :presence_event, :invite_event, :leave_event, :ephemeral_event
     ignore_inspect :api,
-                   :on_event, :on_presence_event, :on_invite_event, :on_left_event, :on_ephemeral_event
+                   :on_event, :on_presence_event, :on_invite_event, :on_leave_event, :on_ephemeral_event
 
     def_delegators :@api,
                    :access_token, :access_token=, :device_id, :device_id=, :homeserver, :homeserver=,
