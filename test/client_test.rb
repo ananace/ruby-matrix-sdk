@@ -42,4 +42,20 @@ class ClientTest < Test::Unit::TestCase
     assert cl_some.instance_variable_get(:@users).empty?
     assert !cl_all.instance_variable_get(:@users).empty?
   end
+
+  def test_sync_retry
+    cl = MatrixSdk::Client.new 'https://example.com'
+    cl.api.expects(:sync)
+      .times(2).raises(MatrixSdk::MatrixTimeoutError)
+      .returns(presence: { events: [] }, rooms: { invite: [], leave: [], join: [] }, next_batch: '0')
+
+    cl.sync(allow_sync_retry: 5)
+  end
+
+  def test_sync_limited_retry
+    cl = MatrixSdk::Client.new 'https://example.com'
+    cl.api.expects(:sync).times(5).raises(MatrixSdk::MatrixTimeoutError)
+
+    assert_raises(MatrixSdk::MatrixTimeoutError) { cl.sync(allow_sync_retry: 5) }
+  end
 end

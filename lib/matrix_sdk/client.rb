@@ -219,7 +219,7 @@ module MatrixSdk
         begin
           break api.sync extra_params
         rescue MatrixSdk::MatrixTimeoutError => e
-          raise e if (attempts += 1) > params.fetch(:allow_sync_retry, 0)
+          raise e if (attempts += 1) >= params.fetch(:allow_sync_retry, 0)
         end
       end
 
