@@ -58,4 +58,19 @@ class ClientTest < Test::Unit::TestCase
 
     assert_raises(MatrixSdk::MatrixTimeoutError) { cl.sync(allow_sync_retry: 5) }
   end
+
+  def test_events
+    cl = MatrixSdk::Client.new 'https://example.com'
+
+
+    cl.instance_variable_get(:@on_presence_event).expects(:fire).once
+    cl.instance_variable_get(:@on_invite_event).expects(:fire).once
+    cl.instance_variable_get(:@on_leave_event).expects(:fire).once
+    cl.instance_variable_get(:@on_event).expects(:fire).twice
+    cl.instance_variable_get(:@on_ephemeral_event).expects(:fire).once
+
+    response = JSON.parse(open('test/fixtures/sync_response.json').read, symbolize_names: true)
+
+    cl.send :handle_sync_response, response
+  end
 end
