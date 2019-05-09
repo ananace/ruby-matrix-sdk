@@ -305,11 +305,11 @@ module MatrixSdk
       end
 
       data[:rooms][:invite].each do |room_id, invite|
-        fire_invite_event(MatrixEvent.new(self, invite), room_id)
+        fire_invite_event(MatrixEvent.new(self, invite), room_id.to_s)
       end
 
       data[:rooms][:leave].each do |room_id, left|
-        fire_leave_event(MatrixEvent.new(self, left), room_id)
+        fire_leave_event(MatrixEvent.new(self, left), room_id.to_s)
       end
 
       data[:rooms][:join].each do |room_id, join|
@@ -318,19 +318,20 @@ module MatrixSdk
         room.instance_variable_set :@members_loaded, true unless sync_filter.fetch(:room, {}).fetch(:state, {}).fetch(:lazy_load_members, false)
 
         join[:state][:events].each do |event|
-          event[:room_id] = room_id
+          event[:room_id] = room_id.to_s
           handle_state(room_id, event)
         end
 
         join[:timeline][:events].each do |event|
-          event[:room_id] = room_id
+          event[:room_id] = room_id.to_s
+          handle_state(room_id, event) unless event[:type] == 'm.room.message'
           room.send :put_event, event
 
           fire_event(MatrixEvent.new(self, event), event[:type])
         end
 
         join[:ephemeral][:events].each do |event|
-          event[:room_id] = room_id
+          event[:room_id] = room_id.to_s
           room.send :put_ephemeral_event, event
 
           fire_ephemeral_event(MatrixEvent.new(self, event), event[:type])

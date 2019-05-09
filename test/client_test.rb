@@ -73,4 +73,38 @@ class ClientTest < Test::Unit::TestCase
 
     cl.send :handle_sync_response, response
   end
+
+  def test_sync_results
+    cl = MatrixSdk::Client.new 'https://example.com'
+    response = JSON.parse(open('test/fixtures/sync_response.json').read, symbolize_names: true)
+
+    cl.instance_variable_get(:@on_ephemeral_event)
+      .expects(:fire).with do |ev|
+      wanted = { type: 'm.typing', content: { user_ids: ['@alice:example.com'] }, room_id: '!726s6s6q:example.com' }
+      ev.event == wanted
+    end
+
+    cl.send :handle_sync_response, response
+
+    assert_equal 1, cl.rooms.count
+
+    room = cl.rooms.first
+    assert_equal '!726s6s6q:example.com', room.id
+    assert_equal 2, room.events.count
+    assert_equal 'I am a fish', room.events.last[:content][:body]
+    assert_equal '@alice:example.com', room.events.last[:sender]
+    assert_equal 2, room.members.count
+    assert_equal '@alice:example.com', room.members.first.id
+    assert_equal '@bob:example.com', room.members.last.id
+
+    cl.api.expects(:get_avatar_url).with('@alice:example.com').returns(avatar_url: 'mxc://example')
+    cl.api.expects(:get_display_name).with('@alice:example.com').returns(displayname: 'Alice')
+
+    assert_equal 'mxc://example', room.members.first.avatar_url
+    assert_equal 'Alice', room.members.first.display_name
+
+    # Ensure room-specific member updates don't escape the room context
+    assert_nil cl.get_user('@alice:example.com').instance_variable_get(:@avatar_url)
+    assert_nil cl.get_user('@alice:example.com').instance_variable_get(:@display_name)
+  end
 end
