@@ -278,6 +278,8 @@ module MatrixSdk
         room.instance_variable_set '@name', content[:name]
       when 'm.room.canonical_alias'
         room.instance_variable_set '@canonical_alias', content[:alias]
+        # Also add as a regular alias
+        room.instance_variable_get('@aliases').concat [content[:alias]]
       when 'm.room.topic'
         room.instance_variable_set '@topic', content[:topic]
       when 'm.room.aliases'

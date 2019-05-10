@@ -107,4 +107,48 @@ class ClientTest < Test::Unit::TestCase
     assert_nil cl.get_user('@alice:example.com').instance_variable_get(:@avatar_url)
     assert_nil cl.get_user('@alice:example.com').instance_variable_get(:@display_name)
   end
+
+  def test_state_handling
+    cl = MatrixSdk::Client.new 'https://example.com'
+    room = '!roomid:example.com'
+    cl.send :ensure_room, room
+
+    cl.api.expects(:get_room_members).returns(chunk: [])
+
+    assert_equal 'Empty Room', cl.rooms.first.display_name
+    cl.send(:handle_state, room, type: 'm.room.member', content: { membership: 'join', displayname: 'Alice' }, state_key: '@alice:example.com')
+    assert_equal 'Alice', cl.rooms.first.display_name
+    cl.send(:handle_state, room, type: 'm.room.member', content: { membership: 'join', displayname: 'Bob' }, state_key: '@bob:example.com')
+    assert_equal 'Alice and Bob', cl.rooms.first.display_name
+    cl.send(:handle_state, room, type: 'm.room.member', content: { membership: 'join', displayname: 'Charlie' }, state_key: '@charlie:example.com')
+    assert_equal 'Alice and 2 others', cl.rooms.first.display_name
+    cl.send(:handle_state, room, type: 'm.room.member', content: { membership: 'kick' }, state_key: '@charlie:example.com')
+    assert_equal 'Alice and Bob', cl.rooms.first.display_name
+
+    cl.send(:handle_state, room, type: 'm.room.canonical_alias', content: { alias: '#test:example.com' })
+    assert_equal '#test:example.com', cl.rooms.first.canonical_alias
+    assert_equal '#test:example.com', cl.rooms.first.display_name
+    cl.send(:handle_state, room, type: 'm.room.name', content: { name: 'Test room' })
+    assert_equal 'Test room', cl.rooms.first.display_name
+    cl.send(:handle_state, room, type: 'm.room.topic', content: { topic: 'Test room' })
+    assert_equal 'Test room', cl.rooms.first.topic
+    cl.send(:handle_state, room, type: 'm.room.aliases', content: { aliases: ['#test:example1.com'] })
+    assert cl.rooms.first.aliases.include? '#test:example1.com'
+    assert cl.rooms.first.aliases.include? '#test:example.com'
+    cl.send(:handle_state, room, type: 'm.room.join_rules', content: { join_rule: :invite })
+    assert cl.rooms.first.invite_only?
+    cl.send(:handle_state, room, type: 'm.room.guest_access', content: { guest_access: :can_join })
+    assert cl.rooms.first.guest_access?
+  end
+
+  def test_login
+    cl = MatrixSdk::Client.new 'https://example.com'
+    cl.api.expects(:login).with(user: 'alice', password: 'password').returns(user_id: '@alice:example.com', access_token: 'opaque', device_id: 'device', home_server: 'example.com')
+    cl.expects(:sync)
+
+    cl.login('alice', 'password')
+
+    assert cl.logged_in?
+    assert_equal '@alice:example.com', cl.mxid
+  end
 end

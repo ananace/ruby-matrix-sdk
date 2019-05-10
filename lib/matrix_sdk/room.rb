@@ -99,7 +99,7 @@ module MatrixSdk
 
       members = joined_members
                 .reject { |m| m.user_id == client.mxid }
-                .map(&:get_display_name)
+                .map(&:display_name)
 
       return members.first if members.one?
       return "#{members.first} and #{members.last}" if members.count == 2
