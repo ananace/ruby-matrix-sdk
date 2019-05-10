@@ -249,7 +249,7 @@ module MatrixSdk
           logger.warn("A #{e.class} occurred during sync")
           if e.httpstatus >= 500
             logger.warn("Serverside error, retrying in #{bad_sync_timeout} seconds...")
-            sleep params[:bad_sync_timeout]
+            sleep(bad_sync_timeout) if bad_sync_timeout > 0
             bad_sync_timeout = [bad_sync_timeout * 2, @bad_sync_timeout_limit].min
           end
         end

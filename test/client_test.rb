@@ -139,6 +139,12 @@ class ClientTest < Test::Unit::TestCase
     assert cl.rooms.first.invite_only?
     cl.send(:handle_state, room, type: 'm.room.guest_access', content: { guest_access: :can_join })
     assert cl.rooms.first.guest_access?
+
+    expected_room = cl.rooms.first
+
+    assert_equal expected_room, cl.find_room('#test:example1.com')
+    assert_equal expected_room, cl.find_room('#test:example.com')
+    assert_equal expected_room, cl.find_room(room)
   end
 
   def test_login
@@ -150,5 +156,44 @@ class ClientTest < Test::Unit::TestCase
 
     assert cl.logged_in?
     assert_equal '@alice:example.com', cl.mxid
+
+    cl.api.expects(:logout)
+    cl.logout
+
+    assert !cl.logged_in?
+    assert_not_equal '@alice:example.com', cl.mxid
+  end
+
+  def test_token_login
+    cl = MatrixSdk::Client.new 'https://example.com'
+    cl.api.expects(:login).with(user: 'alice', token: 'token', type: 'm.login.token').returns(user_id: '@alice:example.com', access_token: 'opaque', device_id: 'device', home_server: 'example.com')
+    cl.expects(:sync)
+
+    cl.login_with_token('alice', 'token')
+
+    assert cl.logged_in?
+    assert_equal '@alice:example.com', cl.mxid
+  end
+
+  def test_register
+    cl = MatrixSdk::Client.new 'https://example.com'
+    cl.api.expects(:register).with(username: 'alice', password: 'password', auth: { type: 'm.login.dummy' }).returns(user_id: '@alice:example.com', access_token: 'opaque', device_id: 'device', home_server: 'example.com')
+    cl.expects(:sync)
+
+    cl.register_with_password('alice', 'password')
+
+    assert cl.logged_in?
+    assert_equal '@alice:example.com', cl.mxid
+  end
+
+  def test_threading
+    cl = MatrixSdk::Client.new 'https://example.com'
+    cl.expects(:sync)
+      .twice.raises(MatrixSdk::MatrixRequestError.new({ errcode: 503, error: '' }, 503))
+      .then.returns({})
+
+    cl.start_listener_thread sync_interval: 0.05, bad_sync_timeout: 0
+    sleep 0.01
+    cl.stop_listener_thread
   end
 end
