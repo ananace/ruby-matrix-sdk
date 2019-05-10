@@ -103,4 +103,35 @@ class ApiTest < Test::Unit::TestCase
 
     MatrixSdk::Api.new_for_domain 'example.com:8448', target: :server
   end
+
+  def test_http_request_logging
+    api = MatrixSdk::Api.new 'https://example.com'
+    api.logger.expects(:debug?).returns(true)
+
+    api.logger.stubs(:debug).with do |arg|
+      [
+        '> Sending a GET request to `https://example.com`:',
+        '> accept-encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3',
+        '> accept: */*',
+        '> user-agent: Ruby',
+        '>'
+      ].include? arg
+    end
+
+    api.send :print_http, Net::HTTP::Get.new('https://example.com')
+  end
+
+  def test_http_response_logging
+    api = MatrixSdk::Api.new 'https://example.com'
+    api.logger.expects(:debug?).returns(true)
+
+    api.logger.stubs(:debug).with do |arg|
+      [
+        '< Received a 200 GET response:',
+        '<'
+      ].include? arg
+    end
+
+    api.send :print_http, Net::HTTPSuccess.new(nil, 200, 'GET')
+  end
 end
