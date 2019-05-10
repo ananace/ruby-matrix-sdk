@@ -96,7 +96,7 @@ module MatrixSdk
       post_authentication(data)
     end
 
-    def register_with_password(username, password)
+    def register_with_password(username, password, full_state: true, **params)
       username = username.to_s unless username.is_a?(String)
       password = password.to_s unless password.is_a?(String)
 
@@ -105,6 +105,11 @@ module MatrixSdk
 
       data = api.register(auth: { type: 'm.login.dummy' }, username: username, password: password)
       post_authentication(data)
+
+      return if params[:no_sync]
+
+      sync full_state: full_state,
+           allow_sync_retry: params.fetch(:allow_sync_retry, nil)
     end
 
     def login(username, password, sync_timeout: 15, full_state: false, **params)
