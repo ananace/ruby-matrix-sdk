@@ -169,7 +169,7 @@ module MatrixSdk
       room_id_or_alias = MXID.new(room_id_or_alias.to_s) unless room_id_or_alias.is_a? MXID
       raise ArgumentError, 'Must be a room id or alias' unless %i[room_id room_alias].include? room_id_or_alias.type
 
-      return @rooms.fetch(room_id_or_alias, nil) if room_id_or_alias.room_id?
+      return @rooms.fetch(room_id_or_alias.to_s, nil) if room_id_or_alias.room_id?
 
       return @rooms.values.find { |r| r.canonical_alias == room_id_or_alias.to_s } if only_canonical
 
