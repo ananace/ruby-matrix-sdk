@@ -1,3 +1,14 @@
+## v0.1.0 - 2019-05-10
+
+- Adds code for handling member lazy load in the client abstraction, and activates it by default
+- Adds methods to read device keys from users
+- Adds basic methods for device handling
+- Restructures the API code to separate protocol implementations
+- Improves the domain discovery code to support all currently specced methods
+- Improves performance in sync calls
+- Started work on an application service prototype, not ready for use yet
+- Testing has been written for large parts of the code
+
 ## v0.0.4 - 2019-02-20
 
 - Adds a parameter to the client abstraction to allow retrying syncs on timeouts
