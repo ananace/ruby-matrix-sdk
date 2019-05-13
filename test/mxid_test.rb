@@ -61,7 +61,7 @@ class MXIDTest < Test::Unit::TestCase
   def test_parse_failures
     assert_raises(ArgumentError) { MatrixSdk::MXID.new nil }
     assert_raises(ArgumentError) { MatrixSdk::MXID.new true }
-    assert_raises(ArgumentError) { MatrixSdk::MXID.new '#asdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfadsfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfadsfasdfadsfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdf' }
+    assert_raises(ArgumentError) { MatrixSdk::MXID.new '#asdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfadsfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfadsfasdfadsfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdf:example.com' }
     assert_raises(ArgumentError) { MatrixSdk::MXID.new '' }
     assert_raises(ArgumentError) { MatrixSdk::MXID.new 'user:example.com' }
     assert_raises(ArgumentError) { MatrixSdk::MXID.new '@user' }
