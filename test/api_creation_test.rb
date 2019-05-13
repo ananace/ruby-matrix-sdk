@@ -6,8 +6,10 @@ require 'resolv'
 class ApiTest < Test::Unit::TestCase
   def test_creation
     api = MatrixSdk::Api.new 'https://matrix.example.com/_matrix/'
-
     assert_equal URI('https://matrix.example.com'), api.homeserver
+
+    api = MatrixSdk::Api.new 'matrix.com'
+    assert_equal URI('https://matrix.com'), api.homeserver
   end
 
   def test_creation_with_as_protocol
@@ -30,6 +32,11 @@ class ApiTest < Test::Unit::TestCase
 
     # assert !api.respond_to?(:join_room) # No longer true since the definite include
     assert api.respond_to? :identity_status
+  end
+
+  def test_fail_creation
+    assert_raises(ArgumentError) { MatrixSdk::Api.new :test }
+    assert_raises(ArgumentError) { MatrixSdk::Api.new URI() }
   end
 
   # This test is more complicated due to testing protocol extensions and auto-login all in the initializer

@@ -41,9 +41,11 @@ module MatrixSdk
     # @option params [Hash] :well_known The .well-known object that the server was discovered through, should not be set manually
     def initialize(homeserver, params = {})
       @homeserver = homeserver
+      raise ArgumentError, 'Homeserver URL must be String or URI' unless @homeserver.is_a?(String) || @homeserver.is_a?(URI)
+
       @homeserver = URI.parse("#{'https://' unless @homeserver.start_with? 'http'}#{@homeserver}") unless @homeserver.is_a? URI
       @homeserver.path.gsub!(/\/?_matrix\/?/, '') if @homeserver.path =~ /_matrix\/?$/
-      raise 'Please use the base URL for your HS (without /_matrix/)' if @homeserver.path.include? '/_matrix/'
+      raise ArgumentError, 'Please use the base URL for your HS (without /_matrix/)' if @homeserver.path.include? '/_matrix/'
 
       @protocols = params.fetch(:protocols, %i[CS])
       @protocols = [@protocols] unless @protocols.is_a? Array
