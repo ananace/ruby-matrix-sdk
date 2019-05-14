@@ -111,6 +111,32 @@ class ApiTest < Test::Unit::TestCase
     MatrixSdk::Api.new_for_domain 'example.com:8448', target: :server
   end
 
+  def test_failed_creation_with_domain
+    ::Resolv::DNS
+      .any_instance
+      .stubs(:getresource)
+      .raises(::Resolv::ResolvError)
+
+    ::Net::HTTP
+      .expects(:get)
+      .with('https://example.com/.well-known/matrix/server')
+      .raises(StandardError)
+    ::Net::HTTP
+      .expects(:get)
+      .with('https://example.com/.well-known/matrix/client')
+      .raises(StandardError)
+
+    api = MatrixSdk::Api.new_for_domain('example.com', target: :server)
+    assert_equal 'https://example.com', api.homeserver.to_s
+    assert_equal 'example.com', api.connection_address
+    assert_equal 8448, api.connection_port
+
+    api = MatrixSdk::Api.new_for_domain('example.com', target: :client)
+    assert_equal 'https://example.com', api.homeserver.to_s
+    assert_equal 'example.com', api.connection_address
+    assert_equal 8448, api.connection_port
+  end
+
   def test_http_request_logging
     api = MatrixSdk::Api.new 'https://example.com'
     api.logger.expects(:debug?).returns(true)
