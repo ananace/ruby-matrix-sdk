@@ -174,9 +174,16 @@ class ApiTest < Test::Unit::TestCase
     response = Net::HTTPSuccess.new(nil, 200, 'GET')
     response.stubs(:body).returns({ user_id: '@alice:example.com' }.to_json)
 
-    Net::HTTP.any_instance.expects(:request).returns(response)
-
     api = MatrixSdk::Api.new 'https://example.com'
+    http = api.send(:http)
+
+    http.expects(:request).returns(response)
+    assert_equal({ user_id: '@alice:example.com' }, api.request(:get, :client_r0, '/account/whoami'))
+
+    err = Net::HTTPTooManyRequests.new(nil, 200, 'GET')
+    err.stubs(:body).returns({ error: { retry_after_ms: 1500 } }.to_json)
+    http.expects(:request).twice.returns(err).then.returns(response)
+    api.expects(:sleep).with(1.5)
 
     assert_equal({ user_id: '@alice:example.com' }, api.request(:get, :client_r0, '/account/whoami'))
   end
