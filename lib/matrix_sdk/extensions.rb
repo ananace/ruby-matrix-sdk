@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module URI
   class MATRIX < Generic
     def full_path
@@ -96,7 +98,7 @@ module MatrixSdk
 
     def fire(event, filter = nil)
       reverse_each do |_k, h|
-        begin
+        begin # rubocop:disable Style/RedundantBegin
           h[:block].call(event) if event.matches?(h[:filter], filter)
         rescue StandardError => e
           logger.error "#{e.class.name} occurred when firing event (#{event})\n#{e}"

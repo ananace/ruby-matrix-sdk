@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module MatrixSdk::Protocols::IS
   def identity_status
     request(:get, :identity_api_v1, '/')

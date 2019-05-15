@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'matrix_sdk'
 
 require 'forwardable'
@@ -73,7 +75,7 @@ module MatrixSdk
 
     def mxid
       @mxid ||= begin
-        api.whoami?[:user_id] if api && api.access_token
+        api.whoami?[:user_id] if api&.access_token
       end
     end
 
@@ -221,7 +223,7 @@ module MatrixSdk
 
       attempts = 0
       data = loop do
-        begin
+        begin # rubocop:disable Style/RedundantBegin
           break api.sync extra_params
         rescue MatrixSdk::MatrixTimeoutError => e
           raise e if (attempts += 1) >= params.fetch(:allow_sync_retry, 0)
@@ -244,12 +246,12 @@ module MatrixSdk
           sync(params.merge(timeout: timeout))
 
           bad_sync_timeout = orig_bad_sync_timeout
-          sleep(sync_interval) if sync_interval > 0
+          sleep(sync_interval) if sync_interval.positive?
         rescue MatrixRequestError => e
           logger.warn("A #{e.class} occurred during sync")
           if e.httpstatus >= 500
             logger.warn("Serverside error, retrying in #{bad_sync_timeout} seconds...")
-            sleep(bad_sync_timeout) if bad_sync_timeout > 0
+            sleep(bad_sync_timeout) if bad_sync_timeout.positive? # rubocop:disable Metrics/BlockNesting
             bad_sync_timeout = [bad_sync_timeout * 2, @bad_sync_timeout_limit].min
           end
         end

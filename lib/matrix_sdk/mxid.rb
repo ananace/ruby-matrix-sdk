@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module MatrixSdk
   class MXID
     attr_accessor :sigil, :localpart, :domain, :port
@@ -16,7 +18,8 @@ module MatrixSdk
     end
 
     def to_s
-      "#{sigil}#{localpart}#{domain ? ':' + domain + (port ? ':' + port.to_s : '') : ''}"
+      port_s = port ? ':' + port.to_s : ''
+      "#{sigil}#{localpart}#{domain ? ':' + domain + port_s : ''}"
     end
 
     # Returns the type of the ID

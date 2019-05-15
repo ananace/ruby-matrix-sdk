@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module MatrixSdk
   # An usability wrapper for API responses as an extended [Hash]
   # All results can be read as both hash keys and as read-only methods on the key

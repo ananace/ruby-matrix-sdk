@@ -1,5 +1,5 @@
 ---
-image: "ruby:2.4"
+image: "ruby:2.6"
 
 # Cache gems in between builds
 cache:
@@ -17,9 +17,13 @@ rubocop:
     - rubocop lib
 
 test:
+  coverage: '/\((\d+.\d+\%)\) covered/'
   script:
     - GENERATE_REPORTS=true CI_REPORTS=reports bundle exec rake test
   artifacts:
+    expire_in: 1 week
+    paths:
+      - coverage/
     reports:
       junit: "reports/TEST-*.xml"
 

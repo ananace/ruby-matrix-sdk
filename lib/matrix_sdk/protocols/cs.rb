@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module MatrixSdk::Protocols::CS
   # Gets the available client API versions
   # @return [Array]
