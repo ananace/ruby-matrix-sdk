@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'matrix_sdk/extensions'
 require 'matrix_sdk/version'
 

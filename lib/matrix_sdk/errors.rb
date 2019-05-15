@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module MatrixSdk
   # A generic error raised for issues in the MatrixSdk
   class MatrixError < StandardError

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'matrix_sdk'
 
 require 'erb'
@@ -13,7 +15,7 @@ module MatrixSdk
     include MatrixSdk::Protocols::IS
     include MatrixSdk::Protocols::CS
 
-    USER_AGENT = "Ruby Matrix SDK v#{MatrixSdk::VERSION}".freeze
+    USER_AGENT = "Ruby Matrix SDK v#{MatrixSdk::VERSION}"
     DEFAULT_HEADERS = {
       'accept' => 'application/json',
       'user-agent' => USER_AGENT
@@ -110,7 +112,7 @@ module MatrixSdk
                          nil
                        end
 
-          target_uri = well_known['m.server'] if well_known && well_known.key?('m.server')
+          target_uri = well_known['m.server'] if well_known&.key?('m.server')
         else
           target_uri = URI("https://#{target_uri.target}:#{target_uri.port}")
         end
@@ -171,7 +173,7 @@ module MatrixSdk
       # TODO: DNS query for SRV information about HS?
       return unless hs_info.is_a? URI
 
-      @http.finish if @http
+      @http.finish if @http && homeserver != hs_info
       @homeserver = hs_info
     end
 

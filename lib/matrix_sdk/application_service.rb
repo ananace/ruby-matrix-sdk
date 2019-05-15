@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'matrix_sdk'
 
 module MatrixSdk
@@ -154,7 +156,7 @@ module MatrixSdk
     end
 
     def stop_server
-      @server.shutdown if @server
+      @server&.shutdown
       @server = nil
     end
 

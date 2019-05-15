@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module MatrixSdk::Protocols::SS
   # Gets the server version
   def server_version
