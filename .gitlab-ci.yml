@@ -17,11 +17,14 @@ rubocop:
     - rubocop lib
 
 test:
+  coverage: '/\((\d+.\d+\%)\) covered/'
   script:
     - GENERATE_REPORTS=true CI_REPORTS=reports bundle exec rake test
   artifacts:
     reports:
       junit: "reports/TEST-*.xml"
+      paths:
+        - coverage/
 
 pages:
   stage: deploy
