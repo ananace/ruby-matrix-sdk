@@ -22,10 +22,10 @@ test:
     - GENERATE_REPORTS=true CI_REPORTS=reports bundle exec rake test
   artifacts:
     expire_in: 1 week
+    paths:
+      - coverage/
     reports:
       junit: "reports/TEST-*.xml"
-      paths:
-        - coverage/
 
 pages:
   stage: deploy
