@@ -266,6 +266,7 @@ module MatrixSdk
       @http.use_ssl = homeserver.scheme == 'https'
       @http.verify_mode = validate_certificate ? ::OpenSSL::SSL::VERIFY_NONE : nil
       @http.start
+      @http
     end
   end
 end

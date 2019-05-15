@@ -167,4 +167,50 @@ class ApiTest < Test::Unit::TestCase
 
     api.send :print_http, Net::HTTPSuccess.new(nil, 200, 'GET')
   end
+
+  def test_requests
+    Net::HTTP.any_instance.stubs(:start)
+
+    response = Net::HTTPSuccess.new(nil, 200, 'GET')
+    response.stubs(:body).returns({ user_id: '@alice:example.com' }.to_json)
+
+    Net::HTTP.any_instance.expects(:request).returns(response)
+
+    api = MatrixSdk::Api.new 'https://example.com'
+
+    assert_equal({ user_id: '@alice:example.com' }, api.request(:get, :client_r0, '/account/whoami'))
+  end
+
+  def test_http_changes
+    Net::HTTP.any_instance.stubs(:start)
+    Net::HTTP.any_instance.expects(:finish).never
+    api = MatrixSdk::Api.new 'https://example.com'
+
+    api.read_timeout = 5
+    assert_equal 5, api.read_timeout
+
+    api.validate_certificate = true
+    assert_equal true, api.validate_certificate
+
+    api.homeserver = URI('https://matrix.example.com')
+    assert_equal 'matrix.example.com', api.homeserver.host
+
+    http = api.send :http
+
+    assert_equal 5, http.read_timeout
+    assert_equal OpenSSL::SSL::VERIFY_NONE, http.verify_mode
+
+    api = MatrixSdk::Api.new 'https://example.com'
+
+    api.send(:http).expects(:finish).times(3)
+
+    api.read_timeout = 5
+    assert_equal 5, api.read_timeout
+
+    api.validate_certificate = true
+    assert_equal true, api.validate_certificate
+
+    api.homeserver = URI('https://matrix.example.com')
+    assert_equal 'matrix.example.com', api.homeserver.host
+  end
 end
