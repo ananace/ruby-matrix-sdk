@@ -1,3 +1,8 @@
+## v1.0.0 - 2019-05-17
+
+- Improves testing and code coverage of existing code
+- Fixes a series of minor bugs found during the writing of tests
+
 ## v0.1.0 - 2019-05-10
 
 - Adds code for handling member lazy load in the client abstraction, and activates it by default
