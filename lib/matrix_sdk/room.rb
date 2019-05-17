@@ -308,7 +308,7 @@ module MatrixSdk
     # @return [Boolean] wether the request succeeded
     def leave
       client.api.leave_room(id)
-      client.rooms.delete id
+      client.instance_variable_get(:@rooms).delete id
       true
     end
 
@@ -487,7 +487,7 @@ module MatrixSdk
         data[:events].delete_if { |_k, v| v.nil? }
       end
 
-      client.api.set_power.levels(id, data)
+      client.api.set_power_levels(id, data)
       true
     end
 

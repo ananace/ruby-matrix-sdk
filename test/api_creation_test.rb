@@ -165,7 +165,9 @@ class ApiTest < Test::Unit::TestCase
       ].include? arg
     end
 
-    api.send :print_http, Net::HTTPSuccess.new(nil, 200, 'GET')
+    response = Net::HTTPSuccess.new(nil, 200, 'GET')
+    response.instance_variable_set :@socket, nil
+    api.send :print_http, response
   end
 
   def test_requests

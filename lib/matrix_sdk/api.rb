@@ -65,6 +65,7 @@ module MatrixSdk
       @well_known = params.fetch(:well_known, {})
       @global_headers = DEFAULT_HEADERS.dup
       @global_headers.merge!(params.fetch(:global_headers)) if params.key? :global_headers
+      @http = nil
 
       login(user: @homeserver.user, password: @homeserver.password) if @homeserver.user && @homeserver.password && !@access_token && !params[:skip_login] && protocol?(:CS)
       @homeserver.userinfo = '' unless params[:skip_login]
