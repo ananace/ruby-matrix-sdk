@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require File.join File.expand_path('lib', __dir__), 'matrix_sdk/version'
 
 Gem::Specification.new do |spec|
