@@ -1,3 +1,8 @@
+## v1.0.1 - **Unreleased**
+
+- Fixes an error in the room creation code
+- Fixes a divergence from spec in the room message request
+
 ## v1.0.0 - 2019-05-17
 
 - Improves testing and code coverage of existing code
