@@ -1,0 +1,404 @@
+---
+GET|_matrix/client/versions:
+  method: :client_api_versions
+  results:
+    200: |
+      {
+        "versions": [
+          "r0.0.1"
+        ]
+      }
+GET|_matrix/client/r0/login:
+  method: :allowed_login_methods
+  results:
+    429: &429 |
+      {
+        "errcode": "M_LIMIT_EXCEEDED",
+        "error": "Too many requests",
+        "retry_after_ms": 2000
+      }
+    200: |
+      {
+        "flows": [
+          {
+            "type": "m.login.password"
+          }
+        ]
+      }
+POST|_matrix/client/r0/login:
+  method: :login
+  requests:
+    - args: [{ initial_device_display_name: 'test', identifier: { type: 'm.id.user', user: 'cheeky_monkey' } }]
+      body:
+        :type: 'm.login.password'
+        :initial_device_display_name: 'test'
+        :identifier:
+          :type: 'm.id.user'
+          :user: 'cheeky_monkey'
+  results:
+    200: |
+      {
+        "user_id": "@cheeky_monkey:matrix.org",
+        "access_token": "abc123",
+        "device_id": "GHTYAJCE"
+      }
+    400: |
+      {
+        "errcode": "M_UNKNOWN",
+        "error": "Bad login type."
+      }
+    403: |
+      {
+        "errcode": "M_FORBIDDEN"
+      }
+    429: *429
+POST|_matrix/client/r0/logout:
+  method: :logout
+  results:
+    200: |
+      {}
+POST|_matrix/client/r0/logout/all:
+  results:
+    200: |
+      {}
+POST|_matrix/client/r0/register:
+  method: :register
+  requests:
+    - args: [{ kind: 'guest' }]
+      query:
+        :kind: 'guest'
+      body: {}
+    - args: [{ username: 'test', password: 'testing' }]
+      query:
+        :kind: 'user'
+      body:
+        :username: 'test'
+        :password: 'testing'
+  results:
+    200: |
+      {
+        "user_id": "@cheeky_monkey:matrix.org",
+        "access_token": "abc123",
+        "device_id": "GHTYAJCE"
+      }
+    400: |
+      {
+        "errcode": "M_USER_IN_USE",
+        "error": "Desired user ID is already taken."
+      }
+    401: |
+      {
+        "flows": [
+          {
+            "stages": [
+              "example.type.foo"
+            ]
+          }
+        ],
+        "params": {
+          "example.type.baz": {
+            "example_key": "foobar"
+          }
+        },
+        "session": "xxxxxxyz",
+        "completed": [
+          "example.type.foo"
+        ]
+      }
+    429: *429
+POST|_matrix/client/r0/register/email/requestToken:
+  results:
+    200: |
+      {
+        "sid": "123abc"
+      }
+    400: |
+      {
+        "errcode": "M_THREEPID_IN_USE",
+        "error": "The specified address is already in use"
+      }
+    403: |
+      {
+        "errcode": "M_THREEPID_DENIED",
+        "error": "Third party identifier is not allowed"
+      }
+POST|_matrix/client/r0/register/msisdn/requestToken:
+  results:
+    200: |
+      {
+        "sid": "123abc"
+      }
+    400: |
+      {
+        "errcode": "M_THREEPID_IN_USE",
+        "error": "The specified address is already in use"
+      }
+    403: |
+      {
+        "errcode": "M_THREEPID_DENIED",
+        "error": "Third party identifier is not allowed"
+      }
+POST|_matrix/client/r0/account/password:
+  results:
+    200: |
+      {}
+    401: |
+      {
+        "flows": [
+          {
+            "stages": [
+              "example.type.foo"
+            ]
+          }
+        ],
+        "params": {
+          "example.type.baz": {
+            "example_key": "foobar"
+          }
+        },
+        "session": "xxxxxxyz",
+        "completed": [
+          "example.type.foo"
+        ]
+      }
+    429: *429
+POST|/_matrix/client/r0/account/password/email/requestToken: {}
+POST|/_matrix/client/r0/account/password/msisdn/requestToken: {}
+POST|/_matrix/client/r0/account/deactivate: {}
+GET|/_matrix/client/r0/register/available: {}
+GET|/_matrix/client/r0/account/3pid: {}
+POST|/_matrix/client/r0/account/3pid: {}
+POST|/_matrix/client/r0/account/3pid/delete: {}
+POST|/_matrix/client/r0/account/3pid/email/requestToken: {}
+POST|/_matrix/client/r0/account/3pid/msisdn/requestToken: {}
+GET|/_matrix/client/r0/account/whoami:
+  method: :whoami?
+  results:
+    200: |
+      {
+        "user_id": "@joe:example.org"
+      }
+    401: |
+      {
+        "errcode": "M_UNKNOWN_TOKEN",
+        "error": "Unrecognised access token."
+      }
+    403: |
+      {
+        "errcode": "M_FORBIDDEN",
+        "error": "Application service has not registered this user."
+      }
+    429: *429
+POST|/_matrix/client/r0/user/{userId}/filter:
+  method: :create_filter
+  requests:
+    - args: ['@alice:example.com', { room: { state: { types: ['m.room.*'] } } }]
+      path: '/user/%40alice%3Aexample.com/filter'
+      body:
+        :room:
+          :state:
+            :types:
+              - 'm.room.*'
+  results:
+    200: |
+      {
+        "filter_id": "66696p746572"
+      }
+GET|/_matrix/client/r0/user/{userId}/filter/{filterId}:
+  method: :get_filter
+  requests:
+    - args: ['@alice:example.com', '66696p746572']
+      path: '/user/%40alice%3Aexample.com/filter/66696p746572'
+  results:
+    200: |
+      {
+        "room": {
+          "state": {
+            "types": [
+              "m.room.*"
+            ],
+            "not_rooms": [
+              "!726s6s6q:example.com"
+            ]
+          },
+          "timeline": {
+            "limit": 10,
+            "types": [
+              "m.room.message"
+            ],
+            "not_rooms": [
+              "!726s6s6q:example.com"
+            ],
+            "not_senders": [
+              "@spam:example.com"
+            ]
+          },
+          "ephemeral": {
+            "types": [
+              "m.receipt",
+              "m.typing"
+            ],
+            "not_rooms": [
+              "!726s6s6q:example.com"
+            ],
+            "not_senders": [
+              "@spam:example.com"
+            ]
+          }
+        },
+        "presence": {
+          "types": [
+            "m.presence"
+          ],
+          "not_senders": [
+            "@alice:example.com"
+          ]
+        },
+        "event_format": "client",
+        "event_fields": [
+          "type",
+          "content",
+          "sender"
+        ]
+      }
+GET|/_matrix/client/r0/sync:
+  method: :sync
+  requests:
+    - args: [{ filter: '66696p746572', since: 's72594_4483_1934', full_state: false, set_presence: 'offline', timeout: 30 }]
+      query:
+        :filter: '66696p746572'
+        :since: 's72594_4483_1934'
+        :full_state: false
+        :set_presence: 'offline'
+        :timeout: 30000
+  results:
+    200: |
+      {
+        "too big": "and 100% ignored by the API abstraction"
+      }
+GET|/_matrix/client/r0/rooms/{roomId}/event/{eventId}: {}
+GET|/_matrix/client/r0/rooms/{roomId}/state/{eventType}/{stateKey}: {}
+GET|/_matrix/client/r0/rooms/{roomId}/state/{eventType}:
+  method: :get_room_state
+  requests:
+    - args: ['!636q39766251:example.com', 'm.room.name']
+      path: '/rooms/%21636q39766251%3Aexample.com/state/m.room.name'
+  results:
+    200: |
+      {
+        "name": "Example room name"
+      }
+GET|/_matrix/client/r0/rooms/{roomId}/state: {}
+GET|/_matrix/client/r0/rooms/{roomId}/members:
+  method: :get_room_members
+  requests:
+    - args: ['!636q39766251:example.com']
+      path: '/rooms/%21636q39766251%3Aexample.com/members'
+  results:
+    200: |
+      {
+        "chunk": []
+      }
+GET|/_matrix/client/r0/rooms/{roomId}/joined_members: {}
+GET|/_matrix/client/r0/rooms/{roomId}/messages:
+  method: :get_room_messages
+  requests:
+    - args: ['!636q39766251:example.com', 's345_678_333', 'b', { limit: 3, filter: { contains_url: true } }]
+      path: '/rooms/%21636q39766251%3Aexample.com/messages'
+      query:
+        :from: 's345_678_333'
+        :dir: 'b'
+        :limit: 3
+        :filter:
+          :contains_url: true
+  results:
+    200: |
+      {
+        "start": "t47429-4392820_219380_26003_2265",
+        "end": "t47409-4357353_219380_26003_2265",
+        "chunk": [ ]
+      }
+PUT|/_matrix/client/r0/rooms/{roomId}/state/{eventType}/{stateKey}:
+  method: :send_state_event
+  requests:
+    - args: ['!636q39766251:example.com', 'm.room.member', { membership: 'join', avatar_url: 'mxc://...' }, { state_key: '@alice:example.com' }]
+      path: '/rooms/%21636q39766251%3Aexample.com/state/m.room.member/%40alice%3Aexample.com'
+      body:
+        :membership: 'join'
+        :avatar_url: 'mxc://...'
+  results:
+    200: |
+      {
+        "event_id": "$YUwRidLecu:example.com"
+      }
+    403: |
+      {
+        "errcode": "M_FORBIDDEN",
+        "error": "You do not have permission to send the event."
+      }
+PUT|/_matrix/client/r0/rooms/{roomId}/state/{eventType}:
+  method: :send_state_event
+  requests:
+    - args: ['!636q39766251:example.com', 'm.room.name', { name: 'Room name' }]
+      path: '/rooms/%21636q39766251%3Aexample.com/state/m.room.name'
+      body:
+        :name: 'Room name'
+  results:
+    200: |
+      {
+        "event_id": "$YUwRidLecu:example.com"
+      }
+    403: |
+      {
+        "errcode": "M_FORBIDDEN",
+        "error": "You do not have permission to send the event."
+      }
+PUT|/_matrix/client/r0/rooms/{roomId}/send/{eventType}/{txnId}:
+  method: :send_message_event
+  requests:
+    - args: ['!636q39766251:example.com', 'm.room.message', { msgtype: 'm.text', body: 'hello' }, { txn_id: 35 }]
+      path: '/rooms/%21636q39766251%3Aexample.com/send/m.room.message/35'
+      body:
+        :msgtype: 'm.text'
+        :body: 'hello'
+  results:
+    200: |
+      {
+        "event_id": "$YUwRidLecu:example.com"
+      }
+PUT|/_matrix/client/r0/rooms/{roomId}/redact/{eventId}/{txnId}:
+  method: :redact_event
+  requests:
+    - args: ['!636q39766251:example.com', '$bai2b1i9:matrix.org', { reason: 'Indecent material', txn_id: 37 }]
+      path: '/rooms/%21636q39766251%3Aexample.com/redact/%24bai2b1i9%3Amatrix.org/37'
+      body:
+        :reason: 'Indecent material'
+  results:
+    200: |
+      {
+        "event_id": "$YUwRidLecu:example.com"
+      }
+POST|/_matrix/client/r0/createRoom:
+  method: :create_room
+  requests:
+    - args: [{ preset: 'public_chat', room_alias: 'thepub', name: 'The Grand Duke Pub', topic: 'All about happy hour', creation_content: { 'm.federate': false } }]
+      path: '/createRoom'
+      query: {}
+      body:
+        :preset: 'public_chat'
+        :room_alias_name: 'thepub'
+        :name: 'The Grand Duke Pub'
+        :topic: 'All about happy hour'
+        :creation_content:
+          :m.federate: false
+        :visibility: :public
+  results:
+    200: |
+      {
+        "room_id": "!sefiuhWgwghwWgh:example.com"
+      }
+    400: |
+      {
+        "errcode": "M_UNKNOWN",
+        "error": "An unknown error occurred"
+      }

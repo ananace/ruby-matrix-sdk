@@ -25,6 +25,10 @@ module MatrixSdk::Protocols::CS
     end
   end
 
+  def allowed_login_methods
+    request(:get, :client_r0, '/login').flows
+  end
+
   # Runs the client API /sync method
   # @param timeout [Numeric] (30.0) The timeout in seconds for the sync
   # @param params [Hash] The sync options to use
@@ -149,10 +153,11 @@ module MatrixSdk::Protocols::CS
     content = {
       visibility: visibility
     }
-    content[:room_alias_name] = params[:room_alias] if params[:room_alias]
-    content[:invite] = [params[:invite]].flatten if params[:invite]
+    content[:room_alias_name] = params.delete(:room_alias) if params[:room_alias]
+    content[:invite] = [params.delete(:invite)].flatten if params[:invite]
+    content.merge! params
 
-    request(:post, :client_r0, '/createRoom', content, query: query)
+    request(:post, :client_r0, '/createRoom', body: content, query: query)
   end
 
   # Joins a room
@@ -392,7 +397,6 @@ module MatrixSdk::Protocols::CS
   #      The Matrix Spec, for more information about the call and response
   def get_room_messages(room_id, token, direction, limit: 10, **params)
     query = {
-      roomId: room_id,
       from: token,
       dir: direction,
       limit: limit
