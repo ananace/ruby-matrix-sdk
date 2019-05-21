@@ -2,6 +2,7 @@
 
 - Fixes an error in the room creation code
 - Fixes a divergence from spec in the room message request
+- Fixes a slight divergence from spec in the kick method
 
 ## v1.0.0 - 2019-05-17
 
