@@ -66,10 +66,11 @@ class ApiCSVerificationTest < Test::Unit::TestCase
       data['results'].each do |code, body|
         @http.expects(:request).returns(mock_response(code, body))
 
-        args = []
-        if data.key? 'requests'
-          args = data['requests'].first['args'].deep_symbolize_keys
-        end
+        args = if data.key? 'requests'
+                 data['requests'].first['args'].deep_symbolize_keys
+               else
+                 []
+               end
 
         if code.to_s[0] == 2
           assert !@api.send(data['method'], *args).nil?

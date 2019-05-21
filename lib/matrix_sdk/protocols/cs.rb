@@ -167,6 +167,7 @@ module MatrixSdk::Protocols::CS
   # @return [Response] A response hash with the parameter :room_id
   # @see https://matrix.org/docs/spec/client_server/r0.3.0.html#post-matrix-client-r0-join-roomidoralias
   #      The Matrix Spec, for more information about the call and response
+  # @todo Add support for 3rd-party signed objects
   def join_room(id_or_alias, **params)
     query = {}
     query[:server_name] = params[:server_name] if params[:server_name]
@@ -496,8 +497,17 @@ module MatrixSdk::Protocols::CS
     request(:post, :client_r0, "/rooms/#{room_id}/invite", body: content, query: query)
   end
 
-  def kick_user(room_id, user_id, **params)
-    set_membership(room_id, user_id, 'leave', params)
+  def kick_user(room_id, user_id, reason: '', **params)
+    query = {}
+    query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
+
+    content = {
+      user_id: user_id,
+      reason: reason
+    }
+    room_id = ERB::Util.url_encode room_id.to_s
+
+    request(:post, :client_r0, "/rooms/#{room_id}/kick", body: content, query: query)
   end
 
   def get_membership(room_id, user_id, **params)

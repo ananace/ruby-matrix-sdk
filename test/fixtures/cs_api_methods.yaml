@@ -402,3 +402,226 @@ POST|/_matrix/client/r0/createRoom:
         "errcode": "M_UNKNOWN",
         "error": "An unknown error occurred"
       }
+PUT|/_matrix/client/r0/directory/room/{roomAlias}:
+  method: :set_room_alias
+  requests:
+    - args: ['!abnjk1jdasj98:capuchins.com', '#monkeys:matrix.org']
+      path: '/directory/room/%23monkeys%3Amatrix.org'
+      query: {}
+      body:
+        :room_id: '!abnjk1jdasj98:capuchins.com'
+  results:
+    200: |
+      {}
+    409: |
+      {
+        "errcode": "M_UNKNOWN",
+        "error": "Room alias #monkeys:matrix.org already exists."
+      }
+GET|/_matrix/client/r0/directory/room/{roomAlias}:
+  method: :get_room_id
+  requests:
+    - args: ['#monkeys:matrix.org']
+      path: '/directory/room/%23monkeys%3Amatrix.org'
+      query: {}
+      body: null
+  results:
+    200: |
+      {
+        "room_id": "!abnjk1jdasj98:capuchins.com",
+        "servers": [
+          "capuchins.com",
+          "matrix.org",
+          "another.com"
+        ]
+      }
+    404: |
+      {
+        "errcode": "M_NOT_FOUND",
+        "error": "Room alias #monkeys:matrix.org not found."
+      }
+DELETE|/_matrix/client/r0/directory/room/{roomAlias}:
+  method: :remove_room_alias
+  requests:
+    - args: ['#monkeys:matrix.org']
+      path: '/directory/room/%23monkeys%3Amatrix.org'
+      query: {}
+      body: null
+  results:
+    200: |
+      {}
+GET|/_matrix/client/r0/joined_rooms: {}
+POST|/_matrix/client/r0/rooms/{roomId}/invite:
+  method: :invite_user
+  requests:
+    - args: ['!d41d8cd:matrix.org', '@cheeky_monkey:matrix.org']
+      path: '/rooms/%21d41d8cd%3Amatrix.org/invite'
+      query: {}
+      body:
+        :user_id: '@cheeky_monkey:matrix.org'
+  results:
+    200: |
+      {}
+    403: |
+      {
+        "errcode": "M_FORBIDDEN",
+        "error": "@cheeky_monkey:matrix.org is banned from the room"
+      }
+    429: *429
+POST|/_matrix/client/r0/rooms/{roomId}/join: {}
+POST|/_matrix/client/r0/join/{roomIdOrAlias}:
+  method: :join_room
+  requests:
+    - args: ['#monkeys:matrix.org', { server_name: ['matrix.org', 'elsewhere.ca'] }]
+      path: '/join/%23monkeys%3Amatrix.org'
+      query:
+        :server_name: ['matrix.org', 'elsewhere.ca']
+      body: null
+    - args: ['!d41d8cd:matrix.org', { }]
+      path: '/join/%21d41d8cd%3Amatrix.org'
+      query: {}
+      body: null
+  results:
+    200: |
+      {
+        "room_id": "!d41d8cd:matrix.org"
+      }
+    403: |
+      {
+        "errcode": "M_FORBIDDEN",
+        "error": "You are not invited to this room."
+      }
+    429: *429
+POST|/_matrix/client/r0/rooms/{roomId}/leave:
+  method: :leave_room
+  requests:
+    - args: ['!nkl290a:matrix.org']
+      path: '/rooms/%21nkl290a%3Amatrix.org/leave'
+      query: {}
+      body: null
+  results:
+    200: |
+      {}
+    429: *429
+POST|/_matrix/client/r0/rooms/{roomId}/forget:
+  method: :forget_room
+  requests:
+    - args: ['!au1ba7o:matrix.org']
+      path: '/rooms/%21au1ba7o%3Amatrix.org/forget'
+      query: {}
+      body: null
+  results:
+    200: |
+      {}
+    400: |
+      {
+        "errcode": "M_UNKNOWN",
+        "error": "User @example:matrix.org is in room !au1ba7o:matrix.org"
+      }
+    429: *429
+POST|/_matrix/client/r0/rooms/{roomId}/kick:
+  method: :kick_user
+  requests:
+    - args: ['!e42d8c:matrix.org', '@cheeky_monkey:matrix.org', { reason: 'Telling unfunny jokes' }]
+      path: '/rooms/%21e42d8c%3Amatrix.org/kick'
+      query: {}
+      body:
+        :reason: 'Telling unfunny jokes'
+        :user_id: '@cheeky_monkey:matrix.org'
+  results:
+    200: |
+      {}
+    403: |
+      {
+        "errcode": "M_FORBIDDEN",
+        "error": "You do not have a high enough power level to kick from this room."
+      }
+POST|/_matrix/client/r0/rooms/{roomId}/ban:
+  method: :ban_user
+  requests:
+    - args: ['!e42d8c:matrix.org', '@cheeky_monkey:matrix.org', { reason: 'Telling unfunny jokes' }]
+      path: '/rooms/%21e42d8c%3Amatrix.org/ban'
+      query: {}
+      body:
+        :reason: 'Telling unfunny jokes'
+        :user_id: '@cheeky_monkey:matrix.org'
+  results:
+    200: |
+      {}
+    403: |
+      {
+        "errcode": "M_FORBIDDEN",
+        "error": "You do not have a high enough power level to ban from this room."
+      }
+POST|/_matrix/client/r0/rooms/{roomId}/unban:
+  method: :unban_user
+  requests:
+    - args: ['!e42d8c:matrix.org', '@cheeky_monkey:matrix.org']
+      path: '/rooms/%21e42d8c%3Amatrix.org/unban'
+      query: {}
+      body:
+        :user_id: '@cheeky_monkey:matrix.org'
+  results:
+    200: |
+      {}
+    403: |
+      {
+        "errcode": "M_FORBIDDEN",
+        "error": "You do not have a high enough power level to unban from this room."
+      }
+GET|/_matrix/client/r0/directory/list/room/{roomId}: {}
+PUT|/_matrix/client/r0/directory/list/room/{roomId}: {}
+GET|/_matrix/client/r0/publicRooms: {}
+POST|/_matrix/client/r0/publicRooms: {}
+POST|/_matrix/client/r0/user_directory/search: {}
+PUT|/_matrix/client/r0/profile/{userId}/displayname:
+  method: :set_display_name
+  requests:
+    - args: ['@alice:example.com', 'Alice Margatroid']
+      path: '/profile/%40alice%3Aexample.com/displayname'
+      query: {}
+      body:
+        :displayname: 'Alice Margatroid'
+  results:
+    200: |
+      {}
+    429: *429
+GET|/_matrix/client/r0/profile/{userId}/displayname:
+  method: :get_display_name
+  requests:
+    - args: ['@alice:example.com']
+      path: '/profile/%40alice%3Aexample.com/displayname'
+      query: {}
+      body: null
+  results:
+    200: |
+      {
+        "displayname": "Alice Margatroid"
+      }
+    429: *429
+PUT|/_matrix/client/r0/profile/{userId}/avatar_url:
+  method: :set_avatar_url
+  requests:
+    - args: ['@alice:example.com', 'mxc://matrix.org/wefh34uihSDRGhw34']
+      path: '/profile/%40alice%3Aexample.com/avatar_url'
+      query: {}
+      body:
+        :avatar_url: 'mxc://matrix.org/wefh34uihSDRGhw34'
+  results:
+    200: |
+      {}
+    429: *429
+GET|/_matrix/client/r0/profile/{userId}/avatar_url:
+  method: :get_avatar_url
+  requests:
+    - args: ['@alice:example.com']
+      path: '/profile/%40alice%3Aexample.com/avatar_url'
+      query: {}
+      body: null
+  results:
+    200: |
+      {
+        "avatar_url": "mxc://matrix.org/wefh34uihSDRGhw34"
+      }
+    429: *429
+GET|/_matrix/client/r0/profile/{userId}: {}
