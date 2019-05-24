@@ -64,4 +64,50 @@ class ApiTest < Test::Unit::TestCase
     @api.expects(:request).with(:put, :client_r0, '/rooms/%21room%3Aexample.com/redact/%24acR1l0raoZnm60CBwAVgqbZqoO%2FmYU81xysh1u7XcJk/42', body: { reason: 'oops' }, query: {}).returns({})
     assert @api.redact_event('!room:example.com', '$acR1l0raoZnm60CBwAVgqbZqoO/mYU81xysh1u7XcJk', txn_id: 42, reason: 'oops')
   end
+
+  def test_content
+    room = '!test:example.com'
+    type = 'm.room.message'
+    url = 'mxc://example.com/data'
+    msgtype = 'type'
+    msgbody = 'Name of content'
+    content = {
+      url: url,
+      msgtype: msgtype,
+      body: msgbody,
+      info: {}
+    }
+
+    @api.expects(:send_message_event).with(room, type, content, {})
+    @api.send_content(room, url, msgbody, msgtype)
+
+    msgtype.replace 'm.location'
+    url.replace 'geo:12341234'
+
+    content.delete :url
+    content[:geo_uri] = url
+
+    @api.expects(:send_message_event).with(room, type, content, {})
+    @api.send_location(room, url, msgbody)
+
+    content = {
+      msgtype: msgtype,
+      body: msgbody
+    }
+
+    msgtype.replace 'm.text'
+
+    @api.expects(:send_message_event).with(room, type, content, {})
+    @api.send_message(room, msgbody)
+
+    msgtype.replace 'm.emote'
+
+    @api.expects(:send_message_event).with(room, type, content, {})
+    @api.send_emote(room, msgbody)
+
+    msgtype.replace 'm.notice'
+
+    @api.expects(:send_message_event).with(room, type, content, {})
+    @api.send_notice(room, msgbody)
+  end
 end

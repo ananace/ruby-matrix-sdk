@@ -3,6 +3,7 @@
 - Fixes an error in the room creation code
 - Fixes a divergence from spec in the room message request
 - Fixes a slight divergence from spec in the kick method
+- Fixes a divergence from spec in the tags handling methods
 
 ## v1.0.0 - 2019-05-17
 

@@ -625,3 +625,241 @@ GET|/_matrix/client/r0/profile/{userId}/avatar_url:
       }
     429: *429
 GET|/_matrix/client/r0/profile/{userId}: {}
+GET|/_matrix/client/r0/voip/turnServer: {}
+PUT|/_matrix/client/r0/rooms/{roomId}/typing/{userId}: {}
+POST|/_matrix/client/r0/rooms/{roomId}/receipt/{receiptType}/{eventId}: {}
+POST|/_matrix/client/r0/rooms/{roomId}/read_markers: {}
+PUT|/_matrix/client/r0/presence/{userId}/status: {}
+GET|/_matrix/client/r0/presence/{userId}/status: {}
+POST|/_matrix/client/r0/presence/list/{userId}: {}
+GET|/_matrix/client/r0/presence/list/{userId}: {}
+POST|/_matrix/media/r0/upload:
+  method: :media_upload
+  requests:
+    - args: [ '{"json":true}', 'application/json' ]
+      headers:
+        content-type: 'application/json'
+      body: '{"json":true}'
+  results:
+    200: |
+      {
+        "content_uri": "mxc://example.com/AQwafuaFswefuhsfAFAgsw"
+      }
+    429: *429
+GET|/_matrix/media/r0/download/{serverName}/{mediaId}: {}
+GET|/_matrix/media/r0/download/{serverName}/{mediaId}/{fileName}: {}
+GET|/_matrix/media/r0/thumbnail/{serverName}/{mediaId}: {}
+GET|/_matrix/media/r0/preview_url: {}
+GET|/_matrix/media/r0/config: {}
+PUT|/_matrix/client/r0/sendToDevice/{eventType}/{txnId}: {}
+GET|/_matrix/client/r0/devices:
+  method: :get_devices
+  requests:
+    - args: []
+      query: null
+      body: null
+  results:
+    200: |
+      {
+        "devices": [
+          {
+            "device_id": "QBUAZIFURK",
+            "display_name": "android",
+            "last_seen_ip": "1.2.3.4",
+            "last_seen_ts": 1474491775024
+          }
+        ]
+      }
+GET|/_matrix/client/r0/devices/{deviceId}:
+  method: :get_device
+  requests:
+    - args: ['QBUAZIFURK']
+      path: '/devices/QBUAZIFURK'
+      query: null
+      body: null
+  results:
+    200: |
+      {
+        "device_id": "QBUAZIFURK",
+        "display_name": "android",
+        "last_seen_ip": "1.2.3.4",
+        "last_seen_ts": 1474491775024
+      }
+    404: |
+      {}
+PUT|/_matrix/client/r0/devices/{deviceId}:
+  method: :set_device
+  requests:
+    - args: ['QBUAZIFURK', display_name: 'My other phone']
+      path: '/devices/QBUAZIFURK'
+      query: null
+      body:
+        :display_name: 'My other phone'
+  results:
+    200: |
+      {}
+    404: |
+      {}
+DELETE|/_matrix/client/r0/devices/{deviceId}:
+  method: :delete_device
+  requests:
+    - args: ['QBUAZIFURK', auth: { type: 'example.type.foo', session: 'xxxxx', example_credential: 'verypoorsharedsecret' }]
+      path: '/devices/QBUAZIFURK'
+      query: null
+      body:
+        :auth:
+          :type: 'example.type.foo'
+          :session: 'xxxxx'
+          :example_credential: 'verypoorsharedsecret'
+  results:
+    200: |
+      {}
+    401: |
+      {
+        "flows": [
+          {
+            "stages": [
+              "example.type.foo"
+            ]
+          }
+        ],
+        "params": {
+          "example.type.baz": {
+            "example_key": "foobar"
+          }
+        },
+        "session": "xxxxxxyz",
+        "completed": [
+          "example.type.foo"
+        ]
+      }
+POST|/_matrix/client/r0/delete_devices: {}
+POST|/_matrix/client/r0/keys/upload: {}
+POST|/_matrix/client/r0/keys/query:
+  method: :keys_query
+  requests:
+    - args: [{device_keys: { '@alice:example.com': [] }, token: 'string'}]
+      query: null
+      body:
+        :timeout: 10000
+        :device_keys:
+          :@alice:example.com: []
+        :token: string
+  results:
+    200: |
+      {
+        "failures": {},
+        "device_keys": {
+          "@alice:example.com": {
+            "JLAFKJWSCS": {
+              "user_id": "@alice:example.com",
+              "device_id": "JLAFKJWSCS",
+              "algorithms": [
+                "m.olm.v1.curve25519-aes-sha256",
+                "m.megolm.v1.aes-sha"
+              ],
+              "keys": {
+                "curve25519:JLAFKJWSCS": "3C5BFWi2Y8MaVvjM8M22DBmh24PmgR0nPvJOIArzgyI",
+                "ed25519:JLAFKJWSCS": "lEuiRJBit0IG6nUf5pUzWTUEsRVVe/HJkoKuEww9ULI"
+              },
+              "signatures": {
+                "@alice:example.com": {
+                  "ed25519:JLAFKJWSCS": "dSO80A01XiigH3uBiDVx/EjzaoycHcjq9lfQX0uWsqxl2giMIiSPR8a4d291W1ihKJL/a+myXS367WT6NAIcBA"
+                }
+              },
+              "unsigned": {
+                "device_display_name": "Alice's mobile phone"
+              }
+            }
+          }
+        }
+      }
+POST|/_matrix/client/r0/keys/claim: {}
+GET|/_matrix/client/r0/keys/changes: {}
+GET|/_matrix/client/r0/pushers: {}
+POST|/_matrix/client/r0/pushers/set: {}
+GET|/_matrix/client/r0/notifications: {}
+GET|/_matrix/client/r0/pushrules/: {}
+GET|/_matrix/client/r0/pushrules/{scope}/{kind}/{ruleId}: {}
+DELETE|/_matrix/client/r0/pushrules/{scope}/{kind}/{ruleId}: {}
+PUT|/_matrix/client/r0/pushrules/{scope}/{kind}/{ruleId}: {}
+GET|/_matrix/client/r0/pushrules/{scope}/{kind}/{ruleId}/enabled: {}
+PUT|/_matrix/client/r0/pushrules/{scope}/{kind}/{ruleId}/enabled: {}
+GET|/_matrix/client/r0/pushrules/{scope}/{kind}/{ruleId}/actions: {}
+PUT|/_matrix/client/r0/pushrules/{scope}/{kind}/{ruleId}/actions: {}
+POST|/_matrix/client/r0/search: {}
+GET|/_matrix/client/r0/user/{userId}/rooms/{roomId}/tags:
+  method: :get_user_tags
+  requests:
+    - args: ['@alice:example.com', '!726s6s6q:example.com']
+      path: '/user/%40alice%3Aexample.com/rooms/%21726s6s6q%3Aexample.com/tags'
+      query: {}
+      body: null
+  results:
+    200: |
+      {
+        "tags": {
+          "m.favourite": {
+            "order": 0.1
+          },
+          "u.Work": {
+            "order": 0.7
+          },
+          "u.Customers": {}
+        }
+      }
+PUT|/_matrix/client/r0/user/{userId}/rooms/{roomId}/tags/{tag}:
+  method: :add_user_tags
+  requests:
+    - args: ['@alice:example.com', '!726s6s6q:example.com', 'u.work', order: 0.25]
+      path: '/user/%40alice%3Aexample.com/rooms/%21726s6s6q%3Aexample.com/tags/u.work'
+      query: {}
+      body:
+        :order: 0.25
+  results:
+    200: |
+      {}
+DELETE|/_matrix/client/r0/user/{userId}/rooms/{roomId}/tags/{tag}:
+  method: :remove_user_tag
+  requests:
+    - args: ['@alice:example.com', '!726s6s6q:example.com', 'u.work']
+      path: '/user/%40alice%3Aexample.com/rooms/%21726s6s6q%3Aexample.com/tags/u.work'
+      query: {}
+      body: null
+  results:
+    200: |
+      {}
+PUT|/_matrix/client/r0/user/{userId}/account_data/{type}:
+  method: :set_account_data
+  requests:
+    - args: ['@alice:example.com', 'org.example.custom.config', custom_account_data_key: 'custom_config_value']
+      path: '/user/%40alice%3Aexample.com/account_data/org.example.custom.config'
+      query: {}
+      body:
+        :custom_account_data_key: 'custom_config_value'
+  results:
+    200: |
+      {}
+PUT|/_matrix/client/r0/user/{userId}/rooms/{roomId}/account_data/{type}:
+  method: :set_room_account_data
+  requests:
+    - args: ['@alice:example.com', '!726s6s6q:example.com', 'org.example.custom.room.config', custom_account_data_key: 'custom_config_value']
+      path: '/user/%40alice%3Aexample.com/rooms/%21726s6s6q%3Aexample.com/account_data/org.example.custom.room.config'
+      query: {}
+      body:
+        :custom_account_data_key: 'custom_config_value'
+  results:
+    200: |
+      {}
+GET|/_matrix/client/r0/admin/whois/{userId}: {}
+GET|/_matrix/client/r0/rooms/{roomId}/context/{eventId}: {}
+# GET|/_matrix/client/r0/login/cas/redirect: {}
+# GET|/_matrix/client/r0/login/cas/ticket: {}
+POST|/_matrix/client/r0/rooms/{roomId}/report/{eventId}: {}
+GET|/_matrix/client/r0/thirdparty/protocols: {}
+GET|/_matrix/client/r0/thirdparty/protocol/{protocol}: {}
+GET|/_matrix/client/r0/thirdparty/location/{protocol}: {}
+GET|/_matrix/client/r0/thirdparty/user/{protocol}: {}
+GET|/_matrix/client/r0/thirdparty/location: {}
+GET|/_matrix/client/r0/thirdparty/user: {}
+POST|/_matrix/client/r0/user/{userId}/openid/request_token: {}
