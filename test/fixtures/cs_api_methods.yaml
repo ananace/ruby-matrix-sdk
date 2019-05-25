@@ -809,7 +809,7 @@ GET|/_matrix/client/r0/user/{userId}/rooms/{roomId}/tags:
         }
       }
 PUT|/_matrix/client/r0/user/{userId}/rooms/{roomId}/tags/{tag}:
-  method: :add_user_tags
+  method: :add_user_tag
   requests:
     - args: ['@alice:example.com', '!726s6s6q:example.com', 'u.work', order: 0.25]
       path: '/user/%40alice%3Aexample.com/rooms/%21726s6s6q%3Aexample.com/tags/u.work'
