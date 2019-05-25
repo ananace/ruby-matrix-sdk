@@ -27,8 +27,8 @@ api.request :get, :federation_v1, '/version'
 # Client wrapper
 require 'matrix_sdk'
 
-client = MatrixSdk::Client.new 'https://matrix.org'
-client.login user: 'example', password: 'notarealpass' # no_sync: true
+client = MatrixSdk::Client.new 'https://example.com'
+client.login 'username', 'notarealpass' #, no_sync: true
 
 client.rooms.count
 # => 5
@@ -38,6 +38,22 @@ hq.guest_access?
 # => true
 hq.send_text "This is an example message - don't actually do this ;)"
 # => {:event_id=>"$123457890abcdef:matrix.org"}
+```
+
+```ruby
+# Client wrapper
+require 'matrix_sdk'
+
+client = MatrixSdk::Client.new 'https://example.com'
+client.api.access_token = 'thisisnotarealtoken'
+
+# Doesn't automatically trigger a sync when setting the token directly
+client.rooms.count
+# => 0
+
+client.sync
+client.rooms.count
+# => 5
 ```
 
 ## Contributing
