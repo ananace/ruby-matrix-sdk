@@ -159,8 +159,8 @@ module MatrixSdk
     end
 
     def create_room(room_alias = nil, params = {})
-      id =api.create_room(params.merge(room_alias: room_alias))
-      ensure_room(id)
+      data = api.create_room(params.merge(room_alias: room_alias))
+      ensure_room(data.room_id)
     end
 
     def join_room(room_id_or_alias)
