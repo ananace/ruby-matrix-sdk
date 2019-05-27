@@ -1,3 +1,7 @@
+## v1.0.2 - **Unreleased**
+
+- The create_room method in the client abstraction now automatically stores the created room
+
 ## v1.0.1 - 2019-05-24
 
 - Fixes an error in the room creation code
