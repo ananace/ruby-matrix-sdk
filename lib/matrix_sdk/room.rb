@@ -328,18 +328,17 @@ module MatrixSdk
     end
 
     # Changes the room-specific user profile
-    # @param params [Hash] the user profile changes to apply
-    # @option params [String] :display_name the new display name to use in the room
-    # @option params [String,URI] :avatar_url the new avatar URL to use in the room
+    # @param display_name [String] the new display name to use in the room
+    # @param avatar_url [String,URI] the new avatar URL to use in the room
     # @note the avatar URL should be a mxc:// URI
-    def set_user_profile(params = {})
-      return nil unless params[:display_name] || params[:avatar_url]
+    def set_user_profile(display_name: nil, avatar_url: nil)
+      return nil unless display_name || avatar_url
 
       data = client.api.get_membership(id, client.mxid)
       raise "Can't set profile if you haven't joined the room" unless data[:membership] == 'join'
 
-      data[:displayname] = params[:display_name] unless params[:display_name].nil?
-      data[:avatar_url] = params[:avatar_url] unless params[:avatar_url].nil?
+      data[:displayname] = display_name unless display_name.nil?
+      data[:avatar_url] = avatar_url unless avatar_url.nil?
 
       client.api.set_membership(id, client.mxid, 'join', params.fetch(:reason, 'Updating room profile information'), data)
       true

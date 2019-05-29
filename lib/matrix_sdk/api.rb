@@ -41,7 +41,7 @@ module MatrixSdk
     # @option params [Hash] :global_headers Additional headers to set for all requests
     # @option params [Boolean] :skip_login Should the API skip logging in if the HS URL contains user information
     # @option params [Hash] :well_known The .well-known object that the server was discovered through, should not be set manually
-    def initialize(homeserver, params = {})
+    def initialize(homeserver, **params)
       @homeserver = homeserver
       raise ArgumentError, 'Homeserver URL must be String or URI' unless @homeserver.is_a?(String) || @homeserver.is_a?(URI)
 
@@ -178,7 +178,7 @@ module MatrixSdk
       @homeserver = hs_info
     end
 
-    def request(method, api, path, options = {})
+    def request(method, api, path, **options)
       url = homeserver.dup.tap do |u|
         u.path = api_to_path(api) + path
         u.query = [u.query, URI.encode_www_form(options.fetch(:query))].flatten.compact.join('&') if options[:query]

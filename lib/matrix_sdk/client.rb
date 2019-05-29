@@ -158,7 +158,7 @@ module MatrixSdk
       !(mxid.nil? || @api.access_token.nil?)
     end
 
-    def create_room(room_alias = nil, params = {})
+    def create_room(room_alias = nil, **params)
       data = api.create_room(params.merge(room_alias: room_alias))
       ensure_room(data.room_id)
     end
@@ -198,7 +198,7 @@ module MatrixSdk
       raise MatrixUnexpectedResponseError, 'Upload succeeded, but no media URI returned'
     end
 
-    def start_listener_thread(params = {})
+    def start_listener_thread(**params)
       @should_listen = true
       thread = Thread.new { listen_forever(params) }
       @sync_thread = thread
