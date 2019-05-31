@@ -212,7 +212,7 @@ module MatrixSdk
         data = JSON.parse(response.body, symbolize_names: true) rescue nil
 
         if response.is_a? Net::HTTPTooManyRequests
-          raise MatrixRequestError.new(data, response.code) unless autoretry
+          raise MatrixRequestError.new_by_code(data, response.code) unless autoretry
 
           failures += 1
           waittime = data[:retry_after_ms] || data[:error][:retry_after_ms] || @backoff_time
@@ -221,7 +221,7 @@ module MatrixSdk
         end
 
         return MatrixSdk::Response.new self, data if response.is_a? Net::HTTPSuccess
-        raise MatrixRequestError.new(data, response.code) if data
+        raise MatrixRequestError.new_by_code(data, response.code) if data
 
         raise MatrixConnectionError.class_by_code(response.code), response
       end

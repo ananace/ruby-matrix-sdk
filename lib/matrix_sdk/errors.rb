@@ -10,6 +10,16 @@ module MatrixSdk
     attr_reader :code, :httpstatus, :message
     alias error message
 
+    def self.class_by_code(code)
+      return MatrixNotFoundError if code == 404
+
+      MatrixRequestError
+    end
+
+    def self.new_by_code(data, code)
+      class_by_code(code).new(data, code)
+    end
+
     def initialize(error, status)
       @code = error[:errcode]
       @httpstatus = status
@@ -22,6 +32,8 @@ module MatrixSdk
       "HTTP #{httpstatus} (#{code}): #{message}"
     end
   end
+
+  class MatrixNotFoundError < MatrixError; end
 
   # An error raised when errors occur in the connection layer
   class MatrixConnectionError < MatrixError
