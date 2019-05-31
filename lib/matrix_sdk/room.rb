@@ -331,7 +331,7 @@ module MatrixSdk
     # @param display_name [String] the new display name to use in the room
     # @param avatar_url [String,URI] the new avatar URL to use in the room
     # @note the avatar URL should be a mxc:// URI
-    def set_user_profile(display_name: nil, avatar_url: nil)
+    def set_user_profile(display_name: nil, avatar_url: nil, reason: nil)
       return nil unless display_name || avatar_url
 
       data = client.api.get_membership(id, client.mxid)
@@ -340,7 +340,7 @@ module MatrixSdk
       data[:displayname] = display_name unless display_name.nil?
       data[:avatar_url] = avatar_url unless avatar_url.nil?
 
-      client.api.set_membership(id, client.mxid, 'join', params.fetch(:reason, 'Updating room profile information'), data)
+      client.api.set_membership(id, client.mxid, 'join', reason || 'Updating room profile information', data)
       true
     end
 
