@@ -82,7 +82,7 @@ class ApiCSVerificationTest < Test::Unit::TestCase
         if code.to_s[0] == 2
           assert !@api.send(data['method'], *args).nil?
         else
-          assert_raises(MatrixSdk::MatrixRequestError) { @api.send(data['method'], *args) }
+          assert_raises(MatrixSdk::MatrixRequestError.class_by_code(code)) { @api.send(data['method'], *args) }
         end
 
         @http.unstub(:request)

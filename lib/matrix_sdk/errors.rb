@@ -11,7 +11,11 @@ module MatrixSdk
     alias error message
 
     def self.class_by_code(code)
+      return MatrixNotAuthorizedError if code == 401
+      return MatrixForbiddenError if code == 403
       return MatrixNotFoundError if code == 404
+      return MatrixConflictError if code == 409
+      return MatrixTooManyRequestsError if code == 429
 
       MatrixRequestError
     end
@@ -33,7 +37,11 @@ module MatrixSdk
     end
   end
 
-  class MatrixNotFoundError < MatrixError; end
+  class MatrixNotAuthorizedError < MatrixRequestError; end
+  class MatrixForbiddenError < MatrixRequestError; end
+  class MatrixNotFoundError < MatrixRequestError; end
+  class MatrixConflictError < MatrixRequestError; end
+  class MatrixTooManyRequestsError < MatrixRequestError; end
 
   # An error raised when errors occur in the connection layer
   class MatrixConnectionError < MatrixError
