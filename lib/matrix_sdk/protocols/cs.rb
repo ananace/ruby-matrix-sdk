@@ -82,6 +82,19 @@ module MatrixSdk::Protocols::CS
     end
   end
 
+  # Checks if a given username is available and valid for registering
+  #
+  # @example Verifying a username
+  #   api.username_available?('example')
+  #   # => { available: true }
+  #
+  # @param username [String] The username to check
+  # @return [Response]
+  # @see https://matrix.org/docs/spec/client_server/latest.html#get-matrix-client-r0-register-available
+  def username_available?(username)
+    request(:get, :client_r0, '/register/available', query: { username: username })
+  end
+
   # Logs in using the client API /login endpoint, and optionally stores the resulting access for API usage
   #
   # @example Logging in with username and password

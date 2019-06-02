@@ -165,7 +165,24 @@ POST|_matrix/client/r0/account/password:
 POST|/_matrix/client/r0/account/password/email/requestToken: {}
 POST|/_matrix/client/r0/account/password/msisdn/requestToken: {}
 POST|/_matrix/client/r0/account/deactivate: {}
-GET|/_matrix/client/r0/register/available: {}
+GET|/_matrix/client/r0/register/available:
+  method: :username_available?
+  requests:
+    - args: ['example']
+      query:
+        :username: 'example'
+      body: null
+  results:
+    200: |
+      {
+        "available": true
+      }
+    400: |
+      {
+        "errcode": "M_USER_IN_USE",
+        "error": "Desired user ID is already taken."
+      }
+    429: *429
 GET|/_matrix/client/r0/account/3pid: {}
 POST|/_matrix/client/r0/account/3pid: {}
 POST|/_matrix/client/r0/account/3pid/delete: {}
