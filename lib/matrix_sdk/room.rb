@@ -376,6 +376,13 @@ module MatrixSdk
     # State updates
     #
 
+    def reload!
+      reload_name!
+      reload_topic!
+      reload_aliases!
+    end
+    alias refresh! reload!
+
     def name=(name)
       client.api.set_room_name(id, name)
       @name = name
@@ -389,6 +396,7 @@ module MatrixSdk
       @name = data[:name] if changed
       changed
     end
+    alias refresh_name! reload_name!
 
     def topic=(topic)
       client.api.set_room_topic(id, topic)
@@ -403,6 +411,7 @@ module MatrixSdk
       @topic = data[:topic] if changed
       changed
     end
+    alias refresh_topic! reload_topic!
 
     # Add an alias to the room
     # @return [Boolean] if the addition was successful or not
@@ -428,6 +437,7 @@ module MatrixSdk
       @aliases = new_aliases if changed
       changed
     end
+    alias refresh_aliases! reload_aliases!
 
     def invite_only=(invite_only)
       self.join_rule = invite_only ? :invite : :public
