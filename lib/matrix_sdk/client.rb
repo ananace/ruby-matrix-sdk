@@ -99,6 +99,19 @@ module MatrixSdk
       @rooms.values
     end
 
+    def reload_rooms!
+      return true if cache == :none
+
+      @rooms.clear
+      api.get_joined_rooms.joined_rooms.each do |id|
+        r = ensure_room(id)
+        r.reload!
+      end
+
+      true
+    end
+    alias refresh_rooms! reload_rooms!
+
     def register_as_guest
       data = api.register(kind: :guest)
       post_authentication(data)

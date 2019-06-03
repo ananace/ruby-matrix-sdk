@@ -2,6 +2,7 @@
 
 - The create_room method in the client abstraction now automatically stores the created room
 - Adds more CS API endpoints, exposed as #get_joined_rooms, and #username_available?
+- Adds a method to the client abstraction to reload all joined rooms
 
 ## v1.0.1 - 2019-05-24
 
