@@ -467,7 +467,20 @@ DELETE|/_matrix/client/r0/directory/room/{roomAlias}:
   results:
     200: |
       {}
-GET|/_matrix/client/r0/joined_rooms: {}
+GET|/_matrix/client/r0/joined_rooms:
+  method: :get_joined_rooms
+  requests:
+    - args: []
+      path: '/joined_rooms'
+      query: {}
+      body: null
+  results:
+    200: |
+      {
+        "joined_rooms": [
+          "!foo:example.com"
+        ]
+      }
 POST|/_matrix/client/r0/rooms/{roomId}/invite:
   method: :invite_user
   requests:

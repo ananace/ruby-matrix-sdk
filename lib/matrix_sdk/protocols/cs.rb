@@ -151,6 +151,17 @@ module MatrixSdk::Protocols::CS
     request(:post, :client_r0, '/logout', query: query)
   end
 
+  # Gets the list of rooms joined by the current user
+  #
+  # @return [Response] An array of room IDs under the key :joined_rooms
+  # @see https://matrix.org/docs/spec/client_server/latest.html#get-matrix-client-r0-joined-rooms
+  def get_joined_rooms(**params)
+    query = {}
+    query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
+
+    request(:get, :client_r0, '/joined_rooms', query: query)
+  end
+
   # Creates a new room
   # @param params [Hash] The room creation details
   # @option params [Symbol] :visibility (:public) The room visibility
