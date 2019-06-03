@@ -654,7 +654,20 @@ GET|/_matrix/client/r0/profile/{userId}/avatar_url:
         "avatar_url": "mxc://matrix.org/wefh34uihSDRGhw34"
       }
     429: *429
-GET|/_matrix/client/r0/profile/{userId}: {}
+GET|/_matrix/client/r0/profile/{userId}:
+  method: :get_profile
+  requests:
+    - args: ['@alice:example.com']
+      path: '/profile/%40alice%3Aexample.com'
+      query: {}
+      body: null
+  results:
+    200: |
+      {
+        "avatar_url": "mxc://matrix.org/wefh34uihSDRGhw34",
+        "displayname": "Alice Margatroid"
+      }
+    429: *429
 GET|/_matrix/client/r0/voip/turnServer: {}
 PUT|/_matrix/client/r0/rooms/{roomId}/typing/{userId}: {}
 POST|/_matrix/client/r0/rooms/{roomId}/receipt/{receiptType}/{eventId}: {}

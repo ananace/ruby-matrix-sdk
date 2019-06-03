@@ -731,6 +731,15 @@ module MatrixSdk::Protocols::CS
     request(:put, :client_r0, "/profile/#{user_id}/avatar_url", body: content, query: query)
   end
 
+  def get_profile(user_id, **params)
+    query = {}
+    query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
+
+    user_id = ERB::Util.url_encode user_id.to_s
+
+    request(:get, :client_r0, "/profile/#{user_id}", query: query)
+  end
+
   def get_download_url(mxcurl, **_params)
     mxcurl = URI.parse(mxcurl.to_s) unless mxcurl.is_a? URI
     raise 'Not a mxc:// URL' unless mxcurl.is_a? URI::MATRIX
