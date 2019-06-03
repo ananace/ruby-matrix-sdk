@@ -90,6 +90,12 @@ module MatrixSdk
     alias user_id= mxid=
 
     def rooms
+      if @rooms.empty? && cache != :none
+        api.get_joined_rooms.joined_rooms.each do |id|
+          ensure_room(id)
+        end
+      end
+
       @rooms.values
     end
 
