@@ -68,10 +68,12 @@ module MatrixSdk
       @aliases = []
       @join_rule = nil
       @guest_access = nil
+      @world_readable = nil
       @members = []
       @events = []
       @members_loaded = false
       @event_history_limit = 10
+      @avatar_url = nil
 
       @prev_batch = nil
 

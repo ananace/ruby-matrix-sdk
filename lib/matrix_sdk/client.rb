@@ -89,6 +89,29 @@ module MatrixSdk
     alias user_id mxid
     alias user_id= mxid=
 
+    def public_rooms
+      rooms = []
+      since = nil
+      loop do
+        data = api.get_public_rooms since: since
+
+        data[:chunk].each do |chunk|
+          rooms << Room.new(self, chunk[:room_id],
+                            name: chunk[:name], topic: chunk[:topic], aliases: chunk[:aliases],
+                            canonical_alias: chunk[:canonical_alias], avatar_url: chunk[:avatar_url],
+                            join_rule: :public, world_readable: chunk[:world_readable]).tap do |r|
+            r.instance_variable_set :@guest_access, chunk[:guest_can_join] ? :can_join : :forbidden
+          end
+        end
+
+        break if data[:next_batch].nil?
+
+        since = data.next_batch
+      end
+
+      rooms
+    end
+
     def rooms
       if @rooms.empty? && cache != :none
         api.get_joined_rooms.joined_rooms.each do |id|
