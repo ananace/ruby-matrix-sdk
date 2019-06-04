@@ -413,6 +413,8 @@ module MatrixSdk
       changed = data[:name] != name
       @name = data[:name] if changed
       changed
+    rescue MatrixNotFoundError
+      nil
     end
     alias refresh_name! reload_name!
 
@@ -428,6 +430,8 @@ module MatrixSdk
       changed = data[:topic] != topic
       @topic = data[:topic] if changed
       changed
+    rescue MatrixNotFoundError
+      nil
     end
     alias refresh_topic! reload_topic!
 
@@ -454,6 +458,8 @@ module MatrixSdk
       changed = new_aliases != aliases
       @aliases = new_aliases if changed
       changed
+    rescue MatrixNotFoundError
+      nil
     end
     alias refresh_aliases! reload_aliases!
 
