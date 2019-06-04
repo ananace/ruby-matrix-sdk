@@ -11,6 +11,8 @@ module MatrixSdk
     alias error message
 
     def self.class_by_code(code)
+      code = code.to_i
+
       return MatrixNotAuthorizedError if code == 401
       return MatrixForbiddenError if code == 403
       return MatrixNotFoundError if code == 404
