@@ -3,6 +3,12 @@
 - The create_room method in the client abstraction now automatically stores the created room
 - Adds more CS API endpoints, exposed as #get_joined_rooms, #get_public_rooms, and #username_available?
 - Adds a method to the client abstraction to reload all joined rooms
+- Adds a method to the client abstraction to get a list of all public rooms
+- Adds avatar tracking to rooms in the client abstraction
+- Adds lazy loading of join rules and guest access for rooms in the client abstraction
+- Adds granular error classes like MatrixSdk::MatrixNotFoundError to make error handling easier
+- Improves the CS API endpoint for room state retrieval
+- Fixes an issue in the client abstraction where it would fail to load aliases if multiple HSes have applied aliases to a room
 
 ## v1.0.1 - 2019-05-24
 
