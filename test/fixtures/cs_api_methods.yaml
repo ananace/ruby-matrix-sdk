@@ -605,13 +605,16 @@ GET|/_matrix/client/r0/publicRooms:
   method: :get_public_rooms
   requests:
     - args: []
+      method: :get
       path: '/publicRooms'
       query: {}
       body: null
-    - args: [{ limit: 10 }]
+    - args: [{ limit: 10, server: 'example.com' }]
+      method: :get
       path: '/publicRooms'
       query:
         :limit: 10
+        :server: example.com
       body: null
   results:
     200: |
@@ -634,7 +637,48 @@ GET|/_matrix/client/r0/publicRooms:
         "prev_batch": "p1902",
         "total_room_count_estimate": 115
       }
-POST|/_matrix/client/r0/publicRooms: {}
+POST|/_matrix/client/r0/publicRooms:
+  method: :get_public_rooms
+  requests:
+    - args: [{ limit: 10, server: 'example.com', filter: 1 }]
+      method: :post
+      path: '/publicRooms'
+      query:
+        :server: example.com
+      body:
+        :limit: 10
+        :filter: 1
+    - args: [{ limit: 10, filter: { generic_search_term: foo }, include_all_networks: false, third_party_instance_id: irc }]
+      method: :post
+      path: '/publicRooms'
+      query: {}
+      body:
+        :limit: 10
+        :filter:
+          :generic_search_term: foo
+        :include_all_networks: false
+        :third_party_instance_id: irc
+  results:
+    200: |
+      {
+        "chunk": [
+          {
+            "aliases": [
+              "#murrays:cheese.bar"
+            ],
+            "avatar_url": "mxc://bleeker.street/CHEDDARandBRIE",
+            "guest_can_join": false,
+            "name": "CHEESE",
+            "num_joined_members": 37,
+            "room_id": "!ol19s:bleecker.street",
+            "topic": "Tasty tasty cheese",
+            "world_readable": true
+          }
+        ],
+        "next_batch": "p190q",
+        "prev_batch": "p1902",
+        "total_room_count_estimate": 115
+      }
 POST|/_matrix/client/r0/user_directory/search: {}
 PUT|/_matrix/client/r0/profile/{userId}/displayname:
   method: :set_display_name

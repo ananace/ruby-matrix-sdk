@@ -48,8 +48,9 @@ class ApiCSVerificationTest < Test::Unit::TestCase
       if data.key? 'requests'
         data['requests'].each do |request|
           response = request.fetch('response', {})
-          @api.expects(:request).with do |_method, _api, path, options|
+          @api.expects(:request).with do |method, _api, path, options|
             options ||= {}
+            assert_equal request['method'], method if request.key?('method')
             assert_equal request['path'], path if request.key?('path')
             assert_equal request['query'], options[:query] if request.key?('query')
             assert_equal request['body'], options[:body] if request.key?('body')

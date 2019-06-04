@@ -171,14 +171,28 @@ module MatrixSdk::Protocols::CS
   #                    :next_batch, :prev_batch, and :total_room_count_estimate
   #                    for pagination
   # @see https://matrix.org/docs/spec/client_server/latest.html#get-matrix-client-r0-publicrooms
-  def get_public_rooms(limit: nil, since: nil, server: nil)
+  #      https://matrix.org/docs/spec/client_server/latest.html#post-matrix-client-r0-publicrooms
+  def get_public_rooms(server: nil, **params)
     query = {
-      limit: limit,
-      since: since,
       server: server
     }.compact
+    body = nil
+    method = :get
 
-    request(:get, :client_r0, '/publicRooms', query: query)
+    if !params[:filter].nil? || !params[:include_all_networks].nil? || !params[:third_party_instance_id].nil?
+      body = {
+        limit: params[:limit],
+        since: params[:since],
+        filter: params[:filter],
+        include_all_networks: params[:include_all_networks],
+        third_party_instance_id: params[:third_party_instance_id]
+      }.merge(params).compact
+      method = :post
+    else
+      query = query.merge(params).compact
+    end
+
+    request(method, :client_r0, '/publicRooms', query: query, body: body)
   end
 
   # Creates a new room
