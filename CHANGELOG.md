@@ -1,4 +1,4 @@
-## v1.0.2 - **Unreleased**
+## v1.1.0 - 2019-06-04
 
 - The create_room method in the client abstraction now automatically stores the created room
 - Adds more CS API endpoints, exposed as #get_joined_rooms, #get_public_rooms, and #username_available?
