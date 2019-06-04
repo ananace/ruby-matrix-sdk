@@ -162,6 +162,25 @@ module MatrixSdk::Protocols::CS
     request(:get, :client_r0, '/joined_rooms', query: query)
   end
 
+  # Gets the list of public rooms on a Matrix server
+  #
+  # @param limit [Integer] Limits the number of results returned
+  # @param since [String] A pagination token received from an earlier call
+  # @param server [String] The Matrix server to request public rooms from
+  # @return [Response] An array of public rooms in the :chunk key, along with
+  #                    :next_batch, :prev_batch, and :total_room_count_estimate
+  #                    for pagination
+  # @see https://matrix.org/docs/spec/client_server/latest.html#get-matrix-client-r0-publicrooms
+  def get_public_rooms(limit: nil, since: nil, server: nil)
+    query = {
+      limit: limit,
+      since: since,
+      server: server
+    }.compact
+
+    request(:get, :client_r0, '/publicRooms', query: query)
+  end
+
   # Creates a new room
   # @param params [Hash] The room creation details
   # @option params [Symbol] :visibility (:public) The room visibility
