@@ -398,6 +398,7 @@ module MatrixSdk
       reload_name!
       reload_topic!
       reload_aliases!
+      true
     end
     alias refresh! reload!
 
