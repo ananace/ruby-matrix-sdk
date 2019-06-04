@@ -39,7 +39,7 @@ module MatrixSdk
     #   @return [Array(Object)] the last +event_history_limit+ events to arrive in the room
     #   @see https://matrix.org/docs/spec/client_server/r0.3.0.html#get-matrix-client-r0-sync
     #        The timeline events are what will end up in here
-    attr_reader :id, :client, :name, :topic, :aliases, :join_rule, :guest_access, :members, :events
+    attr_reader :id, :client, :name, :topic, :aliases, :members, :events
 
     # @!attribute [r] on_event
     #   @return [EventHandlerArray] The list of event handlers for all events
@@ -123,6 +123,22 @@ module MatrixSdk
       end
       @members_loaded = true
       members
+    end
+
+    # Gets the avatar url of the room - if any
+    def avatar_url
+      @avatar_url ||= client.api.get_room_state(id, 'm.room.avatar').url
+    rescue MatrixNotFoundError
+      # No avatar has been set
+      nil
+    end
+
+    def guest_access
+      @guest_access ||= client.api.get_room_state(id, 'm.room.guest_access').guest_access.to_sym
+    end
+
+    def join_rule
+      @join_rule ||= client.api.get_room_state(id, 'm.room.join_rules').join_rule.to_sym
     end
 
     # Checks if +guest_access+ is set to +:can_join+
@@ -459,6 +475,17 @@ module MatrixSdk
     def guest_access=(guest_access)
       client.api.set_guest_access(id, guest_access)
       @guest_access = guest_access
+    end
+
+    def avatar_url=(avatar_url)
+      avatar_url = URI(avatar_url) unless avatar_url.is_a? URI
+      raise ArgumentError, 'Must be a valid MXC URL' unless avatar_url.is_a? URI::MATRIX
+
+      content = {
+        url: avatar_url
+      }
+      client.api.send_state_event(id, 'm.room.avatar', content)
+      @avatar_url = avatar_url
     end
 
     # Modifies the power levels of the room
