@@ -449,10 +449,10 @@ module MatrixSdk
     #       alias list updates.
     def reload_aliases!
       data = client.api.get_room_state(id)
-      new_aliases = data.select { |chunk| chunk.key?(:content) && chunk[:content].key?(:aliases) }
+      new_aliases = data.select { |chunk| chunk[:type] == 'm.room.aliases' && chunk.key?(:content) && chunk[:content].key?(:aliases) }
                         .map { |chunk| chunk[:content][:aliases] }
                         .flatten
-                        .reject(&:nil?)
+                        .compact
       return false if new_aliases.nil?
 
       changed = new_aliases != aliases
