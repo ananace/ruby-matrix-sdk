@@ -114,7 +114,7 @@ class ClientTest < Test::Unit::TestCase
     cl.send :ensure_room, room
 
     cl.api.expects(:get_room_members).returns(chunk: [])
-    cl.api.expects(:get_room_name).times(6).raises MatrixSdk::MatrixNotFoundError.new({ errcode: 404, error: '' }, 404)
+    cl.api.expects(:get_room_name).raises MatrixSdk::MatrixNotFoundError.new({ errcode: 404, error: '' }, 404)
 
     assert_equal 'Empty Room', cl.rooms.first.display_name
     cl.send(:handle_state, room, type: 'm.room.member', content: { membership: 'join', displayname: 'Alice' }, state_key: '@alice:example.com')

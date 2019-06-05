@@ -81,6 +81,8 @@ module MatrixSdk
         instance_variable_set("@#{k}", v) if instance_variable_defined? "@#{k}"
       end
 
+      @name_checked = Time.new(0)
+
       logger.debug "Created room #{room_id}"
     end
 
@@ -126,6 +128,9 @@ module MatrixSdk
     end
 
     def name
+      return @name if Time.now - @name_checked < 10
+
+      @name_checked = Time.now
       @name ||= client.api.get_room_name(id)
     rescue MatrixNotFoundError
       # No room name has been specified
