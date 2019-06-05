@@ -13,7 +13,7 @@ module MatrixSdk
     include MatrixSdk::Protocols::AS
     include MatrixSdk::Protocols::CS
     include MatrixSdk::Protocols::IS
-    include MatrixSdk::Protocols::CS
+    include MatrixSdk::Protocols::SS
 
     USER_AGENT = "Ruby Matrix SDK v#{MatrixSdk::VERSION}"
     DEFAULT_HEADERS = {

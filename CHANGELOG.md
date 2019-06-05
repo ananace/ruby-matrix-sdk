@@ -1,3 +1,7 @@
+## *Unreleased*
+
+- Fixes a faulty include which broke the single implemented S2S endpoint
+
 ## v1.1.0 - 2019-06-04
 
 - The create_room method in the client abstraction now automatically stores the created room
