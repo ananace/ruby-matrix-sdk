@@ -39,7 +39,7 @@ module MatrixSdk
     #   @return [Array(Object)] the last +event_history_limit+ events to arrive in the room
     #   @see https://matrix.org/docs/spec/client_server/r0.3.0.html#get-matrix-client-r0-sync
     #        The timeline events are what will end up in here
-    attr_reader :id, :client, :name, :topic, :aliases, :members, :events
+    attr_reader :id, :client, :topic, :aliases, :members, :events
 
     # @!attribute [r] on_event
     #   @return [EventHandlerArray] The list of event handlers for all events
@@ -123,6 +123,13 @@ module MatrixSdk
       end
       @members_loaded = true
       members
+    end
+
+    def name
+      @name ||= client.api.get_room_name(id)
+    rescue MatrixNotFoundError
+      # No room name has been specified
+      nil
     end
 
     # Gets the avatar url of the room - if any
