@@ -1,6 +1,7 @@
 ## *Unreleased*
 
 - Fixes a faulty include which broke the single implemented S2S endpoint
+- Replaces the room name handling with a cached lazy loading system
 
 ## v1.1.0 - 2019-06-04
 
