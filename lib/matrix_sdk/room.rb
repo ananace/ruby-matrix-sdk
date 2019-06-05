@@ -417,12 +417,14 @@ module MatrixSdk
     # Reloads the name of the room
     # @return [Boolean] if the name was changed or not
     def reload_name!
-      data = client.api.get_room_name(id)
-      changed = data[:name] != name
+      data = begin
+               client.api.get_room_name(id)
+             rescue MatrixNotFoundError
+               nil
+             end
+      changed = data[:name] != @name
       @name = data[:name] if changed
       changed
-    rescue MatrixNotFoundError
-      nil
     end
     alias refresh_name! reload_name!
 
@@ -434,12 +436,14 @@ module MatrixSdk
     # Reloads the topic of the room
     # @return [Boolean] if the topic was changed or not
     def reload_topic!
-      data = client.api.get_room_topic(id)
-      changed = data[:topic] != topic
+      data = begin
+               client.api.get_room_topic(id)
+             rescue MatrixNotFoundError
+               nil
+             end
+      changed = data[:topic] != @topic
       @topic = data[:topic] if changed
       changed
-    rescue MatrixNotFoundError
-      nil
     end
     alias refresh_topic! reload_topic!
 
@@ -456,18 +460,21 @@ module MatrixSdk
     # @note The list of aliases is not sorted, ordering changes will result in
     #       alias list updates.
     def reload_aliases!
-      data = client.api.get_room_state(id)
-      new_aliases = data.select { |chunk| chunk[:type] == 'm.room.aliases' && chunk.key?(:content) && chunk[:content].key?(:aliases) }
-                        .map { |chunk| chunk[:content][:aliases] }
-                        .flatten
-                        .compact
+      begin
+        new_aliases = client.api.get_room_state(id, 'm.room.aliases').aliases
+      rescue MatrixNotFoundError
+        data = client.api.get_room_state(id)
+        new_aliases = data.select { |chunk| chunk[:type] == 'm.room.aliases' && chunk.key?(:content) && chunk[:content].key?(:aliases) }
+                          .map { |chunk| chunk[:content][:aliases] }
+                          .flatten
+                          .compact
+      end
+
       return false if new_aliases.nil?
 
       changed = new_aliases != aliases
       @aliases = new_aliases if changed
       changed
-    rescue MatrixNotFoundError
-      nil
     end
     alias refresh_aliases! reload_aliases!
 
