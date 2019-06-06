@@ -486,6 +486,9 @@ module MatrixSdk::Protocols::CS
     request(:get, :client_r0, "/rooms/#{room_id}/state#{state_type.empty? ? nil : "/#{state_type}"}#{key.empty? ? nil : "/#{key}"}", query: query)
   end
 
+  ## Specialized getters for specced state
+  #
+
   # Gets the display name of a room
   #
   # @param room_id [MXID,String] The room ID to look up
@@ -515,13 +518,104 @@ module MatrixSdk::Protocols::CS
     send_state_event(room_id, 'm.room.topic', content, params)
   end
 
-  def get_power_levels(room_id, **params)
-    get_room_state(room_id, 'm.room.power_levels', params)
+  def get_room_avatar(room_id, **params)
+    get_room_state(room_id, 'm.room.avatar', params)
   end
 
-  def set_power_levels(room_id, content, **params)
+  def set_room_avatar(room_id, url, **params)
+    content = {
+      url: url
+    }
+    send_state_event(room_id, 'm.room.avatar', content, params)
+  end
+
+  def get_room_pinned_events(room_id, **params)
+    get_room_state(room_id, 'm.room.pinned_events', params)
+  end
+
+  def set_room_pinned_events(room_id, events, **params)
+    content = {
+      pinned: events
+    }
+    send_state_event(room_id, 'm.room.pinned_events', content, params)
+  end
+
+  def get_room_power_levels(room_id, **params)
+    get_room_state(room_id, 'm.room.power_levels', params)
+  end
+  alias get_power_levels get_room_power_levels
+
+  def set_room_power_levels(room_id, content, **params)
     content[:events] = {} unless content.key? :events
     send_state_event(room_id, 'm.room.power_levels', content, params)
+  end
+  alias set_power_levels set_room_power_levels
+
+  def get_room_join_rules(room_id, **params)
+    get_room_state(room_id, 'm.room.join_rules', params)
+  end
+
+  def set_room_join_rules(room_id, join_rule, **params)
+    content = {
+      join_rule: join_rule
+    }
+
+    send_state_event(room_id, 'm.room.join_rules', content, params)
+  end
+
+  def get_room_guest_access(room_id, **params)
+    get_room_state(room_id, 'm.room.guest_access', params)
+  end
+
+  def set_room_guest_access(room_id, guest_access, **params)
+    content = {
+      guest_access: guest_access
+    }
+
+    send_state_event(room_id, 'm.room.guest_access', content, params)
+  end
+
+  def get_room_creation_info(room_id, **params)
+    get_room_state(room_id, 'm.room.create', params)
+  end
+
+  def get_room_encryption_settings(room_id, **params)
+    get_room_state(room_id, 'm.room.encryption', params)
+  end
+
+  def set_room_encryption_settings(room_id, algorithm: 'm.megolm.v1.aes-sha2', rotation_period_ms: 1 * 7 * 24 * 60 * 60 * 1000, rotation_period_msgs: 100, **params)
+    content = {
+      algorithm: algorithm,
+      rotation_period_ms: rotation_period_ms,
+      rotation_period_msgs: rotation_period_msgs
+    }
+    send_state_event(room_id, 'm.room.encryption', content, params)
+  end
+
+  def get_room_history_visibility(room_id, **params)
+    get_room_state(room_id, 'm.room.history_visibility', params)
+  end
+
+  def set_room_history_visibility(room_id, visibility, **params)
+    content = {
+      history_visibility: visibility
+    }
+
+    send_state_event(room_id, 'm.room.history_visibility', content, params)
+  end
+
+  def get_room_server_acl(room_id, **params)
+    get_room_state(room_id, 'm.room.server_acl', params)
+  end
+
+  def set_room_server_acl(room_id, allow_ip_literals: false, allow:, deny:, **params)
+    content = {
+      allow_ip_literals: allow_ip_literals,
+      allow: allow,
+      deny: deny
+    }
+
+    send_state_event(room_id, 'm.room.server_acl', content, params)
   end
 
   def leave_room(room_id, **params)
@@ -821,23 +915,6 @@ module MatrixSdk::Protocols::CS
     room_id = ERB::Util.url_encode room_id.to_s
 
     request(:get, :client_r0, "/rooms/#{room_id}/members", query: query)
-  end
-
-  def set_join_rule(room_id, join_rule, **params)
-    content = {
-      join_rule: join_rule
-    }
-
-    send_state_event(room_id, 'm.room.join_rules', params.merge(content))
-  end
-
-  def set_guest_access(room_id, guest_access, **params)
-    # raise ArgumentError, '`guest_access` must be one of [:can_join, :forbidden]' unless %i[can_join forbidden].include? guest_access
-    content = {
-      guest_access: guest_access
-    }
-
-    send_state_event(room_id, 'm.room.guest_access', params.merge(content))
   end
 
   def get_devices
