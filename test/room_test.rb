@@ -178,6 +178,9 @@ class RoomTest < Test::Unit::TestCase
     ]
     @room.reload_aliases!
 
+    @api.expects(:get_room_state).with(@id, 'm.room.aliases').returns(MatrixSdk::Response.new(@api, aliases: ['#test:example.com']))
+    @room.reload_aliases!
+
     assert @room.aliases.include? '#test:example.com'
   end
 
