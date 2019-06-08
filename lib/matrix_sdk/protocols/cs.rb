@@ -529,6 +529,10 @@ module MatrixSdk::Protocols::CS
     send_state_event(room_id, 'm.room.avatar', content, params)
   end
 
+  def get_room_aliases(room_id, **params)
+    get_room_state(room_id, 'm.room.aliases', params)
+  end
+
   def get_room_pinned_events(room_id, **params)
     get_room_state(room_id, 'm.room.pinned_events', params)
   end
