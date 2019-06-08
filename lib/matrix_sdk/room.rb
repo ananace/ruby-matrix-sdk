@@ -139,18 +139,18 @@ module MatrixSdk
 
     # Gets the avatar url of the room - if any
     def avatar_url
-      @avatar_url ||= client.api.get_room_state(id, 'm.room.avatar').url
+      @avatar_url ||= client.api.get_room_avatar(id).url
     rescue MatrixNotFoundError
       # No avatar has been set
       nil
     end
 
     def guest_access
-      @guest_access ||= client.api.get_room_state(id, 'm.room.guest_access').guest_access.to_sym
+      @guest_access ||= client.api.get_room_guest_access(id).guest_access.to_sym
     end
 
     def join_rule
-      @join_rule ||= client.api.get_room_state(id, 'm.room.join_rules').join_rule.to_sym
+      @join_rule ||= client.api.get_room_join_rules(id).join_rule.to_sym
     end
 
     # Checks if +guest_access+ is set to +:can_join+
@@ -466,7 +466,7 @@ module MatrixSdk
     #       alias list updates.
     def reload_aliases!
       begin
-        new_aliases = client.api.get_room_state(id, 'm.room.aliases').aliases
+        new_aliases = client.api.get_room_aliases(id).aliases
       rescue MatrixNotFoundError
         data = client.api.get_room_state(id)
         new_aliases = data.select { |chunk| chunk[:type] == 'm.room.aliases' && chunk.key?(:content) && chunk[:content].key?(:aliases) }
@@ -507,10 +507,7 @@ module MatrixSdk
       avatar_url = URI(avatar_url) unless avatar_url.is_a? URI
       raise ArgumentError, 'Must be a valid MXC URL' unless avatar_url.is_a? URI::MATRIX
 
-      content = {
-        url: avatar_url
-      }
-      client.api.send_state_event(id, 'm.room.avatar', content)
+      client.api.set_room_avatar(id, avatar_url)
       @avatar_url = avatar_url
     end
 
