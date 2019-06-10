@@ -197,4 +197,27 @@ class ClientTest < Test::Unit::TestCase
     sleep 0.01
     cl.stop_listener_thread
   end
+
+  def test_public_rooms
+    cl = MatrixSdk::Client.new 'https://example.com'
+
+    cl.api.expects(:get_public_rooms).with(since: nil).returns MatrixSdk::Response.new(
+      cl.api,
+      chunk: [
+        { room_id: '!room:example.com', name: 'Example room', topic: 'Example topic' }
+      ],
+      next_batch: 'batch'
+    )
+
+    cl.api.expects(:get_public_rooms).with(since: 'batch').returns MatrixSdk::Response.new(
+      cl.api,
+      chunk: []
+    )
+
+    room = cl.public_rooms.first
+    assert_equal '!room:example.com', room.id
+    assert_equal 'Example room', room.name
+    assert_equal 'Example topic', room.topic
+    assert_equal false, room.invite_only?
+  end
 end
