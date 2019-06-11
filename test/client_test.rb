@@ -220,4 +220,28 @@ class ClientTest < Test::Unit::TestCase
     assert_equal 'Example topic', room.topic
     assert_equal false, room.invite_only?
   end
+
+  def test_create_room
+    cl = MatrixSdk::Client.new 'https://example.com'
+
+    cl.api.expects(:create_room).with(room_alias: nil).returns(MatrixSdk::Response.new(cl.api, room_id: '!room:example.com'))
+
+    room = cl.create_room
+
+    assert_not_nil room
+    assert_equal room, cl.rooms.first
+    assert_equal room, cl.find_room('!room:example.com')
+  end
+
+  def test_join_room
+    cl = MatrixSdk::Client.new 'https://example.com'
+
+    cl.api.expects(:join_room).with('!room:example.com').returns(MatrixSdk::Response.new(cl.api, room_id: '!room:example.com'))
+
+    room = cl.join_room('!room:example.com')
+
+    assert_not_nil room
+    assert_equal room, cl.rooms.first
+    assert_equal room, cl.find_room('!room:example.com')
+  end
 end
