@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+# rubocop:disable Metrics/ModuleLength
 module MatrixSdk::Protocols::CS
   # Gets the available client API versions
   # @return [Array]
@@ -961,3 +962,4 @@ module MatrixSdk::Protocols::CS
     request(:get, :client_r0, '/account/whoami', query: query)
   end
 end
+# rubocop:enable Metrics/ModuleLength

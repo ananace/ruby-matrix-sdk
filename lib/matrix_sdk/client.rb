@@ -266,7 +266,7 @@ module MatrixSdk
 
       attempts = 0
       data = loop do
-        begin # rubocop:disable Style/RedundantBegin
+        begin
           break api.sync extra_params
         rescue MatrixSdk::MatrixTimeoutError => e
           raise e if (attempts += 1) >= params.fetch(:allow_sync_retry, 0)

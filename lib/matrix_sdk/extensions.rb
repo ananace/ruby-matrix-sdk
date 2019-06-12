@@ -98,7 +98,7 @@ module MatrixSdk
 
     def fire(event, filter = nil)
       reverse_each do |_k, h|
-        begin # rubocop:disable Style/RedundantBegin
+        begin
           h[:block].call(event) if event.matches?(h[:filter], filter)
         rescue StandardError => e
           logger.error "#{e.class.name} occurred when firing event (#{event})\n#{e}"
