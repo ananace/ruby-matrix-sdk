@@ -1,3 +1,7 @@
+## *Unreleased*
+
+- Adds getters and setters for more specced room state
+
 ## v1.1.1 - 2019-06-05
 
 - Fixes a faulty include which broke the single implemented S2S endpoint
