@@ -380,7 +380,7 @@ module MatrixSdk
         tag_obj.define_singleton_method(:room) do
           @room
         end
-        tag_obj.define_singleton_method(:add) do |tag, params = {}|
+        tag_obj.define_singleton_method(:add) do |tag, **params|
           @room.add_tag(tag.to_s.to_sym, params)
           self[tag.to_s.to_sym] = params
           self
@@ -397,7 +397,7 @@ module MatrixSdk
       true
     end
 
-    def add_tag(tag, params = {})
+    def add_tag(tag, **params)
       client.api.add_user_tag(client.mxid, id, tag, params)
       true
     end
