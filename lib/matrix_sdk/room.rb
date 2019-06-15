@@ -374,15 +374,24 @@ module MatrixSdk
       true
     end
 
+    # Returns a list of the room tags
+    # @return [Response] A list of the tags and their data, with add and remove methods implemented
+    # @example Managing tags
+    #   room.tags
+    #   # => { :room_tag => { data: false } }
+    #   room.tags.add('some_tag', data: true)
+    #   # => { :some_tag => { data: true }, :room_tag => { data: false} }
+    #   room.tags.remove('room_tag')
+    #   # => { :some_tag => { data: true} }
     def tags
       client.api.get_user_tags(client.mxid, id)[:tags].tap do |tag_obj|
         tag_obj.instance_variable_set(:@room, self)
         tag_obj.define_singleton_method(:room) do
           @room
         end
-        tag_obj.define_singleton_method(:add) do |tag, **params|
-          @room.add_tag(tag.to_s.to_sym, params)
-          self[tag.to_s.to_sym] = params
+        tag_obj.define_singleton_method(:add) do |tag, **data|
+          @room.add_tag(tag.to_s.to_sym, data)
+          self[tag.to_s.to_sym] = data
           self
         end
         tag_obj.define_singleton_method(:remove) do |tag|
@@ -392,13 +401,18 @@ module MatrixSdk
       end
     end
 
+    # Remove a tag from the room
+    # @param [String] tag The tag to remove
     def remove_tag(tag)
       client.api.remove_user_tag(client.mxid, id, tag)
       true
     end
 
-    def add_tag(tag, **params)
-      client.api.add_user_tag(client.mxid, id, tag, params)
+    # Add a tag to the room
+    # @param [String] tag The tag to add
+    # @param [Hash] data The data to assign to the tag
+    def add_tag(tag, **data)
+      client.api.add_user_tag(client.mxid, id, tag, data)
       true
     end
 
