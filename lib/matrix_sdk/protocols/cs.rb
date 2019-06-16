@@ -45,7 +45,7 @@ module MatrixSdk::Protocols::CS
       %i[since filter full_state set_presence].include? k
     end
 
-    query[:timeout] = (timeout * 1000).to_i
+    query[:timeout] = (timeout * 1000).to_i if timeout
     query[:timeout] = params.delete(:timeout_ms).to_i if params.key? :timeout_ms
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
 

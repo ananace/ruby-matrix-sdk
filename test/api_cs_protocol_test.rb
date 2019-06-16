@@ -42,11 +42,16 @@ class ApiTest < Test::Unit::TestCase
 
   def test_sync_timeout
     @http.expects(:request).with do |req|
-      puts req.path
       req.path == '/_matrix/client/r0/sync?timeout=3000'
     end.returns(mock_success('{}'))
 
     assert @api.sync(timeout: 3)
+
+    @http.expects(:request).with do |req|
+      req.path == '/_matrix/client/r0/sync'
+    end.returns(mock_success('{}'))
+
+    assert @api.sync(timeout: nil)
   end
 
   def test_send_message
