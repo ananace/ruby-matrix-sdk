@@ -1,6 +1,8 @@
 ## *Unreleased*
 
 - Adds getters and setters for more specced room state
+- Fixes handling of the timeout parameter for the sync endpoint (#7)
+    - Additionally also now allows for running sync with a nil timeout
 
 ## v1.1.1 - 2019-06-05
 
