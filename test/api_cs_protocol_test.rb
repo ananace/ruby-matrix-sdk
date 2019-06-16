@@ -40,6 +40,15 @@ class ApiTest < Test::Unit::TestCase
     assert @api.sync
   end
 
+  def test_sync_timeout
+    @http.expects(:request).with do |req|
+      puts req.path
+      req.path == '/_matrix/client/r0/sync?timeout=3000'
+    end.returns(mock_success('{}'))
+
+    assert @api.sync(timeout: 3)
+  end
+
   def test_send_message
     @api.expects(:request).with(:put, :client_r0, '/rooms/%21room%3Aexample.com/send/m.room.message/42', body: { msgtype: 'm.text', body: 'this is a message' }, query: {}).returns({})
     assert @api.send_message('!room:example.com', 'this is a message', txn_id: 42)
