@@ -41,13 +41,11 @@ module MatrixSdk::Protocols::CS
   # @see https://matrix.org/docs/spec/client_server/r0.3.0.html#get-matrix-client-r0-sync
   #      For more information on the parameters and what they mean
   def sync(timeout: 30.0, **params)
-    query = {
-      timeout: timeout
-    }.merge(params).select do |k, _v|
+    query = params.select do |k, _v|
       %i[since filter full_state set_presence].include? k
     end
 
-    query[:timeout] = (query.fetch(:timeout, 30) * 1000).to_i
+    query[:timeout] = (timeout * 1000).to_i
     query[:timeout] = params.delete(:timeout_ms).to_i if params.key? :timeout_ms
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
 
