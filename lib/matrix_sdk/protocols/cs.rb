@@ -491,6 +491,7 @@ module MatrixSdk::Protocols::CS
   # Gets the current display name of a room
   #
   # @param room_id [MXID,String] The room ID to look up
+  # @param [Hash] params Extra options to provide to the request, see #get_room_state
   # @return [Response] A response hash with the parameter :name
   # @raise [MatrixNotFoundError] Raised if no name has been set on the room
   # @see get_room_state
@@ -518,6 +519,7 @@ module MatrixSdk::Protocols::CS
   # Gets the current topic of a room
   #
   # @param [MXID,String] room_id The room ID to look up
+  # @param [Hash] params Extra options to provide to the request, see #get_room_state
   # @return [Response] A response hash with the parameter :topic
   # @raise [MatrixNotFoundError] Raised if no topic has been set on the room
   # @see get_room_state
@@ -545,6 +547,7 @@ module MatrixSdk::Protocols::CS
   # Gets the current avatar URL of a room
   #
   # @param [MXID,String] room_id The room ID to look up
+  # @param [Hash] params Extra options to provide to the request, see #get_room_state
   # @return [Response] A response hash with the parameters :url and (optionally) :info
   # @raise [MatrixNotFoundError] Raised if no avatar has been set on the room
   # @see get_room_state
@@ -572,6 +575,7 @@ module MatrixSdk::Protocols::CS
   # Gets a list of current aliases of a room
   #
   # @param [MXID,String] room_id The room ID to look up
+  # @param [Hash] params Extra options to provide to the request, see #get_room_state
   # @return [Response] A response hash with the array :aliases
   # @raise [MatrixNotFoundError] Raised if no aliases has been set on the room by the specified HS
   # @see get_room_state
@@ -598,6 +602,7 @@ module MatrixSdk::Protocols::CS
   # Gets a list of pinned events in a room
   #
   # @param [MXID,String] room_id The room ID to look up
+  # @param [Hash] params Extra options to provide to the request, see #get_room_state
   # @return [Response] A response hash with the array :pinned
   # @raise [MatrixNotFoundError] Raised if no aliases has been set on the room by the specified HS
   # @see get_room_state
@@ -607,6 +612,14 @@ module MatrixSdk::Protocols::CS
     get_room_state(room_id, 'm.room.pinned_events', params)
   end
 
+  # Sets the list of pinned events in a room
+  #
+  # @param [MXID,String] room_id The room ID to work on
+  # @param [Array[String]] events The new list of events to set as pinned
+  # @param [Hash] params Extra options to set on the request, see #send_state_event
+  # @return [Response] The resulting state event
+  # @see https://matrix.org/docs/spec/client_server/r0.5.0.html#m-room-pinned-events
+  #      The Matrix Spec, for more information about the event and data
   def set_room_pinned_events(room_id, events, **params)
     content = {
       pinned: events
@@ -614,21 +627,53 @@ module MatrixSdk::Protocols::CS
     send_state_event(room_id, 'm.room.pinned_events', content, params)
   end
 
+  # Gets the configured power levels for a room
+  #
+  # @param [MXID,String] room_id The room ID to look up
+  # @param [Hash] params Extra options to provide to the request, see #get_room_state
+  # @return [Response] A response hash with power level information
+  # @see get_room_state
+  # @see https://matrix.org/docs/spec/client_server/r0.5.0.html#m-room-power-levels
+  #      The Matrix Spec, for more information about the event and data
   def get_room_power_levels(room_id, **params)
     get_room_state(room_id, 'm.room.power_levels', params)
   end
   alias get_power_levels get_room_power_levels
 
+  # Sets the configuration for power levels in a room
+  #
+  # @param [MXID,String] room_id The room ID to work on
+  # @param [Hash] content The new power level configuration
+  # @param [Hash] params Extra options to set on the request, see #send_state_event
+  # @return [Response] The resulting state event
+  # @see https://matrix.org/docs/spec/client_server/r0.5.0.html#m-room-power-levels
+  #      The Matrix Spec, for more information about the event and data
   def set_room_power_levels(room_id, content, **params)
     content[:events] = {} unless content.key? :events
     send_state_event(room_id, 'm.room.power_levels', content, params)
   end
   alias set_power_levels set_room_power_levels
 
+  # Gets the join rules for a room
+  #
+  # @param [MXID,String] room_id The room ID to look up
+  # @param [Hash] params Extra options to provide to the request, see #get_room_state
+  # @return [Response] A response hash with the key :join_rule
+  # @see get_room_state
+  # @see https://matrix.org/docs/spec/client_server/r0.5.0.html#m-room-join-rules
+  #      The Matrix Spec, for more information about the event and data
   def get_room_join_rules(room_id, **params)
     get_room_state(room_id, 'm.room.join_rules', params)
   end
 
+  # Sets the join rules for a room
+  #
+  # @param [MXID,String] room_id The room ID to work on
+  # @param [String,Symbol] join_rule The new join rule setting (Currently only public and invite are implemented)
+  # @param [Hash] params Extra options to set on the request, see #send_state_event
+  # @return [Response] The resulting state event
+  # @see https://matrix.org/docs/spec/client_server/r0.5.0.html#m-room-join-rules
+  #      The Matrix Spec, for more information about the event and data
   def set_room_join_rules(room_id, join_rule, **params)
     content = {
       join_rule: join_rule
@@ -637,10 +682,26 @@ module MatrixSdk::Protocols::CS
     send_state_event(room_id, 'm.room.join_rules', content, params)
   end
 
+  # Gets the guest access settings for a room
+  #
+  # @param [MXID,String] room_id The room ID to look up
+  # @param [Hash] params Extra options to provide to the request, see #get_room_state
+  # @return [Response] A response hash with the key :guest_acces, either :can_join or :forbidden
+  # @see get_room_state
+  # @see https://matrix.org/docs/spec/client_server/r0.5.0.html#m-room-guest-access
+  #      The Matrix Spec, for more information about the event and data
   def get_room_guest_access(room_id, **params)
     get_room_state(room_id, 'm.room.guest_access', params)
   end
 
+  # Sets the guest access settings for a room
+  #
+  # @param [MXID,String] room_id The room ID to work on
+  # @param [:can_join, :forbidden] guest_access The new guest access setting for the room
+  # @param [Hash] params Extra options to set on the request, see #send_state_event
+  # @return [Response] The resulting state event
+  # @see https://matrix.org/docs/spec/client_server/r0.5.0.html#m-room-guest-access
+  #      The Matrix Spec, for more information about the event and data
   def set_room_guest_access(room_id, guest_access, **params)
     content = {
       guest_access: guest_access
@@ -649,14 +710,40 @@ module MatrixSdk::Protocols::CS
     send_state_event(room_id, 'm.room.guest_access', content, params)
   end
 
+  # Gets the creation configuration object for a room
+  #
+  # @param [MXID,String] room_id The room ID to look up
+  # @param [Hash] params Extra options to provide to the request, see #get_room_state
+  # @return [Response] A response hash with the configuration the room was created for
+  # @see get_room_state
+  # @see https://matrix.org/docs/spec/client_server/r0.5.0.html#m-room-create
+  #      The Matrix Spec, for more information about the event and data
   def get_room_creation_info(room_id, **params)
     get_room_state(room_id, 'm.room.create', params)
   end
 
+  # Gets the encryption configuration for a room
+  #
+  # @param [MXID,String] room_id The room ID to look up
+  # @param [Hash] params Extra options to provide to the request, see #get_room_state
+  # @return [Response] A response hash with the configuration the room was created for
+  # @see get_room_state
+  # @see https://matrix.org/docs/spec/client_server/r0.5.0.html#m-room-encryption
+  #      The Matrix Spec, for more information about the event and data
   def get_room_encryption_settings(room_id, **params)
     get_room_state(room_id, 'm.room.encryption', params)
   end
 
+  # Sets the encryption configuration for a room
+  #
+  # @param [MXID,String] room_id The room ID to work on
+  # @param ['m.megolm.v1.aes-sha2'] algorithm The encryption algorithm to use
+  # @param [Integer] rotation_period_ms The interval between key rotation in milliseconds
+  # @param [Integer] rotation_period_msgs The interval between key rotation in messages
+  # @param [Hash] params Extra options to set on the request, see #send_state_event
+  # @return [Response] The resulting state event
+  # @see https://matrix.org/docs/spec/client_server/r0.5.0.html#m-room-guest-encryption
+  #      The Matrix Spec, for more information about the event and data
   def set_room_encryption_settings(room_id, algorithm: 'm.megolm.v1.aes-sha2', rotation_period_ms: 1 * 7 * 24 * 60 * 60 * 1000, rotation_period_msgs: 100, **params)
     content = {
       algorithm: algorithm,
@@ -666,10 +753,26 @@ module MatrixSdk::Protocols::CS
     send_state_event(room_id, 'm.room.encryption', content, params)
   end
 
+  # Gets the history availabiilty for a room
+  #
+  # @param [MXID,String] room_id The room ID to look up
+  # @param [Hash] params Extra options to provide to the request, see #get_room_state
+  # @return [Response] A response hash with the key :history_visibility
+  # @see get_room_state
+  # @see https://matrix.org/docs/spec/client_server/r0.5.0.html#m-room-history-visibility
+  #      The Matrix Spec, for more information about the event and data
   def get_room_history_visibility(room_id, **params)
     get_room_state(room_id, 'm.room.history_visibility', params)
   end
 
+  # Sets the history availability for a room
+  #
+  # @param [MXID,String] room_id The room ID to work on
+  # @param [:invited, :joined, :shared, :world_readable] visibility The new history visibility level
+  # @param [Hash] params Extra options to set on the request, see #send_state_event
+  # @return [Response] The resulting state event
+  # @see https://matrix.org/docs/spec/client_server/r0.5.0.html#m-room-guest-history-visibility
+  #      The Matrix Spec, for more information about the event and data
   def set_room_history_visibility(room_id, visibility, **params)
     content = {
       history_visibility: visibility
@@ -678,10 +781,28 @@ module MatrixSdk::Protocols::CS
     send_state_event(room_id, 'm.room.history_visibility', content, params)
   end
 
+  # Gets the server ACLs for a room
+  #
+  # @param [MXID,String] room_id The room ID to look up
+  # @param [Hash] params Extra options to provide to the request, see #get_room_state
+  # @return [Response] A response hash with server ACL information
+  # @see get_room_state
+  # @see https://matrix.org/docs/spec/client_server/r0.5.0.html#m-room-server-acl
+  #      The Matrix Spec, for more information about the event and data
   def get_room_server_acl(room_id, **params)
     get_room_state(room_id, 'm.room.server_acl', params)
   end
 
+  # Sets the server ACL configuration for a room
+  #
+  # @param [MXID,String] room_id The room ID to work on
+  # @param [Boolean] allow_ip_literals If HSes with literal IP domains should be allowed
+  # @param [Array[String]] allow A list of HS wildcards that are allowed to communicate with the room
+  # @param [Array[String]] deny A list of HS wildcards that are denied from communicating with the room
+  # @param [Hash] params Extra options to set on the request, see #send_state_event
+  # @return [Response] The resulting state event
+  # @see https://matrix.org/docs/spec/client_server/r0.5.0.html#m-room-guest-server-acl
+  #      The Matrix Spec, for more information about the event and data
   def set_room_server_acl(room_id, allow_ip_literals: false, allow:, deny:, **params)
     content = {
       allow_ip_literals: allow_ip_literals,
