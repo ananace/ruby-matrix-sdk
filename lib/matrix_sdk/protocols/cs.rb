@@ -38,7 +38,7 @@ module MatrixSdk::Protocols::CS
   # @option params [Boolean] :full_state Should the sync include the full state
   # @option params [Boolean] :set_presence Should the sync set the user status to online
   # @return [Response]
-  # @see https://matrix.org/docs/spec/client_server/r0.3.0.html#get-matrix-client-r0-sync
+  # @see https://matrix.org/docs/spec/client_server/r0.5.0.html#get-matrix-client-r0-sync
   #      For more information on the parameters and what they mean
   def sync(timeout: 30.0, **params)
     query = params.select do |k, _v|
@@ -65,7 +65,7 @@ module MatrixSdk::Protocols::CS
   # @option params [Boolean] :store_token (true) Should the resulting access token be stored for the API
   # @option params [Boolean] :store_device_id (store_token value) Should the resulting device ID be stored for the API
   # @return [Response]
-  # @see https://matrix.org/docs/spec/client_server/r0.3.0.html#post-matrix-client-r0-register
+  # @see https://matrix.org/docs/spec/client_server/r0.5.0.html#post-matrix-client-r0-register
   #      For options that are permitted in this call
   def register(kind: 'user', **params)
     query = {}
@@ -117,7 +117,7 @@ module MatrixSdk::Protocols::CS
   # @option params [String] :initial_device_display_name (USER_AGENT) The device display name to specify for this login attempt
   # @option params [String] :device_id The device ID to set on the login
   # @return [Response] A response hash with the parameters :user_id, :access_token, :home_server, and :device_id.
-  # @see https://matrix.org/docs/spec/client_server/r0.3.0.html#post-matrix-client-r0-login
+  # @see https://matrix.org/docs/spec/client_server/r0.5.0.html#post-matrix-client-r0-login
   #      The Matrix Spec, for more information about the call and response
   def login(login_type: 'm.login.password', **params)
     query = {}
@@ -141,7 +141,7 @@ module MatrixSdk::Protocols::CS
 
   # Logs out the currently logged in user
   # @return [Response] An empty response if the logout was successful
-  # @see https://matrix.org/docs/spec/client_server/r0.3.0.html#post-matrix-client-r0-logout
+  # @see https://matrix.org/docs/spec/client_server/r0.5.0.html#post-matrix-client-r0-logout
   #      The Matrix Spec, for more information about the call and response
   def logout(**params)
     query = {}
@@ -200,7 +200,7 @@ module MatrixSdk::Protocols::CS
   # @option params [String] :room_alias A room alias to apply on creation
   # @option params [Boolean] :invite Should the room be created invite-only
   # @return [Response] A response hash with ...
-  # @see https://matrix.org/docs/spec/client_server/r0.3.0.html#post-matrix-client-r0-createroom
+  # @see https://matrix.org/docs/spec/client_server/r0.5.0.html#post-matrix-client-r0-createroom
   #      The Matrix Spec, for more information about the call and response
   def create_room(visibility: :public, **params)
     query = {}
@@ -221,7 +221,7 @@ module MatrixSdk::Protocols::CS
   # @param params [Hash] Extra room join options
   # @option params [String[]] :server_name A list of servers to perform the join through
   # @return [Response] A response hash with the parameter :room_id
-  # @see https://matrix.org/docs/spec/client_server/r0.3.0.html#post-matrix-client-r0-join-roomidoralias
+  # @see https://matrix.org/docs/spec/client_server/r0.5.0.html#post-matrix-client-r0-join-roomidoralias
   #      The Matrix Spec, for more information about the call and response
   # @todo Add support for 3rd-party signed objects
   def join_room(id_or_alias, **params)
@@ -244,8 +244,8 @@ module MatrixSdk::Protocols::CS
   # @param params [Hash] Options for the request
   # @option params [String] :state_key The state key of the event, if there is one
   # @return [Response] A response hash with the parameter :event_id
-  # @see https://matrix.org/docs/spec/client_server/r0.3.0.html#put-matrix-client-r0-rooms-roomid-state-eventtype-statekey
-  #      https://matrix.org/docs/spec/client_server/r0.3.0.html#put-matrix-client-r0-rooms-roomid-state-eventtype
+  # @see https://matrix.org/docs/spec/client_server/r0.5.0.html#put-matrix-client-r0-rooms-roomid-state-eventtype-statekey
+  #      https://matrix.org/docs/spec/client_server/r0.5.0.html#put-matrix-client-r0-rooms-roomid-state-eventtype
   #      The Matrix Spec, for more information about the call and response
   def send_state_event(room_id, event_type, content, **params)
     query = {}
@@ -265,7 +265,7 @@ module MatrixSdk::Protocols::CS
   # @param params [Hash] Options for the request
   # @option params [Integer] :txn_id The ID of the transaction, or automatically generated
   # @return [Response] A response hash with the parameter :event_id
-  # @see https://matrix.org/docs/spec/client_server/r0.3.0.html#put-matrix-client-r0-rooms-roomid-send-eventtype-txnid
+  # @see https://matrix.org/docs/spec/client_server/r0.5.0.html#put-matrix-client-r0-rooms-roomid-send-eventtype-txnid
   #      The Matrix Spec, for more information about the call and response
   def send_message_event(room_id, event_type, content, **params)
     query = {}
@@ -288,7 +288,7 @@ module MatrixSdk::Protocols::CS
   # @option params [String] :reason The reason for the redaction
   # @option params [Integer] :txn_id The ID of the transaction, or automatically generated
   # @return [Response] A response hash with the parameter :event_id
-  # @see https://matrix.org/docs/spec/client_server/r0.3.0.html#put-matrix-client-r0-rooms-roomid-redact-eventid-txnid
+  # @see https://matrix.org/docs/spec/client_server/r0.5.0.html#put-matrix-client-r0-rooms-roomid-redact-eventid-txnid
   #      The Matrix Spec, for more information about the call and response
   def redact_event(room_id, event_id, **params)
     query = {}
@@ -343,10 +343,10 @@ module MatrixSdk::Protocols::CS
   # @option params [Hash] :extra_content Extra data to insert into the content hash
   # @return [Response] A response hash with the parameter :event_id
   # @see send_message_event For more information on the underlying call
-  # @see https://matrix.org/docs/spec/client_server/r0.3.0.html#m-image
-  #      https://matrix.org/docs/spec/client_server/r0.3.0.html#m-file
-  #      https://matrix.org/docs/spec/client_server/r0.3.0.html#m-video
-  #      https://matrix.org/docs/spec/client_server/r0.3.0.html#m-audio
+  # @see https://matrix.org/docs/spec/client_server/r0.5.0.html#m-image
+  #      https://matrix.org/docs/spec/client_server/r0.5.0.html#m-file
+  #      https://matrix.org/docs/spec/client_server/r0.5.0.html#m-video
+  #      https://matrix.org/docs/spec/client_server/r0.5.0.html#m-audio
   #      The Matrix Spec, for more information about the call and response
   def send_content(room_id, url, name, msg_type, **params)
     content = {
@@ -371,7 +371,7 @@ module MatrixSdk::Protocols::CS
   # @option params [Hash] :thumbnail_info Image information about the location thumbnail
   # @return [Response] A response hash with the parameter :event_id
   # @see send_message_event For more information on the underlying call
-  # @see https://matrix.org/docs/spec/client_server/r0.3.0.html#m-location
+  # @see https://matrix.org/docs/spec/client_server/r0.5.0.html#m-location
   #      The Matrix Spec, for more information about the call and response
   def send_location(room_id, geo_uri, name, **params)
     content = {
@@ -394,7 +394,7 @@ module MatrixSdk::Protocols::CS
   # @option params [String] :msg_type ('m.text') The message type to send
   # @return [Response] A response hash with the parameter :event_id
   # @see send_message_event For more information on the underlying call
-  # @see https://matrix.org/docs/spec/client_server/r0.3.0.html#m-text
+  # @see https://matrix.org/docs/spec/client_server/r0.5.0.html#m-text
   #      The Matrix Spec, for more information about the call and response
   def send_message(room_id, message, **params)
     content = {
@@ -412,7 +412,7 @@ module MatrixSdk::Protocols::CS
   # @option params [String] :msg_type ('m.emote') The message type to send
   # @return [Response] A response hash with the parameter :event_id
   # @see send_message_event For more information on the underlying call
-  # @see https://matrix.org/docs/spec/client_server/r0.3.0.html#m-emote
+  # @see https://matrix.org/docs/spec/client_server/r0.5.0.html#m-emote
   #      The Matrix Spec, for more information about the call and response
   def send_emote(room_id, emote, **params)
     content = {
@@ -430,7 +430,7 @@ module MatrixSdk::Protocols::CS
   # @option params [String] :msg_type ('m.notice') The message type to send
   # @return [Response] A response hash with the parameter :event_id
   # @see send_message_event For more information on the underlying call
-  # @see https://matrix.org/docs/spec/client_server/r0.3.0.html#m-notice
+  # @see https://matrix.org/docs/spec/client_server/r0.5.0.html#m-notice
   #      The Matrix Spec, for more information about the call and response
   def send_notice(room_id, notice, **params)
     content = {
@@ -450,7 +450,7 @@ module MatrixSdk::Protocols::CS
   # @option params [String] :to A token to limit retrieval to
   # @option params [String] :filter A filter to limit the retrieval to
   # @return [Response] A response hash with the message information containing :start, :end, and :chunk fields
-  # @see https://matrix.org/docs/spec/client_server/r0.3.0.html#get-matrix-client-r0-rooms-roomid-messages
+  # @see https://matrix.org/docs/spec/client_server/r0.5.0.html#get-matrix-client-r0-rooms-roomid-messages
   #      The Matrix Spec, for more information about the call and response
   def get_room_messages(room_id, token, direction, limit: 10, **params)
     query = {
@@ -472,7 +472,7 @@ module MatrixSdk::Protocols::CS
   # @param room_id [MXID,String] The room ID to read from
   # @param state_type [String] The state type to read
   # @return [Response] A response hash with the contents of the state event
-  # @see https://matrix.org/docs/spec/client_server/r0.3.0.html#get-matrix-client-r0-rooms-roomid-state-eventtype
+  # @see https://matrix.org/docs/spec/client_server/r0.5.0.html#get-matrix-client-r0-rooms-roomid-state-eventtype
   #      The Matrix Spec, for more information about the call and response
   def get_room_state(room_id, state_type = nil, key: nil, **params)
     query = {}
@@ -493,7 +493,7 @@ module MatrixSdk::Protocols::CS
   # @param room_id [MXID,String] The room ID to look up
   # @return [Response] A response hash with the parameter :name
   # @see get_room_state
-  # @see https://matrix.org/docs/spec/client_server/r0.3.0.html#m-room-name
+  # @see https://matrix.org/docs/spec/client_server/r0.5.0.html#m-room-name
   #      The Matrix Spec, for more information about the event and data
   def get_room_name(room_id, **params)
     get_room_state(room_id, 'm.room.name', params)
@@ -505,7 +505,7 @@ module MatrixSdk::Protocols::CS
   # @param [String] name The new name of the room
   # @param [Hash] params Extra options to set on the request, see #send_state_event
   # @return [Response] The resulting state event
-  # @see https://matrix.org/docs/spec/client_server/r0.3.0.html#m-room-name
+  # @see https://matrix.org/docs/spec/client_server/r0.5.0.html#m-room-name
   #      The Matrix Spec, for more information about the event and data
   def set_room_name(room_id, name, **params)
     content = {
