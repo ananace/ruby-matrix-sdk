@@ -488,10 +488,11 @@ module MatrixSdk::Protocols::CS
   ## Specialized getters for specced state
   #
 
-  # Gets the display name of a room
+  # Gets the current display name of a room
   #
   # @param room_id [MXID,String] The room ID to look up
   # @return [Response] A response hash with the parameter :name
+  # @raise [MatrixNotFoundError] Raised if no name has been set on the room
   # @see get_room_state
   # @see https://matrix.org/docs/spec/client_server/r0.5.0.html#m-room-name
   #      The Matrix Spec, for more information about the event and data
@@ -514,10 +515,26 @@ module MatrixSdk::Protocols::CS
     send_state_event(room_id, 'm.room.name', content, params)
   end
 
+  # Gets the current topic of a room
+  #
+  # @param [MXID,String] room_id The room ID to look up
+  # @return [Response] A response hash with the parameter :topic
+  # @raise [MatrixNotFoundError] Raised if no topic has been set on the room
+  # @see get_room_state
+  # @see https://matrix.org/docs/spec/client_server/r0.5.0.html#m-room-topic
+  #      The Matrix Spec, for more information about the event and data
   def get_room_topic(room_id, **params)
     get_room_state(room_id, 'm.room.topic', params)
   end
 
+  # Sets the topic of a room
+  #
+  # @param [MXID,String] room_id The room ID to work on
+  # @param [String] topic The new topic of the room
+  # @param [Hash] params Extra options to set on the request, see #send_state_event
+  # @return [Response] The resulting state event
+  # @see https://matrix.org/docs/spec/client_server/r0.5.0.html#m-room-topic
+  #      The Matrix Spec, for more information about the event and data
   def set_room_topic(room_id, topic, **params)
     content = {
       topic: topic
@@ -525,10 +542,26 @@ module MatrixSdk::Protocols::CS
     send_state_event(room_id, 'm.room.topic', content, params)
   end
 
+  # Gets the current avatar URL of a room
+  #
+  # @param [MXID,String] room_id The room ID to look up
+  # @return [Response] A response hash with the parameters :url and (optionally) :info
+  # @raise [MatrixNotFoundError] Raised if no avatar has been set on the room
+  # @see get_room_state
+  # @see https://matrix.org/docs/spec/client_server/r0.5.0.html#m-room-avatar
+  #      The Matrix Spec, for more information about the event and data
   def get_room_avatar(room_id, **params)
     get_room_state(room_id, 'm.room.avatar', params)
   end
 
+  # Sets the avatar URL for a room
+  #
+  # @param [MXID,String] room_id The room ID to work on
+  # @param [String,URI] url The new avatar URL for the room
+  # @param [Hash] params Extra options to set on the request, see #send_state_event
+  # @return [Response] The resulting state event
+  # @see https://matrix.org/docs/spec/client_server/r0.5.0.html#m-room-avatar
+  #      The Matrix Spec, for more information about the event and data
   def set_room_avatar(room_id, url, **params)
     content = {
       url: url
@@ -536,10 +569,40 @@ module MatrixSdk::Protocols::CS
     send_state_event(room_id, 'm.room.avatar', content, params)
   end
 
+  # Gets a list of current aliases of a room
+  #
+  # @param [MXID,String] room_id The room ID to look up
+  # @return [Response] A response hash with the array :aliases
+  # @raise [MatrixNotFoundError] Raised if no aliases has been set on the room by the specified HS
+  # @see get_room_state
+  # @see https://matrix.org/docs/spec/client_server/r0.5.0.html#m-room-avatar
+  #      The Matrix Spec, for more information about the event and data
+  # @example Looking up aliases for a room
+  #   api.get_room_aliases('!QtykxKocfZaZOUrTwp:matrix.org')
+  #   # MatrixSdk::MatrixNotFoundError: HTTP 404 (M_NOT_FOUND): Event not found.
+  #   api.get_room_aliases('!QtykxKocfZaZOUrTwp:matrix.org', key: 'matrix.org')
+  #   # => {:aliases=>["#matrix:matrix.org"]}
+  #   api.get_room_aliases('!QtykxKocfZaZOUrTwp:matrix.org', key: 'kittenface.studio')
+  #   # => {:aliases=>["#worlddominationhq:kittenface.studio"]}
+  # @example A way to find all aliases for a room
+  #   api.get_room_state('!mjbDjyNsRXndKLkHIe:matrix.org')
+  #      .select { |ch| ch[:type] == 'm.room.aliases' }
+  #      .map { |ch| ch[:content][:aliases] }
+  #      .flatten
+  #      .compact
+  #   # => ["#synapse:im.kabi.tk", "#synapse:matrix.org", "#synapse-community:matrix.org", "#synapse-ops:matrix.org", "#synops:matrix.org", ...
   def get_room_aliases(room_id, **params)
     get_room_state(room_id, 'm.room.aliases', params)
   end
 
+  # Gets a list of pinned events in a room
+  #
+  # @param [MXID,String] room_id The room ID to look up
+  # @return [Response] A response hash with the array :pinned
+  # @raise [MatrixNotFoundError] Raised if no aliases has been set on the room by the specified HS
+  # @see get_room_state
+  # @see https://matrix.org/docs/spec/client_server/r0.5.0.html#m-room-pinned-events
+  #      The Matrix Spec, for more information about the event and data
   def get_room_pinned_events(room_id, **params)
     get_room_state(room_id, 'm.room.pinned_events', params)
   end
