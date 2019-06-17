@@ -499,6 +499,14 @@ module MatrixSdk::Protocols::CS
     get_room_state(room_id, 'm.room.name', params)
   end
 
+  # Sets the display name of a room
+  #
+  # @param [MXID,String] room_id The room ID to work on
+  # @param [String] name The new name of the room
+  # @param [Hash] params Extra options to set on the request, see #send_state_event
+  # @return [Response] The resulting state event
+  # @see https://matrix.org/docs/spec/client_server/r0.3.0.html#m-room-name
+  #      The Matrix Spec, for more information about the event and data
   def set_room_name(room_id, name, **params)
     content = {
       name: name
