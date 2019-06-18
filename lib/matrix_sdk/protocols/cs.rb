@@ -27,7 +27,7 @@ module MatrixSdk::Protocols::CS
   end
 
   def allowed_login_methods
-    request(:get, :client_r0, '/login').flows
+    request(:get, :client_r0, '/login')
   end
 
   # Runs the client API /sync method
