@@ -5,7 +5,7 @@ module MatrixSdk::Protocols::CS
   # Gets the available client API versions
   # @return [Array]
   def client_api_versions
-    @client_api_versions ||= request(:get, :client, '/versions').versions.tap do |vers|
+    (@client_api_versions ||= request(:get, :client, '/versions')).versions.tap do |vers|
       vers.instance_eval <<-'CODE', __FILE__, __LINE__ + 1
         def latest
           last
@@ -17,7 +17,7 @@ module MatrixSdk::Protocols::CS
   # Gets the list of available unstable client API features
   # @return [Array]
   def client_api_unstable_features
-    @client_api_unstable_features ||= request(:get, :client, '/versions').unstable_features.tap do |vers|
+    (@client_api_versions ||= request(:get, :client, '/versions')).unstable_features.tap do |vers|
       vers.instance_eval <<-'CODE', __FILE__, __LINE__ + 1
         def has?(feature)
           fetch(feature, nil)
