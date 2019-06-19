@@ -26,6 +26,8 @@ module MatrixSdk::Protocols::CS
     end
   end
 
+  # Gets the list of available methods for logging in
+  # @return [Response]
   def allowed_login_methods
     request(:get, :client_r0, '/login')
   end
