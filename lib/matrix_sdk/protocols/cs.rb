@@ -1065,11 +1065,25 @@ module MatrixSdk::Protocols::CS
     request(:get, :client_r0, "/profile/#{user_id}", query: query)
   end
 
-  def get_download_url(mxcurl, **_params)
+  # Converts a Matrix content URL (mxc://) to a media download URL
+  # @param [String,URI] mxcurl The Matrix content URL to convert
+  # @param [String,URI] source A source HS to use for the convertion, defaults to the connected HS
+  # @return [URI] The full download URL for the requested piece of media
+  #
+  # @example Converting a MXC URL
+  #   url = 'mxc://example.com/media_hash'
+  #
+  #   api.get_download_url(url)
+  #   # => #<URI::HTTPS https://example.com/_matrix/media/r0/download/example.com/media_hash>
+  #   api.get_download_url(url, source: 'matrix.org')
+  #   # => #<URI::HTTPS https://matrix.org/_matrix/media/r0/download/example.com/media_hash>
+  def get_download_url(mxcurl, source: nil, **_params)
     mxcurl = URI.parse(mxcurl.to_s) unless mxcurl.is_a? URI
     raise 'Not a mxc:// URL' unless mxcurl.is_a? URI::MATRIX
 
-    homeserver.dup.tap do |u|
+    source ||= homeserver.dup
+    source = URI(hs.to_s) unless hs.is_a? URI
+    source.tap do |u|
       full_path = ERB::Util.url_encode mxcurl.full_path.to_s
       u.path = "/_matrix/media/r0/download/#{full_path}"
     end
