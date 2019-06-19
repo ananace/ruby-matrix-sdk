@@ -15,7 +15,7 @@ module MatrixSdk::Protocols::CS
   end
 
   # Gets the list of available unstable client API features
-  # @return [Array]
+  # @return [Hash]
   def client_api_unstable_features
     (@client_api_versions ||= request(:get, :client, '/versions')).unstable_features.tap do |vers|
       vers.instance_eval <<-'CODE', __FILE__, __LINE__ + 1
