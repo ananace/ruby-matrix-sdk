@@ -1089,6 +1089,10 @@ module MatrixSdk::Protocols::CS
     end
   end
 
+  # Gets the room ID for an alias
+  # @param [String,MXID] room_alias The room alias to look up
+  # @return [Response] An object containing the :room_id key and a key of :servers that know of the room
+  # @raise [MatrixNotFoundError] No room with the requested alias exists
   def get_room_id(room_alias, **params)
     query = {}
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
@@ -1098,6 +1102,11 @@ module MatrixSdk::Protocols::CS
     request(:get, :client_r0, "/directory/room/#{room_alias}", query: query)
   end
 
+  # Sets the room ID for an alias
+  # @param [String,MXID] room_id The room to set an alias for
+  # @param [String,MXID] room_alias The alias to configure for the room
+  # @return [Response] An empty object denoting success
+  # @raise [MatrixConflictError] The alias is already in use
   def set_room_alias(room_id, room_alias, **params)
     query = {}
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
@@ -1110,6 +1119,9 @@ module MatrixSdk::Protocols::CS
     request(:put, :client_r0, "/directory/room/#{room_alias}", body: content, query: query)
   end
 
+  # Remove an alias from its room
+  # @param [String,MXID] room_alias The alias to remove
+  # @return [Response] An empty object denoting success
   def remove_room_alias(room_alias, **params)
     query = {}
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
