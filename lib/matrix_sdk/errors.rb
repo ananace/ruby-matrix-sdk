@@ -7,7 +7,7 @@ module MatrixSdk
 
   # An error specialized and raised for failed requests
   class MatrixRequestError < MatrixError
-    attr_reader :code, :httpstatus, :message
+    attr_reader :code, :data, :httpstatus, :message
     alias error message
 
     def self.class_by_code(code)
@@ -30,6 +30,7 @@ module MatrixSdk
       @code = error[:errcode]
       @httpstatus = status
       @message = error[:error]
+      @data = error.reject { |k, _v| %i[errcode error].include? k }
 
       super error[:error]
     end
