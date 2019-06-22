@@ -1140,22 +1140,43 @@ module MatrixSdk::Protocols::CS
     request(:get, :client_r0, "/rooms/#{room_id}/members", query: query)
   end
 
+  # Gets a list of the current users registered devices
+  # @return [Response] An object including all information about the users devices.
+  # @see https://matrix.org/docs/spec/client_server/r0.4.0#get-matrix-client-r0-devices
+  #      The Matrix Spec, for more information about the data
   def get_devices
     request(:get, :client_r0, '/devices')
   end
 
+  # Gets the information about a certain client device
+  # @param [String] device_id The ID of the device to look up
+  # @return [Response] An object containing all available device information
+  # @see https://matrix.org/docs/spec/client_server/r0.4.0#get-matrix-client-r0-devices-deviceid
+  #      The Matrix Spec, for more information about the data
   def get_device(device_id)
     device_id = ERB::Util.url_encode device_id.to_s
 
     request(:get, :client_r0, "/devices/#{device_id}")
   end
 
+  # Sets the metadata for a device
+  # @param [String] device_id The ID of the device to modify
+  # @param [String] display_name The new display name to set for the device
+  # @see https://matrix.org/docs/spec/client_server/r0.4.0#put-matrix-client-r0-devices-deviceid
+  #      The Matrix Spec, for more information about the data
   def set_device(device_id, display_name:)
     device_id = ERB::Util.url_encode device_id.to_s
 
     request(:put, :client_r0, "/devices/#{device_id}", body: { display_name: display_name })
   end
 
+  # Removes a device from the current user
+  # @param [String] device_id The device to remove
+  # @param [Hash] auth Authentication data for the removal request
+  # @raise [MatrixNotAuthorizeedError] The request did not contain enough authentication information,
+  #        the data in this error will include the necessary information to perform interactive auth
+  # @see https://matrix.org/docs/spec/client_server/r0.4.0#delete-matrix-client-r0-devices-deviceid
+  #      The Matrix Spec, for more information about the data
   def delete_device(device_id, auth:)
     device_id = ERB::Util.url_encode device_id.to_s
 
