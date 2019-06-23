@@ -1183,6 +1183,20 @@ module MatrixSdk::Protocols::CS
     request(:delete, :client_r0, "/devices/#{device_id}", body: { auth: auth })
   end
 
+  # Run a query for device keys
+  # @param [Numeric] timeout The timeout - in seconds - for the query
+  # @param [Array] device_keys The list of devices to query
+  # @param [String] token The sync token that led to this query - if any
+  # @param [Hash] params Additional parameters
+  # @option params [Integer] timeout_ms The timeout in milliseconds for the query, overrides _timeout_
+  # @example Looking up all the device keys for a user
+  #   api.keys_query(device_keys: { '@alice:example.com': [] })
+  #   # => { :device_keys => { :'@alice:example.com' => { :JLAFKJWSCS => { ...
+  # @example Looking up a specific device for a user
+  #   api.keys_query(device_keys: { '@alice:example.com': ['ABCDEFGHIJ'] })
+  #   # => { :device_keys => { :'@alice:example.com' => { :ABCDEFGHIJ => { ...
+  # @see https://matrix.org/docs/spec/client_server/r0.4.0#post-matrix-client-r0-keys-query
+  #      The Matrix Spec, for more information about the parameters and data
   def keys_query(timeout: nil, device_keys:, token: nil, **params)
     body = {
       timeout: (timeout || 10) * 1000,
