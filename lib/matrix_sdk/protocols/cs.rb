@@ -1208,6 +1208,8 @@ module MatrixSdk::Protocols::CS
     request(:post, :client_r0, '/keys/query', body: body)
   end
 
+  # Gets the MXID of the currently logged-in user
+  # @return [Response] An object containing the key :user_id
   def whoami?(**params)
     query = {}
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
