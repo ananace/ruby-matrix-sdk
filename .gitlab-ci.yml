@@ -5,6 +5,7 @@ cache:
     - vendor/ruby
 
 rubocop:
+  image: "ruby:2.6"
   script:
     - gem install rubocop -N
     - rubocop lib
