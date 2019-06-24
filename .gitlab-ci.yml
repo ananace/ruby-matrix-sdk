@@ -1,6 +1,4 @@
 ---
-image: "ruby:2.6"
-
 # Cache gems in between builds
 cache:
   paths:
@@ -11,12 +9,12 @@ rubocop:
     - gem install rubocop -N
     - rubocop lib
 
-test:
+.test:
   before_script:
     - sed -e 's/# gem /gem /' -i Gemfile
     - gem install bundler -N
     - bundle install -j $(nproc) --path vendor
-  coverage: '/\((\d+.\d+\%)\) covered/'
+  coverage: '/\((\d+(?:.\d+)?)\%\) covered/'
   script:
     - GENERATE_REPORTS=true CI_REPORTS=reports bundle exec rake test
   artifacts:
@@ -25,6 +23,14 @@ test:
       - coverage/
     reports:
       junit: "reports/TEST-*.xml"
+
+test:2.4:
+  extend: .test
+  image: "ruby:2.4"
+
+test:2.6:
+  extend: .test
+  image: "ruby:2.6"
 
 pages:
   stage: deploy
