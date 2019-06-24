@@ -4,6 +4,7 @@
 - Fixes handling of the timeout parameter for the sync endpoint (#7)
     - Additionally also now allows for running sync with a nil timeout
 - Cleans up the CS protocol implementation slightly, removing a mutation that's not supposed to be there
+- Cleans up the gemspec slightly, no longer uses `git ls-files`
 
 ## v1.1.1 - 2019-06-05
 
