@@ -21,8 +21,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'simplecov'
   spec.add_development_dependency 'test-unit'
 
-  # TODO: Put this in a better location
-  spec.add_development_dependency 'ci_reporter_test_unit'
-
   spec.add_dependency 'logging', '~> 2'
 end
