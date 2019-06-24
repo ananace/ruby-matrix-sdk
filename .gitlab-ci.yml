@@ -25,11 +25,11 @@ rubocop:
       junit: "reports/TEST-*.xml"
 
 test:2.4:
-  extend: .test
+  extends: .test
   image: "ruby:2.4"
 
 test:2.6:
-  extend: .test
+  extends: .test
   image: "ruby:2.6"
 
 pages:
