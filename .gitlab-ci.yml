@@ -6,17 +6,16 @@ cache:
   paths:
     - vendor/ruby
 
-before_script:
-  - gem install bundler -N
-  - bundle install -j $(nproc) --path vendor
-
 rubocop:
-  before_script: []
   script:
     - gem install rubocop -N
     - rubocop lib
 
 test:
+  before_script:
+    - sed -e 's/# gem /gem /' -i Gemfile
+    - gem install bundler -N
+    - bundle install -j $(nproc) --path vendor
   coverage: '/\((\d+.\d+\%)\) covered/'
   script:
     - GENERATE_REPORTS=true CI_REPORTS=reports bundle exec rake test
@@ -29,7 +28,6 @@ test:
 
 pages:
   stage: deploy
-  before_script: []
   script:
     - gem install yard -N
     - yard doc -o public/
