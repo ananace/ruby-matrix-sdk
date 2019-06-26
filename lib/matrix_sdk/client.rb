@@ -205,8 +205,9 @@ module MatrixSdk
       ensure_room(data.room_id)
     end
 
-    def join_room(room_id_or_alias)
-      data = api.join_room(room_id_or_alias)
+    def join_room(room_id_or_alias, server_name: [])
+      server_name = [server_name] unless server_name.is_a? Array
+      data = api.join_room(room_id_or_alias, server_name: server_name)
       ensure_room(data.fetch(:room_id, room_id_or_alias))
     end
 
