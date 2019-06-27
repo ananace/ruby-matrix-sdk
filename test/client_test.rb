@@ -236,9 +236,15 @@ class ClientTest < Test::Unit::TestCase
   def test_join_room
     cl = MatrixSdk::Client.new 'https://example.com'
 
-    cl.api.expects(:join_room).with('!room:example.com').returns(MatrixSdk::Response.new(cl.api, room_id: '!room:example.com'))
-
+    cl.api.expects(:join_room).with('!room:example.com', server_name: []).returns(MatrixSdk::Response.new(cl.api, room_id: '!room:example.com'))
     room = cl.join_room('!room:example.com')
+
+    assert_not_nil room
+    assert_equal room, cl.rooms.first
+    assert_equal room, cl.find_room('!room:example.com')
+
+    cl.api.expects(:join_room).with('!room:example.com', server_name: ['matrix.org']).returns(MatrixSdk::Response.new(cl.api, room_id: '!room:example.com'))
+    room = cl.join_room('!room:example.com', server_name: 'matrix.org')
 
     assert_not_nil room
     assert_equal room, cl.rooms.first
