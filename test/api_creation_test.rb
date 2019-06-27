@@ -211,7 +211,7 @@ class ApiTest < Test::Unit::TestCase
 
     api = MatrixSdk::Api.new 'https://example.com'
 
-    api.send(:http).expects(:finish).times(3)
+    api.send(:http).expects(:finish).times(4)
 
     api.read_timeout = 5
     assert_equal 5, api.read_timeout
@@ -221,5 +221,12 @@ class ApiTest < Test::Unit::TestCase
 
     api.homeserver = URI('https://matrix.example.com')
     assert_equal 'matrix.example.com', api.homeserver.host
+
+    api.proxy_uri = URI('http://squid-proxy.example.com:3128')
+    assert_equal 'squid-proxy.example.com', api.proxy_uri.host
+
+    http = api.send :http
+
+    assert_equal 'squid-proxy.example.com', http.proxy_address
   end
 end

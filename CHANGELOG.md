@@ -5,6 +5,7 @@
     - Additionally also now allows for running sync with a nil timeout
 - Cleans up the CS protocol implementation slightly, removing a mutation that's not supposed to be there
 - Cleans up the gemspec slightly, no longer uses `git ls-files`
+- Add support for explicitly setting proxy config for API
 
 ## v1.1.1 - 2019-06-05
 

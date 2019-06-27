@@ -22,7 +22,7 @@ module MatrixSdk
     }.freeze
 
     attr_accessor :access_token, :connection_address, :connection_port, :device_id, :autoretry, :global_headers
-    attr_reader :homeserver, :validate_certificate, :read_timeout, :protocols, :well_known
+    attr_reader :homeserver, :validate_certificate, :read_timeout, :protocols, :well_known, :proxy_uri
 
     ignore_inspect :access_token, :logger
 
@@ -53,6 +53,7 @@ module MatrixSdk
       @protocols = [@protocols] unless @protocols.is_a? Array
       @protocols << :CS if @protocols.include?(:AS) && !@protocols.include?(:CS)
 
+      @proxy_uri = params.fetch(:proxy_uri, nil)
       @connection_address = params.fetch(:address, nil)
       @connection_port = params.fetch(:port, nil)
       @access_token = params.fetch(:access_token, nil)
@@ -178,6 +179,18 @@ module MatrixSdk
       @homeserver = hs_info
     end
 
+    # @param [URI] proxy_uri The URI for the proxy to use
+    # @return [URI]
+    def proxy_uri=(proxy_uri)
+      proxy_uri = URI(proxy_uri.to_s) unless proxy_uri.is_a? URI
+
+      if @http && @proxy_uri != proxy_uri
+        @http.finish
+        @http = nil
+      end
+      @proxy_uri = proxy_uri
+    end
+
     def request(method, api, path, **options)
       url = homeserver.dup.tap do |u|
         u.path = api_to_path(api) + path
@@ -262,8 +275,15 @@ module MatrixSdk
     end
 
     def http
-      @http ||= Net::HTTP.new (@connection_address || homeserver.host), (@connection_port || homeserver.port)
-      return @http if @http.active?
+      return @http if @http&.active?
+
+      host = (@connection_address || homeserver.host)
+      port = (@connection_port || homeserver.port)
+      @http ||= if proxy_uri
+                  Net::HTTP.new(host, port, proxy_uri.host, proxy_uri.port, proxy_uri.user, proxy_uri.password)
+                else
+                  Net::HTTP.new(host, port)
+                end
 
       @http.read_timeout = read_timeout
       @http.use_ssl = homeserver.scheme == 'https'
