@@ -1,4 +1,4 @@
-## *Unreleased*
+## 1.2.0 - 2019-06-28
 
 - Adds getters and setters for more specced room state
 - Fixes handling of the timeout parameter for the sync endpoint (#7)
