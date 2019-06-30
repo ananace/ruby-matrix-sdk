@@ -220,7 +220,12 @@ module MatrixSdk
         raise MatrixConnectionError, "Server still too busy to handle request after #{failures} attempts, try again later" if failures >= 10
 
         print_http(request)
-        response = http.request request
+        begin
+          response = http.request request
+        rescue EOFError => e
+          logger.error 'Socket closed unexpectedly'
+          raise e
+        end
         print_http(response)
         data = JSON.parse(response.body, symbolize_names: true) rescue nil
 
