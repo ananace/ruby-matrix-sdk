@@ -1144,6 +1144,11 @@ module MatrixSdk::Protocols::CS
     request(:delete, :client_r0, "/directory/room/#{room_alias}", query: query)
   end
 
+  # Gets a list of all the members in a room
+  # @param [String,MXID] room_id The ID of the room
+  # @return [Response] A chunked object
+  # @see https://matrix.org/docs/spec/client_server/r0.4.0#get-matrix-client-r0-rooms-roomid-members
+  #      The Matrix Spec, for more information about the data
   def get_room_members(room_id, **params)
     query = {}
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
