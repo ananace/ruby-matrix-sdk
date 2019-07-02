@@ -4,6 +4,12 @@
 module MatrixSdk::Protocols::CS
   # Gets the available client API versions
   # @return [Array]
+  #
+  # @example Getting API versions
+  #   api.client_api_versions
+  #   # => [ 'r0.1.0', 'r0.2.0', ...
+  #   api.client_api_versions.latest
+  #   # => 'r0.5.0'
   def client_api_versions
     (@client_api_versions ||= request(:get, :client, '/versions')).versions.tap do |vers|
       vers.instance_eval <<-'CODE', __FILE__, __LINE__ + 1
@@ -16,6 +22,12 @@ module MatrixSdk::Protocols::CS
 
   # Gets the list of available unstable client API features
   # @return [Hash]
+  #
+  # @example Checking for unstable features
+  #   api.client_api_unstable_features
+  #   # => { :"m.lazy_load_members" => true }
+  #   api.client_api_unstable_features.has? 'm.lazy_load_members'
+  #   # => true
   def client_api_unstable_features
     (@client_api_versions ||= request(:get, :client, '/versions')).unstable_features.tap do |vers|
       vers.instance_eval <<-'CODE', __FILE__, __LINE__ + 1
