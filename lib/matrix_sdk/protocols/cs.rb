@@ -1094,10 +1094,15 @@ module MatrixSdk::Protocols::CS
     mxcurl = URI.parse(mxcurl.to_s) unless mxcurl.is_a? URI
     raise 'Not a mxc:// URL' unless mxcurl.is_a? URI::MATRIX
 
+    if source
+      source = "https://#{source}" unless source.include? '://'
+      source = URI(source.to_s) unless source.is_a?(URI)
+    end
+
     source ||= homeserver.dup
-    source = URI(hs.to_s) unless hs.is_a? URI
+    source = URI(homeserver.to_s) unless homeserver.is_a? URI
     source.tap do |u|
-      full_path = ERB::Util.url_encode mxcurl.full_path.to_s
+      full_path = mxcurl.full_path.to_s
       u.path = "/_matrix/media/r0/download/#{full_path}"
     end
   end

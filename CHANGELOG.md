@@ -1,3 +1,7 @@
+## **Unreleased**
+
+- Fixes mxc download URL generation
+
 ## 1.2.0 - 2019-06-28
 
 - Adds getters and setters for more specced room state
