@@ -32,7 +32,7 @@ module MatrixSdk::Protocols::CS
     (@client_api_versions ||= request(:get, :client, '/versions')).unstable_features.tap do |vers|
       vers.instance_eval <<-'CODE', __FILE__, __LINE__ + 1
         def has?(feature)
-          features = feature.to_s.to_sym unless feature.is_a? Symbol
+          feature = feature.to_s.to_sym unless feature.is_a? Symbol
           fetch(feature, nil)
         end
       CODE
