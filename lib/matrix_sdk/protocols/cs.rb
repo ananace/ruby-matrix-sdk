@@ -1100,7 +1100,6 @@ module MatrixSdk::Protocols::CS
     end
 
     source ||= homeserver.dup
-    source = URI(homeserver.to_s) unless homeserver.is_a? URI
     source.tap do |u|
       full_path = mxcurl.full_path.to_s
       u.path = "/_matrix/media/r0/download/#{full_path}"
