@@ -1009,6 +1009,10 @@ module MatrixSdk::Protocols::CS
     request(:get, :client_r0, "/user/#{user_id}/filter/#{filter_id}", query: query)
   end
 
+  # Creates a filter for future use
+  #
+  # @param [String,MXID] user_id The user to create the filter for
+  # @param [Hash] filter_params The filter to create
   def create_filter(user_id, filter_params, **params)
     query = {}
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
@@ -1069,6 +1073,14 @@ module MatrixSdk::Protocols::CS
     request(:put, :client_r0, "/profile/#{user_id}/avatar_url", body: content, query: query)
   end
 
+  # Gets the combined profile object of a user.
+  #
+  # This includes their display name and avatar
+  #
+  # @param [String,MXID] user_id The User ID to read the profile for
+  # @return [Response] The user profile object
+  # @see #get_display_name
+  # @see #get_avatar_url
   def get_profile(user_id, **params)
     query = {}
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
