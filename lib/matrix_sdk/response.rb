@@ -24,6 +24,10 @@ module MatrixSdk
     def self.new(api, data)
       data.extend(Extensions)
       data.instance_variable_set(:@api, api)
+
+      data.select { |_k, v| v.is_a? Hash }
+          .each { |_v, v| Response.new api, v }
+
       data
     end
 

@@ -1,3 +1,7 @@
+## **Unreleased**
+
+- Improves response handling to add accessors recursively
+
 ## 1.2.1 - 2019-07-02
 
 - Fixes mxc download URL generation
