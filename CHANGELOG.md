@@ -1,6 +1,9 @@
 ## **Unreleased**
 
 - Improves response handling to add accessors recursively
+- Removes MatrixSdk extensions from the global scope,
+  if you've been using these in your own code you must now remember to
+  `extend MatrixSdk::Extensions` in order for them to be available.
 
 ## 1.2.1 - 2019-07-02
 

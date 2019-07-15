@@ -5,6 +5,7 @@ require 'matrix_sdk'
 module MatrixSdk
   # A class for tracking the information about a room on Matrix
   class Room
+    extend MatrixSdk::Extensions
     include MatrixSdk::Logging
 
     # @!attribute [rw] canonical_alias

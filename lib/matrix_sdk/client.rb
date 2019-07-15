@@ -6,6 +6,7 @@ require 'forwardable'
 
 module MatrixSdk
   class Client
+    extend MatrixSdk::Extensions
     include MatrixSdk::Logging
     extend Forwardable
 

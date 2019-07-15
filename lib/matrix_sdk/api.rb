@@ -9,6 +9,7 @@ require 'uri'
 
 module MatrixSdk
   class Api
+    extend MatrixSdk::Extensions
     include MatrixSdk::Logging
     include MatrixSdk::Protocols::AS
     include MatrixSdk::Protocols::CS

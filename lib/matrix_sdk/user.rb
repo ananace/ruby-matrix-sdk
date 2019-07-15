@@ -5,6 +5,8 @@ require 'matrix_sdk'
 module MatrixSdk
   # A class for tracking information about a user on Matrix
   class User
+    extend MatrixSdk::Extensions
+
     # @!attribute [r] id
     #   @return [String] the MXID of the user
     # @!attribute [r] client
