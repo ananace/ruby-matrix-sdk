@@ -1,4 +1,4 @@
-## **Unreleased**
+## 1.3.0 - 2019-07-16
 
 - Improves response handling to add accessors recursively
 - Removes MatrixSdk extensions from the global scope,
