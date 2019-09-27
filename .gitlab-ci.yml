@@ -34,6 +34,7 @@ test:2.6:
   image: "ruby:2.6"
 
 pages:
+  image: ruby
   stage: deploy
   script:
     - gem install yard -N
