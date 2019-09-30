@@ -1,3 +1,7 @@
+## 1.4.0 - 2019-09-30
+
+- Adds the option to change the logger globally or per-object.
+
 ## 1.3.0 - 2019-07-16
 
 - Improves response handling to add accessors recursively
