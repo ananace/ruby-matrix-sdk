@@ -38,7 +38,7 @@ module MatrixSdk
     # @option params [Boolean] :validate_certificate (false) Should the connection require valid SSL certificates
     # @option params [Integer] :transaction_id (0) The starting ID for transactions
     # @option params [Numeric] :backoff_time (5000) The request backoff time in milliseconds
-    # @option params [Numeric] :open_timeout (nil) The timeout in seconds to wait for a TCP session to open
+    # @option params [Numeric] :open_timeout (60) The timeout in seconds to wait for a TCP session to open
     # @option params [Numeric] :read_timeout (240) The timeout in seconds for reading responses
     # @option params [Hash] :global_headers Additional headers to set for all requests
     # @option params [Boolean] :skip_login Should the API skip logging in if the HS URL contains user information
@@ -64,7 +64,7 @@ module MatrixSdk
       @validate_certificate = params.fetch(:validate_certificate, false)
       @transaction_id = params.fetch(:transaction_id, 0)
       @backoff_time = params.fetch(:backoff_time, 5000)
-      @open_timeout = params.fetch(:open_timeout, nil)
+      @open_timeout = params.fetch(:open_timeout, 60)
       @read_timeout = params.fetch(:read_timeout, 240)
       @well_known = params.fetch(:well_known, {})
       @global_headers = DEFAULT_HEADERS.dup
