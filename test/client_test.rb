@@ -270,7 +270,7 @@ class ClientTest < Test::Unit::TestCase
     thread = cl.instance_variable_get(:@sync_thread)
     thread.join if thread.alive?
 
-    assert_not_equal true, cl.listening?
+    refute cl.listening?
     assert thrown
   end
 end
