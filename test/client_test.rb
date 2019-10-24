@@ -251,14 +251,16 @@ class ClientTest < Test::Unit::TestCase
     assert_equal room, cl.find_room('!room:example.com')
   end
 
+  class TestError < StandardError; end
+
   def test_background_errors
     cl = MatrixSdk::Client.new 'https://example.com'
 
     thrown = false
     # Any error that's not handled at the moment
-    cl.expects(:sync).raises(NoMemoryError.new)
+    cl.expects(:sync).raises(TestError.new('This is just a test'))
     cl.on_error.add_handler do |err|
-      assert_kind_of NoMemoryError, err.error
+      assert_kind_of TestError, err.error
       assert_equal :listener_thread, err.source
       thrown = true
     end
