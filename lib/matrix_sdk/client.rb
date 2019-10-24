@@ -306,7 +306,7 @@ module MatrixSdk
         end
       end
     rescue StandardError => e
-      logger.error "Unhandled #{e.class} raised in background listener", e
+      logger.error "Unhandled #{e.class} raised in background listener\n#{e}"
       fire_error(ErrorEvent.new(e, :listener_thread))
     end
 
