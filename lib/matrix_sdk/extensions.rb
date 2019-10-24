@@ -138,6 +138,19 @@ module MatrixSdk
     end
   end
 
+  class ErrorEvent < Event
+    attr_accessor :error
+
+    def initialize(error, source)
+      @error = error
+      super source
+    end
+
+    def source
+      @sender
+    end
+  end
+
   class MatrixEvent < Event
     attr_accessor :event, :filter
 

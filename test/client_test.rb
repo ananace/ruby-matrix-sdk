@@ -250,4 +250,25 @@ class ClientTest < Test::Unit::TestCase
     assert_equal room, cl.rooms.first
     assert_equal room, cl.find_room('!room:example.com')
   end
+
+  def test_background_errors
+    cl = MatrixSdk::Client.new 'https://example.com'
+
+    thrown = false
+    # Any error that's not handled at the moment
+    cl.expects(:sync).raises(NoMemoryError.new)
+    cl.on_error.add_handler do |err|
+      assert_kind_of NoMemoryError, err.error
+      assert_equal :listener_thread, err.source
+      thrown = true
+    end
+
+    cl.start_listener_thread
+
+    thread = cl.instance_variable_get(:@sync_thread)
+    thread.join if thread.alive?
+
+    assert_not_equal true, cl.listening?
+    assert thrown
+  end
 end

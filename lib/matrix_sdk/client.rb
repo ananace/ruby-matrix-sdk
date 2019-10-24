@@ -13,7 +13,7 @@ module MatrixSdk
     attr_reader :api
     attr_accessor :cache, :sync_filter
 
-    events :event, :presence_event, :invite_event, :leave_event, :ephemeral_event
+    events :error, :event, :presence_event, :invite_event, :leave_event, :ephemeral_event
     ignore_inspect :api,
                    :on_event, :on_presence_event, :on_invite_event, :on_leave_event, :on_ephemeral_event
 
@@ -257,6 +257,10 @@ module MatrixSdk
       @sync_thread = nil
     end
 
+    def listening?
+      @sync_thread&.alive? == true
+    end
+
     def sync(skip_store_batch: false, **params)
       extra_params = {
         filter: sync_filter,
@@ -301,6 +305,9 @@ module MatrixSdk
           end
         end
       end
+    rescue StandardError => e
+      logger.error "Unhandled #{e.class} raised in background listener", e
+      fire_error(ErrorEvent.new(e, :listener_thread))
     end
 
     def post_authentication(data)
