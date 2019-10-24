@@ -1,3 +1,7 @@
+## 1.4.1 - **Unreleased**
+
+- Adds error event to the client abstraction, for handling errors in the background listener
+
 ## 1.4.0 - 2019-09-30
 
 - Adds the option to change the logger globally or per-object.
