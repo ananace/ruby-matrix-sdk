@@ -2,6 +2,7 @@
 
 require 'matrix_sdk'
 
+require 'English'
 require 'forwardable'
 
 module MatrixSdk
@@ -306,7 +307,8 @@ module MatrixSdk
         end
       end
     rescue StandardError => e
-      logger.error "Unhandled #{e.class} raised in background listener\n#{e}"
+      logger.error "Unhandled #{e.class} raised in background listener"
+      logger.error [e.message, *e.backtrace].join($RS)
       fire_error(ErrorEvent.new(e, :listener_thread))
     end
 
