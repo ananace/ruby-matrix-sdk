@@ -44,7 +44,7 @@ class ApiCSVerificationTest < Test::Unit::TestCase
         next
       end
 
-      puts function
+      # puts function
       if data.key? 'requests'
         data['requests'].each do |request|
           response = request.fetch('response', {})
