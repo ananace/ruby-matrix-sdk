@@ -42,10 +42,10 @@ module MatrixSdk
 
   def self.logger=(global_logger)
     @logger = global_logger
-    @use_global_logger = !global_logger.nil?
+    @global_logger = !global_logger.nil?
   end
 
   def self.global_logger?
-    @use_global_logger || false
+    @global_logger ||= false
   end
 end
