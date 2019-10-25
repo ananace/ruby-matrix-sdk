@@ -1,4 +1,4 @@
-## 1.4.1 - **Unreleased**
+## 1.5.0 - 2019-10-25
 
 - Adds error event to the client abstraction, for handling errors in the background listener
 - Adds an `open_timeout` setter to the API
