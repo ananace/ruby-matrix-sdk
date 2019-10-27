@@ -22,6 +22,8 @@ module MatrixSdk
   #   @return [Api] The API connection that returned the response
   module Response
     def self.new(api, data)
+      raise ArgumentError, 'Input data was not a hash' unless data.is_a? Hash
+
       data.extend(Extensions)
       data.instance_variable_set(:@api, api)
 
