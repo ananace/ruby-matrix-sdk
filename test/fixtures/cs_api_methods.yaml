@@ -186,6 +186,7 @@ GET|/_matrix/client/r0/register/available:
 GET|/_matrix/client/r0/account/3pid: {}
 POST|/_matrix/client/r0/account/3pid: {}
 POST|/_matrix/client/r0/account/3pid/delete: {}
+POST|/_matrix/client/r0/account/3pid/unbind: {}
 POST|/_matrix/client/r0/account/3pid/email/requestToken: {}
 POST|/_matrix/client/r0/account/3pid/msisdn/requestToken: {}
 GET|/_matrix/client/r0/account/whoami:
