@@ -58,6 +58,7 @@ POST|_matrix/client/r0/logout:
     200: |
       {}
 POST|_matrix/client/r0/logout/all:
+  method: :logout_all
   results:
     200: |
       {}

@@ -154,7 +154,7 @@ module MatrixSdk::Protocols::CS
     end
   end
 
-  # Logs out the currently logged in user
+  # Logs out the currently logged in device for the current user
   # @return [Response] An empty response if the logout was successful
   # @see https://matrix.org/docs/spec/client_server/r0.5.0.html#post-matrix-client-r0-logout
   #      The Matrix Spec, for more information about the call and response
@@ -163,6 +163,17 @@ module MatrixSdk::Protocols::CS
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
 
     request(:post, :client_r0, '/logout', query: query)
+  end
+
+  # Logs out the currently logged in user
+  # @return [Response] An empty response if the logout was successful
+  # @see https://matrix.org/docs/spec/client_server/r0.5.0.html#post-matrix-client-r0-logout-all
+  #      The Matrix Spec, for more information about the call and response
+  def logout_all(**params)
+    query = {}
+    query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
+
+    request(:post, :client_r0, '/logout/all', query: query)
   end
 
   # Gets the list of rooms joined by the current user
