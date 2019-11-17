@@ -140,6 +140,14 @@ POST|_matrix/client/r0/register/msisdn/requestToken:
         "error": "Third party identifier is not allowed"
       }
 POST|_matrix/client/r0/account/password:
+  method: :change_password
+  requests:
+    - args: ['newpass', auth: { type: 'm.null' }]
+      query: {}
+      body:
+        :new_password: 'newpass'
+        :auth:
+          :type: 'm.null'
   results:
     200: |
       {}

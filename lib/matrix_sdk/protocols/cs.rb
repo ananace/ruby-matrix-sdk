@@ -176,6 +176,26 @@ module MatrixSdk::Protocols::CS
     request(:post, :client_r0, '/logout/all', query: query)
   end
 
+  # Changes the users password
+  # @param new_password [String] The new password
+  # @param auth [Hash] An auth object returned from an interactive auth query
+  # @return [Response] An empty response if the password change was successful
+  # @see https://matrix.org/docs/spec/client_server/latest#post-matrix-client-r0-account-password
+  #      The Matrix Spec, for more information about the call and response
+  def change_password(new_password, auth:, **params)
+    query = {}
+    query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
+
+    # raise Error unless auth.is_a?(Hash) && auth.key? :type
+
+    body = {
+      new_password: new_password,
+      auth: auth
+    }
+
+    request(:post, :client_r0, '/account/password', body: body, query: query)
+  end
+
   # Gets the list of rooms joined by the current user
   #
   # @return [Response] An array of room IDs under the key :joined_rooms
