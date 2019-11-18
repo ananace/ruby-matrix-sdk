@@ -463,7 +463,23 @@ GET|/_matrix/client/r0/rooms/{roomId}/members:
       {
         "chunk": []
       }
-GET|/_matrix/client/r0/rooms/{roomId}/joined_members: {}
+GET|/_matrix/client/r0/rooms/{roomId}/joined_members:
+  method: :get_room_joined_members
+  requests:
+    - args: ['!636q39766251:example.com']
+      path: '/rooms/%21636q39766251%3Aexample.com/joined_members'
+  results:
+    200: |
+      {
+        "joined": {
+          "@bar:example.com": {
+            "display_name": "Bar",
+            "avatar_url": "mxc://riot.ovh/printErCATzZijQsSDWorRaK"
+          }
+        }
+      }
+    403: |
+      {}
 GET|/_matrix/client/r0/rooms/{roomId}/messages:
   method: :get_room_messages
   requests:

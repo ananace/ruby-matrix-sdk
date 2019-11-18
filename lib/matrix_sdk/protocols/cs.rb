@@ -1244,6 +1244,21 @@ module MatrixSdk::Protocols::CS
     request(:get, :client_r0, "/rooms/#{room_id}/members", query: query)
   end
 
+  # Gets a list of the joined members in a room
+  #
+  # @param [String,MXID] room_id The ID of the room
+  # @return [Response] A chunked object
+  # @see https://matrix.org/docs/spec/client_server/latest#get-matrix-client-r0-rooms-roomid-joined-members
+  #      The Matrix Spec, for more information about the data
+  def get_room_joined_members(room_id, **params)
+    query = {}
+    query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
+
+    room_id = ERB::Util.url_encode room_id.to_s
+
+    request(:get, :client_r0, "/rooms/#{room_id}/joined_members", query: query)
+  end
+
   # Gets a list of the current users registered devices
   # @return [Response] An object including all information about the users devices.
   # @see https://matrix.org/docs/spec/client_server/r0.4.0#get-matrix-client-r0-devices
