@@ -196,6 +196,13 @@ module MatrixSdk::Protocols::CS
     request(:post, :client_r0, '/account/password', body: body, query: query)
   end
 
+  def get_3pids(**params)
+    query = {}
+    query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
+
+    request(:get, :client_r0, '/account/3pid', query: query)
+  end
+
   # Gets the list of rooms joined by the current user
   #
   # @return [Response] An array of room IDs under the key :joined_rooms

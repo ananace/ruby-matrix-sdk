@@ -192,7 +192,24 @@ GET|/_matrix/client/r0/register/available:
         "error": "Desired user ID is already taken."
       }
     429: *429
-GET|/_matrix/client/r0/account/3pid: {}
+GET|/_matrix/client/r0/account/3pid:
+  method: :get_3pids
+  requests:
+    - args: []
+      query: {}
+      body: null
+  results:
+    200: |
+      {
+        "threepids": [
+          {
+            "medium": "email",
+            "address": "monkey@banana.island",
+            "validated_at": 1535176800000,
+            "added_at": 1535336848756
+          }
+        ]
+      }
 POST|/_matrix/client/r0/account/3pid: {}
 POST|/_matrix/client/r0/account/3pid/delete: {}
 POST|/_matrix/client/r0/account/3pid/unbind: {}
