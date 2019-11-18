@@ -210,7 +210,8 @@ GET|/_matrix/client/r0/account/3pid:
           }
         ]
       }
-POST|/_matrix/client/r0/account/3pid: {}
+POST|/_matrix/client/r0/account/3pid:
+  deprecated: true
 POST|/_matrix/client/r0/account/3pid/delete: {}
 POST|/_matrix/client/r0/account/3pid/unbind: {}
 POST|/_matrix/client/r0/account/3pid/email/requestToken: {}
