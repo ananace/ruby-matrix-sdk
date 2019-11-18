@@ -661,7 +661,31 @@ POST|/_matrix/client/r0/rooms/{roomId}/invite:
         "error": "@cheeky_monkey:matrix.org is banned from the room"
       }
     429: *429
-POST|/_matrix/client/r0/rooms/{roomId}/join: {}
+POST|/_matrix/client/r0/rooms/{roomId}/join:
+  method: :join_room_id
+  requests:
+    - args: ['!nkl290a:matrix.org']
+      path: '/rooms/%21nkl290a%3Amatrix.org/join'
+      query: {}
+      body: {}
+    - args: ['!nkl290a:matrix.org', third_party_signed: { sender: '@alice:example.com', token: 'blah' }]
+      path: '/rooms/%21nkl290a%3Amatrix.org/join'
+      query: {}
+      body:
+        :third_party_signed:
+          :sender: '@alice:example.com'
+          :token: 'blah'
+  results:
+    200: |
+      {
+        "room_id": "!d41d8cd:matrix.org"
+      }
+    403: |
+      {
+        "errcode": "M_FORBIDDEN",
+        "error": "You are not invited to this room."
+      }
+    429: *429
 POST|/_matrix/client/r0/join/{roomIdOrAlias}:
   method: :join_room
   requests:
@@ -670,7 +694,7 @@ POST|/_matrix/client/r0/join/{roomIdOrAlias}:
       query:
         :server_name: ['matrix.org', 'elsewhere.ca']
       body: null
-    - args: ['!d41d8cd:matrix.org', { }]
+    - args: ['!d41d8cd:matrix.org']
       path: '/join/%21d41d8cd%3Amatrix.org'
       query: {}
       body: null

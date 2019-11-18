@@ -916,6 +916,26 @@ module MatrixSdk::Protocols::CS
     request(:post, :client_r0, "/rooms/#{room_id}/forget", query: query)
   end
 
+  # Directly joins a room by ID
+  #
+  # @param room_id [MXID,String] The room ID to join
+  # @param third_party_signed [Hash] The 3PID signature allowing the user to join
+  # @return [Response] A response hash with the parameter :room_id
+  # @see https://matrix.org/docs/spec/client_server/latest#post-matrix-client-r0-rooms-roomid-join
+  #      The Matrix Spec, for more information about the call and response
+  def join_room_id(room_id, third_party_signed: nil, **params)
+    query = {}
+    query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
+
+    body = {
+      third_party_signed: third_party_signed
+    }.compact
+
+    room_id = ERB::Util.url_encode room_id.to_s
+
+    request(:post, :client_r0, "/rooms/#{room_id}/join", body: body, query: query)
+  end
+
   def invite_user(room_id, user_id, **params)
     query = {}
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
