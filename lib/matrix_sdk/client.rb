@@ -202,6 +202,36 @@ module MatrixSdk
       !(mxid.nil? || @api.access_token.nil?)
     end
 
+    def registered_3pids
+      data = api.get_3pids
+      data.threepids.each do |obj|
+        obj.instance_eval do
+          def added_at
+            Time.at(self[:added_at] / 1000)
+          end
+
+          def validated_at
+            return unless validated?
+
+            Time.at(self[:validated_at] / 1000)
+          end
+
+          def validated?
+            key? :validated_at
+          end
+
+          def to_s
+            "#{self[:medium]}:#{self[:address]}"
+          end
+
+          def inspect
+            "#<MatrixSdk::Response 3pid=#{to_s.inspect} added_at=\"#{added_at}\"#{validated? ? " validated_at=\"#{validated_at}\"" : ''}>"
+          end
+        end
+      end
+      data
+    end
+
     def create_room(room_alias = nil, **params)
       data = api.create_room(params.merge(room_alias: room_alias))
       ensure_room(data.room_id)
