@@ -22,6 +22,15 @@ module MatrixSdk
   #   @return [Api] The API connection that returned the response
   module Response
     def self.new(api, data)
+      if data.is_a? Array
+        raise ArgumentError, 'Input data was not an array of hashes' unless data.all? { |v| v.is_a? Hash }
+
+        data.each do |value|
+          Response.new api, value
+        end
+        return data
+      end
+
       raise ArgumentError, 'Input data was not a hash' unless data.is_a? Hash
 
       data.extend(Extensions)
