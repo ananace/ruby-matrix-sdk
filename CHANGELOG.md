@@ -1,3 +1,13 @@
+## 1.6.0 - **Unreleased**
+
+**NB**, this release includes backwards-incompatible changes;  
+- Changes room state lookup to separate specific state lookups from full state retrieval.
+  This will require changes in client code where `#get_room_state` is called to retrieve
+  all state, as it now requires a state key. For retrieving full room state,
+  `#get_room_state_all` is now the method to use.
+
+- Adds multiple CS API endpoints
+
 ## 1.5.0 - 2019-10-25
 
 - Adds error event to the client abstraction, for handling errors in the background listener
