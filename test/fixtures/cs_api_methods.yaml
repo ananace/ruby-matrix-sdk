@@ -321,8 +321,39 @@ GET|/_matrix/client/r0/sync:
       {
         "too big": "and 100% ignored by the API abstraction"
       }
-GET|/_matrix/client/r0/rooms/{roomId}/event/{eventId}: {}
-GET|/_matrix/client/r0/rooms/{roomId}/state/{eventType}/{stateKey}: {}
+GET|/_matrix/client/r0/rooms/{roomId}/event/{eventId}:
+  method: :get_room_event
+  requests:
+    - args: ['!636q39766251:matrix.org', '$asfDuShaf7Gafaw:matrix.org']
+      path: '/rooms/%21636q39766251%3Amatrix.org/event/%24asfDuShaf7Gafaw%3Amatrix.org'
+  results:
+    200: |
+      {
+        "content": {
+          "body": "This is an example text message",
+          "msgtype": "m.text",
+          "format": "org.matrix.custom.html",
+          "formatted_body": "<b>This is an example text message</b>"
+        },
+        "type": "m.room.message",
+        "event_id": "$143273582443PhrSn:example.org",
+        "room_id": "!636q39766251:matrix.org",
+        "sender": "@example:example.org",
+        "origin_server_ts": 1432735824653,
+        "unsigned": {
+          "age": 1234
+        }
+      }
+GET|/_matrix/client/r0/rooms/{roomId}/state/{eventType}/{stateKey}:
+  method: :get_room_state
+  requests:
+    - args: ['!636q39766251:example.com', 'm.room.name', key: 'something']
+      path: '/rooms/%21636q39766251%3Aexample.com/state/m.room.name/something'
+  results:
+    200: |
+      {
+        "name": "Example room name"
+      }
 GET|/_matrix/client/r0/rooms/{roomId}/state/{eventType}:
   method: :get_room_state
   requests:

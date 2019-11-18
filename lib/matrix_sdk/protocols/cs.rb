@@ -520,6 +520,23 @@ module MatrixSdk::Protocols::CS
     request(:get, :client_r0, "/rooms/#{room_id}/messages", query: query)
   end
 
+  # Gets a specific event from a room
+  #
+  # @param room_id [MXID,String] The room ID to read from
+  # @param event_id [MXID,String] The event ID to retrieve
+  # @return [Response] A response hash with the contents of the event
+  # @see https://matrix.org/docs/spec/client_server/latest#get-matrix-client-r0-rooms-roomid-event-eventid
+  #      The Matrix Spec, for more information about the call and response
+  def get_room_event(room_id, event_id, **params)
+    query = {}
+    query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
+
+    room_id = ERB::Util.url_encode room_id.to_s
+    event_id = ERB::Util.url_encode event_id.to_s
+
+    request(:get, :client_r0, "/rooms/#{room_id}/event/#{event_id}", query: query)
+  end
+
   # Reads the latest instance of a room state event
   #
   # @param room_id [MXID,String] The room ID to read from
