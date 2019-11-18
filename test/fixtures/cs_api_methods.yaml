@@ -786,7 +786,23 @@ POST|/_matrix/client/r0/rooms/{roomId}/unban:
         "errcode": "M_FORBIDDEN",
         "error": "You do not have a high enough power level to unban from this room."
       }
-GET|/_matrix/client/r0/directory/list/room/{roomId}: {}
+GET|/_matrix/client/r0/directory/list/room/{roomId}:
+  method: :get_room_directory_visibility
+  requests:
+    - args: ['!au1ba7o:matrix.org']
+      path: '/directory/list/room/%21au1ba7o%3Amatrix.org'
+      query: {}
+      body: null
+  results:
+    200: |
+      {
+        "visibility": "public"
+      }
+    404: |
+      {
+        "errcode": "M_NOT_FOUND",
+        "error": "Room not found"
+      }
 PUT|/_matrix/client/r0/directory/list/room/{roomId}: {}
 GET|/_matrix/client/r0/publicRooms:
   method: :get_public_rooms

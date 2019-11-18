@@ -1008,6 +1008,21 @@ module MatrixSdk::Protocols::CS
     request(:post, :client_r0, "/rooms/#{room_id}/unban", body: content, query: query)
   end
 
+  # Gets the room directory visibility status for a room
+  #
+  # @param [MXID,String] room_id The room ID to look up
+  # @return [Response] A response hash with a :visibility key
+  # @see https://matrix.org/docs/spec/client_server/latest#get-matrix-client-r0-directory-list-room-roomid
+  #      The Matrix Spec, for more information about the event and data
+  def get_room_directory_visibility(room_id, **params)
+    query = {}
+    query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
+
+    room_id = ERB::Util.url_encode room_id.to_s
+
+    request(:get, :client_r0, "/directory/list/room/#{room_id}", query: query)
+  end
+
   def get_user_tags(user_id, room_id, **params)
     query = {}
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
