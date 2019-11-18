@@ -1023,6 +1023,26 @@ module MatrixSdk::Protocols::CS
     request(:get, :client_r0, "/directory/list/room/#{room_id}", query: query)
   end
 
+  # Sets the room directory visibility status for a room
+  #
+  # @param [MXID,String] room_id The room ID to change visibility for
+  # @param [:public,:private] visibility The new visibility status
+  # @return [Response] An empty response hash if the visibilty change succeeded
+  # @see https://matrix.org/docs/spec/client_server/latest#put-matrix-client-r0-directory-list-room-roomid
+  #      The Matrix Spec, for more information about the event and data
+  def set_room_directory_visibility(room_id, visibility, **params)
+    query = {}
+    query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
+
+    body = {
+      visibility: visibility
+    }
+
+    room_id = ERB::Util.url_encode room_id.to_s
+
+    request(:put, :client_r0, "/directory/list/room/#{room_id}", body: body, query: query)
+  end
+
   def get_user_tags(user_id, room_id, **params)
     query = {}
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)

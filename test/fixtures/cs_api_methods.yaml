@@ -803,7 +803,22 @@ GET|/_matrix/client/r0/directory/list/room/{roomId}:
         "errcode": "M_NOT_FOUND",
         "error": "Room not found"
       }
-PUT|/_matrix/client/r0/directory/list/room/{roomId}: {}
+PUT|/_matrix/client/r0/directory/list/room/{roomId}:
+  method: :set_room_directory_visibility
+  requests:
+    - args: ['!au1ba7o:matrix.org', public]
+      path: '/directory/list/room/%21au1ba7o%3Amatrix.org'
+      query: {}
+      body:
+        :visibility: public
+  results:
+    200: |
+      {}
+    404: |
+      {
+        "errcode": "M_NOT_FOUND",
+        "error": "Room not found"
+      }
 GET|/_matrix/client/r0/publicRooms:
   method: :get_public_rooms
   requests:
