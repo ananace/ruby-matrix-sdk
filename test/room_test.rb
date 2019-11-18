@@ -26,38 +26,22 @@ class RoomTest < Test::Unit::TestCase
     @room.instance_variable_set :@members_loaded, true
 
     @api.expects(:get_room_members).never
+    @api.expects(:get_room_joined_members).never
 
     assert_equal users, @room.joined_members
   end
 
   def test_joined_members
-    @api.expects(:get_room_members).with('!room:example.com').returns(chunk:
-    [
-      {
-        state_key: '@alice:example.com',
-        content:
-        {
-          membership: 'join',
-          displayname: 'Alice'
-        }
-      },
-      {
-        state_key: '@bob:example.com',
-        content:
-        {
-          membership: 'leave',
-          displayname: 'Bob'
-        }
-      },
-      {
-        state_key: '@charlie:example.com',
-        content:
-        {
-          membership: 'join',
-          displayname: 'Charlie'
+    @api.expects(:get_room_joined_members).with('!room:example.com').returns(
+      joined: {
+        '@alice:example.com': {
+          display_name: 'Alice'
+        },
+        '@charlie:example.com': {
+          display_name: 'Charlie'
         }
       }
-    ])
+    )
 
     assert_equal 2, @room.joined_members.count
     assert_equal '@alice:example.com', @room.joined_members.first.id

@@ -7,6 +7,7 @@
   `#get_room_state_all` is now the method to use.
 
 - Adds multiple CS API endpoints
+- Changes room abstraction member lookups to use `#get_room_joined_members`, reducing transferred data amounts
 
 ## 1.5.0 - 2019-10-25
 

@@ -119,10 +119,10 @@ module MatrixSdk
     def joined_members
       return members if @members_loaded && !members.empty?
 
-      client.api.get_room_members(id)[:chunk].each do |chunk|
-        next unless chunk [:content][:membership] == 'join'
-
-        ensure_member(User.new(client, chunk[:state_key], display_name: chunk[:content].fetch(:displayname, nil)))
+      client.api.get_room_joined_members(id)[:joined].each do |mxid, data|
+        ensure_member(User.new(client, mxid.to_s,
+                               display_name: data.fetch(:display_name, nil),
+                               avatar_url: data.fetch(:avatar_url, nil)))
       end
       @members_loaded = true
       members
