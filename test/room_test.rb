@@ -172,7 +172,7 @@ class RoomTest < Test::Unit::TestCase
     assert_equal 'New topic', @room.topic
 
     @api.expects(:get_room_aliases).with(@id).raises MatrixSdk::MatrixNotFoundError.new({ errcode: 404, error: '' }, 404)
-    @api.expects(:get_room_state).with(@id).returns [
+    @api.expects(:get_room_state_all).with(@id).returns [
       type: 'm.room.aliases', room_id: @id, sender: '@admin:example.com', content: { aliases: ['#test:example.com'] }, state_key: 'example.com',
       event_id: '$155085254299qAaWf:example.com', origin_server_ts: 1_550_852_542_467, unsigned: { age: 8_826_327_193 }, user_id: '@admin:example.com', age: 8_826_327_193
     ]

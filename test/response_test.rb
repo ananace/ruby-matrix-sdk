@@ -21,7 +21,7 @@ class ResponseTest < Test::Unit::TestCase
   end
 
   def test_creation_failure
-    data = [{ key: 'value' }]
+    data = 'Something else'
     assert_raises(ArgumentError) { MatrixSdk::Response.new(@api, data) }
   end
 end

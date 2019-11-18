@@ -5,7 +5,7 @@ class ApiCSVerificationTest < Test::Unit::TestCase
     @http = mock
     @http.stubs(:active?).returns(true)
 
-    @api = MatrixSdk::Api.new 'https://example.com', protocols: :CS
+    @api = MatrixSdk::Api.new 'https://example.com', protocols: :CS, autoretry: false
     @api.instance_variable_set :@http, @http
     @api.stubs(:print_http)
 
@@ -24,11 +24,9 @@ class ApiCSVerificationTest < Test::Unit::TestCase
   end
 
   def mock_response(code, body)
-    response = mock
-    response.stubs(:is_a?).returns do |klass|
-      Net::HTTPResponse::CODE_TO_OBJ[code.to_s] == klass
-    end
-    response.stubs(:code).returns(code)
+    response = Net::HTTPResponse::CODE_TO_OBJ[code.to_s].new(nil, code.to_i, 'GET')
+    response.stubs(:stream_check).returns(true)
+    response.stubs(:read_body_0).returns(body)
     response.stubs(:body).returns(body)
     response
   end
@@ -80,7 +78,7 @@ class ApiCSVerificationTest < Test::Unit::TestCase
                  []
                end
 
-        if code.to_s[0] == 2
+        if code.to_s[0] == '2'
           assert !@api.send(data['method'], *args).nil?
         else
           assert_raises(MatrixSdk::MatrixRequestError.class_by_code(code)) { @api.send(data['method'], *args) }

@@ -544,7 +544,7 @@ module MatrixSdk::Protocols::CS
   # @return [Response] A response hash with the contents of the state event
   # @see https://matrix.org/docs/spec/client_server/r0.5.0.html#get-matrix-client-r0-rooms-roomid-state-eventtype
   #      The Matrix Spec, for more information about the call and response
-  def get_room_state(room_id, state_type = nil, key: nil, **params)
+  def get_room_state(room_id, state_type, key: nil, **params)
     query = {}
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
 
@@ -552,7 +552,22 @@ module MatrixSdk::Protocols::CS
     state_type = ERB::Util.url_encode state_type.to_s
     key = ERB::Util.url_encode key.to_s
 
-    request(:get, :client_r0, "/rooms/#{room_id}/state#{state_type.empty? ? nil : "/#{state_type}"}#{key.empty? ? nil : "/#{key}"}", query: query)
+    request(:get, :client_r0, "/rooms/#{room_id}/state/#{state_type}#{key.empty? ? nil : "/#{key}"}", query: query)
+  end
+
+  # Retrieves all current state objects from a room
+  #
+  # @param room_id [MXID,String] The room ID to read from
+  # @return [Response] A response hash with the contents of all state events
+  # @see https://matrix.org/docs/spec/client_server/latest#get-matrix-client-r0-rooms-roomid-event-eventid
+  #      The Matrix Spec, for more information about the call and response
+  def get_room_state_all(room_id, **params)
+    query = {}
+    query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
+
+    room_id = ERB::Util.url_encode room_id.to_s
+
+    request(:get, :client_r0, "/rooms/#{room_id}/state", query: query)
   end
 
   ## Specialized getters for specced state

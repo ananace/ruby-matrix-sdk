@@ -483,7 +483,7 @@ module MatrixSdk
       begin
         new_aliases = client.api.get_room_aliases(id).aliases
       rescue MatrixNotFoundError
-        data = client.api.get_room_state(id)
+        data = client.api.get_room_state_all(id)
         new_aliases = data.select { |chunk| chunk[:type] == 'm.room.aliases' && chunk.key?(:content) && chunk[:content].key?(:aliases) }
                           .map { |chunk| chunk[:content][:aliases] }
                           .flatten
