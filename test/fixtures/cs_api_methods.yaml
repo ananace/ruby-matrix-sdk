@@ -962,7 +962,26 @@ GET|/_matrix/client/r0/profile/{userId}:
         "displayname": "Alice Margatroid"
       }
     429: *429
-GET|/_matrix/client/r0/voip/turnServer: {}
+GET|/_matrix/client/r0/voip/turnServer:
+  method: :get_turn_server
+  requests:
+    - args: []
+      path: '/voip/turnServer'
+      query: null
+      body: null
+  results:
+    200: |
+      {
+        "username": "1443779631:@user:example.com",
+        "password": "JlKfBy1QwLrO20385QyAtEyIv0=",
+        "uris": [
+          "turn:turn.example.com:3478?transport=udp",
+          "turn:10.20.30.40:3478?transport=tcp",
+          "turns:10.20.30.40:443?transport=tcp"
+        ],
+        "ttl": 86400
+      }
+    429: *429
 PUT|/_matrix/client/r0/rooms/{roomId}/typing/{userId}: {}
 POST|/_matrix/client/r0/rooms/{roomId}/receipt/{receiptType}/{eventId}: {}
 POST|/_matrix/client/r0/rooms/{roomId}/read_markers: {}

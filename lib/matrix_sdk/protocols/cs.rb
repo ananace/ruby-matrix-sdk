@@ -1215,6 +1215,15 @@ module MatrixSdk::Protocols::CS
     request(:get, :client_r0, "/profile/#{user_id}", query: query)
   end
 
+  # Gets TURN server connection information and credentials
+  #
+  # @return [Response] A response hash according to the spec
+  # @see https://matrix.org/docs/spec/client_server/latest#get-matrix-client-r0-voip-turnserver
+  #      The Matrix Spec, for more information about the event and data
+  def get_turn_server
+    request(:get, :client_r0, '/voip/turnServer')
+  end
+
   # Converts a Matrix content URL (mxc://) to a media download URL
   # @param [String,URI] mxcurl The Matrix content URL to convert
   # @param [String,URI] source A source HS to use for the convertion, defaults to the connected HS
