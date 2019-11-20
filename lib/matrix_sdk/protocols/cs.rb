@@ -1224,6 +1224,38 @@ module MatrixSdk::Protocols::CS
     request(:get, :client_r0, '/voip/turnServer')
   end
 
+  # Gets the presence status of a user
+  #
+  # @param [String,MXID] user_id The User ID to read the status for
+  # @return [Response] A response hash containing the current user presence status
+  # @see https://matrix.org/docs/spec/client_server/latest#get-matrix-client-r0-presence-userid-status
+  #      The Matrix Spec, for more information about the event and data
+  def get_presence_status(user_id)
+    user_id = ERB::Util.url_encode user_id.to_s
+
+    request(:get, :client_r0, "/presence/#{user_id}/status")
+  end
+
+  # Sets the presence status of a user
+  #
+  # @param [String,MXID] user_id The User ID to set the status for
+  # @param [:online,:offline,:unavailable] status The status to set
+  # @param [String] messge The status message to store for the new status
+  # @return [Response] An empty response hash if the status update succeeded
+  # @note The specified user_id should be of the local user unless used for AS purposes
+  # @see https://matrix.org/docs/spec/client_server/latest#put-matrix-client-r0-presence-userid-status
+  #      The Matrix Spec, for more information about the event and data
+  def set_presence_status(user_id, status, message: nil)
+    user_id = ERB::Util.url_encode user_id.to_s
+
+    body = {
+      presence: status,
+      status_msg: message
+    }.compact
+
+    request(:put, :client_r0, "/presence/#{user_id}/status", body: body)
+  end
+
   # Converts a Matrix content URL (mxc://) to a media download URL
   # @param [String,URI] mxcurl The Matrix content URL to convert
   # @param [String,URI] source A source HS to use for the convertion, defaults to the connected HS

@@ -985,8 +985,47 @@ GET|/_matrix/client/r0/voip/turnServer:
 PUT|/_matrix/client/r0/rooms/{roomId}/typing/{userId}: {}
 POST|/_matrix/client/r0/rooms/{roomId}/receipt/{receiptType}/{eventId}: {}
 POST|/_matrix/client/r0/rooms/{roomId}/read_markers: {}
-PUT|/_matrix/client/r0/presence/{userId}/status: {}
-GET|/_matrix/client/r0/presence/{userId}/status: {}
+PUT|/_matrix/client/r0/presence/{userId}/status:
+  method: :set_presence_status
+  requests:
+    - args: ['@alice:example.com', online, message: 'I am here']
+      path: '/presence/%40alice%3Aexample.com/status'
+      query: null
+      body:
+        :presence: 'online'
+        :status_msg: 'I am here'
+    - args: ['@alice:example.com', offline]
+      path: '/presence/%40alice%3Aexample.com/status'
+      query: null
+      body:
+        :presence: offline
+  results:
+    200: |
+      {}
+    429: *429
+GET|/_matrix/client/r0/presence/{userId}/status:
+  method: :get_presence_status
+  requests:
+    - args: ['@alice:example.com']
+      path: '/presence/%40alice%3Aexample.com/status'
+      query: null
+      body: null
+  results:
+    200: |
+      {
+        "presence": "unavailable",
+        "last_active_ago": 420845
+      }
+    403: |
+      {
+        "errcode": "M_FORBIDDEN",
+        "error": "You are not allowed to see their presence"
+      }
+    404: |
+      {
+        "errcode": "M_UNKNOWN",
+        "error": "An unknown error occurred"
+      }
 POST|/_matrix/client/r0/presence/list/{userId}: {}
 GET|/_matrix/client/r0/presence/list/{userId}: {}
 POST|/_matrix/media/r0/upload:
