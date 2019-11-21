@@ -91,6 +91,16 @@ module MatrixSdk
     alias user_id mxid
     alias user_id= mxid=
 
+    def presence
+      api.get_presence_status(mxid).tap { |h| h.delete :user_id }
+    end
+
+    def set_presence(status, message: nil)
+      raise ArgumentError, 'Presence must be one of :online, :offline, :unavaiable' unless %i[online offline unavailable].include?(status)
+
+      api.set_presence_status(mxid, status, message: message)
+    end
+
     def public_rooms
       rooms = []
       since = nil

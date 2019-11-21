@@ -39,5 +39,18 @@ class UserTest < Test::Unit::TestCase
     data = { device_keys: { @id.to_sym => ['Keys here'] } }
     @api.expects(:keys_query).with(device_keys: { @id => [] }).returns(data)
     assert_equal ['Keys here'], @user.device_keys
+
+    data = {
+      presence: 'online',
+      last_active_ago: 5000,
+      currently_active: true,
+      status_msg: 'Testing'
+    }
+    @api.expects(:get_presence_status).times(4).with(@id).returns data
+
+    assert @user.active?
+    assert_equal :online, @user.presence
+    assert_equal 'Testing', @user.status_msg
+    assert_equal (Time.now - 5).to_i, @user.last_active.to_i
   end
 end

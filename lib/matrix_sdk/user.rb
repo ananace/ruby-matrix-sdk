@@ -62,10 +62,55 @@ module MatrixSdk
       @avatar_url = url
     end
 
+    # @!attribute[r] presence
+    # @note This information is not cached in the abstraction layer
+    def presence
+      raw_presence[:presence].to_sym
+    end
+
+    # @!attribute[w] presence
+    def presence=(new_presence)
+      raise ArgumentError, 'Presence must be one of :online, :offline, :unavaiable' unless %i[online offline unavailable].include?(presence)
+
+      client.api.set_presence_status(id, new_presence)
+    end
+
+    # @return [Boolean] if the user is currently active
+    # @note This information is not cached in the abstraction layer
+    def active?
+      raw_presence[:currently_active] == true
+    end
+
+    # @!attribute[r] status_msg
+    # @note This information is not cached in the abstraction layer
+    def status_msg
+      raw_presence[:status_msg]
+    end
+
+    # @!attribute[w] status_msg
+    def status_msg=(message)
+      client.api.set_presence_status(id, presence, message: message)
+    end
+
+    # @return [Time] when the user was last active
+    # @note This information is not cached in the abstraction layer
+    def last_active
+      since = raw_presence[:last_active_ago]
+      return unless since
+
+      Time.now - (since / 1000)
+    end
+
     def device_keys
       @device_keys ||= client.api.keys_query(device_keys: { id => [] }).yield_self do |resp|
         resp[:device_keys][id.to_sym]
       end
+    end
+
+    private
+
+    def raw_presence
+      client.api.get_presence_status(id).tap { |h| h.delete :user_id }
     end
   end
 end

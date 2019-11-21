@@ -198,6 +198,24 @@ class ClientTest < Test::Unit::TestCase
     cl.stop_listener_thread
   end
 
+  def test_presence
+    cl = MatrixSdk::Client.new 'https://example.com', user_id: '@alice:example.com'
+    cl.api.expects(:get_presence_status).with('@alice:example.com').returns(
+      presence: 'online',
+      last_active_ago: 5,
+      currently_active: true
+    )
+
+    presence = cl.presence
+
+    refute presence.key? :user_id
+    assert_equal 5, presence[:last_active_ago]
+
+    cl.api.expects(:set_presence_status).with('@alice:example.com', :online, message: 'test').returns({})
+
+    cl.set_presence :online, message: 'test'
+  end
+
   def test_public_rooms
     cl = MatrixSdk::Client.new 'https://example.com'
 
