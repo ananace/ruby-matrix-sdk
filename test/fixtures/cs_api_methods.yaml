@@ -1026,8 +1026,8 @@ GET|/_matrix/client/r0/presence/{userId}/status:
         "errcode": "M_UNKNOWN",
         "error": "An unknown error occurred"
       }
-POST|/_matrix/client/r0/presence/list/{userId}: {}
-GET|/_matrix/client/r0/presence/list/{userId}: {}
+# POST|/_matrix/client/r0/presence/list/{userId}: {}
+# GET|/_matrix/client/r0/presence/list/{userId}: {}
 POST|/_matrix/media/r0/upload:
   method: :media_upload
   requests:
