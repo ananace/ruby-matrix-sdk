@@ -1423,6 +1423,49 @@ module MatrixSdk::Protocols::CS
     request(:post, :client_r0, '/keys/query', body: body)
   end
 
+  # Gets the list of registered pushers for the current user
+  #
+  # @return [Response] A response hash containing all the currently registered pushers for the current user
+  # @see https://matrix.org/docs/spec/client_server/latest#get-matrix-client-r0-pushers
+  #      The Matrix Spec, for more information about the parameters and data
+  def get_pushers
+    request(:get, :client_r0, '/pushers')
+  end
+
+  # rubocop:disable Metrics/ParameterLists
+
+  # Sets a pusher on the current user
+  #
+  # @param [String] key The pushkey for the pusher, used for routing purposes and for unique identification in coordination with app_id
+  # @param [String] kind The kind of pusher, should be either 'http' or 'email'
+  # @param [String] app_id The ID of the application to push to
+  # @param [String] app_name The user-visible name of the application to push to
+  # @param [String] device_name The user-visible name of the device to push to
+  # @param [String] lang The language that pushes should be sent in
+  # @param [Hash] data Pusher configuration data, depends on the kind parameter
+  # @param [Hash] params Additional optional parameters
+  # @option params [String] profile_tag Specifies which device rules to use
+  # @option params [Boolean] append Specifies if the pusher should replace or be appended to the pusher list based on uniqueness
+  # @return [Response] An empty response hash if the pusher was added/replaced correctly
+  # @see https://matrix.org/docs/spec/client_server/latest#post-matrix-client-r0-pushers
+  #      The Matrix Spec, for more information about the parameters and data
+  def set_pusher(key, kind:, app_id:, app_name:, device_name:, lang:, data:, **params)
+    body = {
+      pushkey: key,
+      kind: kind,
+      app_id: app_id,
+      app_display_name: app_name,
+      device_display_name: device_name,
+      profile_tag: params[:profile_tag],
+      lang: lang,
+      data: data,
+      append: params[:append]
+    }.compact
+
+    request(:post, :client_r0, '/pushers/set', body: body)
+  end
+  # rubocop:enable Metrics/ParameterLists
+
   # Gets the MXID of the currently logged-in user
   # @return [Response] An object containing the key :user_id
   def whoami?(**params)

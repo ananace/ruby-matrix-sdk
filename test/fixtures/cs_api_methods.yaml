@@ -1171,8 +1171,58 @@ POST|/_matrix/client/r0/keys/query:
       }
 POST|/_matrix/client/r0/keys/claim: {}
 GET|/_matrix/client/r0/keys/changes: {}
-GET|/_matrix/client/r0/pushers: {}
-POST|/_matrix/client/r0/pushers/set: {}
+GET|/_matrix/client/r0/pushers:
+  method: :get_pushers
+  requests:
+    - args: []
+      path: '/pushers'
+      query: null
+      body: null
+  results:
+    200: |
+      {
+        "pushers": [
+          {
+            "pushkey": "Xp/MzCt8/9DcSNE9cuiaoT5Ac55job3TdLSSmtmYl4A=",
+            "kind": "http",
+            "app_id": "face.mcapp.appy.prod",
+            "app_display_name": "Appy McAppface",
+            "device_display_name": "Alice's Phone",
+            "profile_tag": "xyz",
+            "lang": "en-US",
+            "data": {
+              "url": "https://example.com/_matrix/push/v1/notify"
+            }
+          }
+        ]
+      }
+POST|/_matrix/client/r0/pushers/set:
+  method: :set_pusher
+  requests:
+    - args: ["APA91bHPRgkF3JUikC4ENAHEeMrd41Zxv3hVZjC9KtT8OvPVGJ-hQMRKRrZuJAEcl7B338qju59zJMjw2DELjzEvxwYv7hH5Ynpc1ODQ0aT4U4OFEeco8ohsN5PjL1iC2dNtk2BAokeMCg2ZXKqpc8FXKmhX94kIxQ", { kind: 'http', app_id: 'com.example.app.ios', app_name: 'Mat Rix', device_name: 'iPhone 9', lang: 'en', data: { url: 'https://push-gateway.location.here/_matrix/push/v1/notify', format: 'event_id_only' }, profile_tag: 'xxyyzz', append: false }]
+      path: '/pushers/set'
+      query: null
+      body:
+        :lang: "en"
+        :kind: "http"
+        :app_display_name: "Mat Rix"
+        :device_display_name: "iPhone 9"
+        :profile_tag: "xxyyzz"
+        :app_id: "com.example.app.ios"
+        :pushkey: "APA91bHPRgkF3JUikC4ENAHEeMrd41Zxv3hVZjC9KtT8OvPVGJ-hQMRKRrZuJAEcl7B338qju59zJMjw2DELjzEvxwYv7hH5Ynpc1ODQ0aT4U4OFEeco8ohsN5PjL1iC2dNtk2BAokeMCg2ZXKqpc8FXKmhX94kIxQ"
+        :data:
+          :url: "https://push-gateway.location.here/_matrix/push/v1/notify"
+          :format: "event_id_only"
+        :append: false
+  results:
+    200: |
+      {}
+    400: |
+      {
+        "error": "Missing parameters: lang, data",
+        "errcode": "M_MISSING_PARAM"
+      }
+    429: *429
 GET|/_matrix/client/r0/notifications: {}
 GET|/_matrix/client/r0/pushrules/: {}
 GET|/_matrix/client/r0/pushrules/{scope}/{kind}/{ruleId}: {}
