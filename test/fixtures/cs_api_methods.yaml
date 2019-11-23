@@ -1041,9 +1041,9 @@ POST|/_matrix/media/r0/upload:
         "content_uri": "mxc://example.com/AQwafuaFswefuhsfAFAgsw"
       }
     429: *429
-GET|/_matrix/media/r0/download/{serverName}/{mediaId}: {}
-GET|/_matrix/media/r0/download/{serverName}/{mediaId}/{fileName}: {}
-GET|/_matrix/media/r0/thumbnail/{serverName}/{mediaId}: {}
+# GET|/_matrix/media/r0/download/{serverName}/{mediaId}: {}
+# GET|/_matrix/media/r0/download/{serverName}/{mediaId}/{fileName}: {}
+# GET|/_matrix/media/r0/thumbnail/{serverName}/{mediaId}: {}
 GET|/_matrix/media/r0/preview_url: {}
 GET|/_matrix/media/r0/config: {}
 PUT|/_matrix/client/r0/sendToDevice/{eventType}/{txnId}: {}
