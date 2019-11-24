@@ -1066,7 +1066,18 @@ GET|/_matrix/media/r0/preview_url:
         "matrix:image:size": 102400
       }
     429: *429
-GET|/_matrix/media/r0/config: {}
+GET|/_matrix/media/r0/config:
+  method: :get_media_config
+  requests:
+    - args: []
+      query: null
+      body: null
+  results:
+    200: |
+      {
+        "m.upload.size": 50000000
+      }
+    429: *429
 PUT|/_matrix/client/r0/sendToDevice/{eventType}/{txnId}: {}
 GET|/_matrix/client/r0/devices:
   method: :get_devices

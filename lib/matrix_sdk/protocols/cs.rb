@@ -1302,6 +1302,15 @@ module MatrixSdk::Protocols::CS
     request(:get, :media_r0, '/preview_url', query: query)
   end
 
+  # Gets the media configuration of the current server
+  #
+  # @return [Response] A response hash containing media configuration informtion
+  # @see https://matrix.org/docs/spec/client_server/latest#get-matrix-media-r0-config
+  #      The Matrix Spec, for more information about the data
+  def get_media_config
+    request(:get, :media_r0, '/config')
+  end
+
   # Gets the room ID for an alias
   # @param [String,MXID] room_alias The room alias to look up
   # @return [Response] An object containing the :room_id key and a key of :servers that know of the room
