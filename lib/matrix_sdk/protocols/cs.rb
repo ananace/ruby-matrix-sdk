@@ -1513,6 +1513,31 @@ module MatrixSdk::Protocols::CS
     request(:get, :client_r0, '/notifications', query: query)
   end
 
+  # Retrieves the full list of registered push rules for the current user
+  #
+  # @return [Response] A response hash containing the current list of push rules for the current user
+  # @see https://matrix.org/docs/spec/client_server/latest#get-matrix-client-r0-pushrules
+  #      The Matrix Spec, for more information about the parameters and data
+  def get_pushrules
+    request(:get, :client_r0, '/pushrules')
+  end
+
+  # Retrieves a single registered push rule for the current user
+  #
+  # @param [String] scope ('global') The scope to look up push rules from
+  # @param [:override,:underride,:sender,:room,:content] kind The kind of push rule to look up
+  # @param [String] id The ID of the rule that's being retrieved
+  # @return [Response] A response hash containing the full data of the requested push rule
+  # @see https://matrix.org/docs/spec/client_server/latest#get-matrix-client-r0-pushrules-scope-kind-ruleid
+  #      The Matrix Spec, for more information about the parameters and data
+  def get_pushrule(scope: 'global', kind:, id:)
+    scope = ERB::Util.url_encode scope.to_s
+    kind = ERB::Util.url_encode kind.to_s
+    id = ERB::Util.url_encode id.to_s
+
+    request(:get, :client_r0, "/pushrules/#{scope}/#{kind}/#{id}")
+  end
+
   # Gets the MXID of the currently logged-in user
   # @return [Response] An object containing the key :user_id
   def whoami?(**params)
