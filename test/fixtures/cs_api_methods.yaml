@@ -1044,7 +1044,28 @@ POST|/_matrix/media/r0/upload:
 # GET|/_matrix/media/r0/download/{serverName}/{mediaId}: {}
 # GET|/_matrix/media/r0/download/{serverName}/{mediaId}/{fileName}: {}
 # GET|/_matrix/media/r0/thumbnail/{serverName}/{mediaId}: {}
-GET|/_matrix/media/r0/preview_url: {}
+GET|/_matrix/media/r0/preview_url:
+  method: :get_url_preview
+  requests:
+    - args: ['https://matrix.org', { timestamp: 1510610716656 }]
+      query:
+        :url: 'https://matrix.org'
+        :ts: 1510610716656 
+    - args: ['https://matrix.org' ]
+      query:
+        :url: 'https://matrix.org'
+  results:
+    200: |
+      {
+        "og:title": "Matrix Blog Post",
+        "og:description": "This is a really cool blog post from matrix.org",
+        "og:image": "mxc://example.com/ascERGshawAWawugaAcauga",
+        "og:image:type": "image/png",
+        "og:image:height": 48,
+        "og:image:width": 48,
+        "matrix:image:size": 102400
+      }
+    429: *429
 GET|/_matrix/media/r0/config: {}
 PUT|/_matrix/client/r0/sendToDevice/{eventType}/{txnId}: {}
 GET|/_matrix/client/r0/devices:

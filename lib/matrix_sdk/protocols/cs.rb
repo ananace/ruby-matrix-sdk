@@ -1284,6 +1284,24 @@ module MatrixSdk::Protocols::CS
     end
   end
 
+  # Gets a preview of the given URL
+  #
+  # @param [String,URI] url The URL to retrieve a preview for
+  # @return [Response] A response hash containing OpenGraph data for the URL
+  # @see https://matrix.org/docs/spec/client_server/latest#get-matrix-media-r0-preview-url
+  #      The Matrix Spec, for more information about the data
+  def get_url_preview(url, timestamp: nil)
+    ts = (timestamp.to_i * 1000) if timestamp.is_a? Time
+    ts = timestamp if timestamp.is_a? Integer
+
+    query = {
+      url: url,
+      ts: ts
+    }.compact
+
+    request(:get, :media_r0, '/preview_url', query: query)
+  end
+
   # Gets the room ID for an alias
   # @param [String,MXID] room_alias The room alias to look up
   # @return [Response] An object containing the :room_id key and a key of :servers that know of the room
