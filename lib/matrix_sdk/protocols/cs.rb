@@ -1493,6 +1493,26 @@ module MatrixSdk::Protocols::CS
   end
   # rubocop:enable Metrics/ParameterLists
 
+  # Enumerates the list of notifies that the current user has/should have received.
+  #
+  # @param [String] from The pagination token to continue reading events from
+  # @param [Integer] limit The maximum number of event to return
+  # @param [String] only A filter string that is to be applied to the notification events
+  # @return [Response] A response hash containing notifications for the current user
+  # @see https://matrix.org/docs/spec/client_server/latest#get-matrix-client-r0-notifications
+  #      The Matrix Spec, for more information about the parameters and data
+  def get_notifications(from: nil, limit: nil, only: nil)
+    raise ArgumentError, 'Limit must be an integer' unless limit.nil? || limit.is_a?(Integer)
+
+    query = {
+      from: from,
+      limit: limit,
+      only: only
+    }.compact
+
+    request(:get, :client_r0, '/notifications', query: query)
+  end
+
   # Gets the MXID of the currently logged-in user
   # @return [Response] An object containing the key :user_id
   def whoami?(**params)

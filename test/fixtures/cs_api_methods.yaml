@@ -1255,7 +1255,53 @@ POST|/_matrix/client/r0/pushers/set:
         "errcode": "M_MISSING_PARAM"
       }
     429: *429
-GET|/_matrix/client/r0/notifications: {}
+GET|/_matrix/client/r0/notifications:
+  method: :get_notifications
+  requests:
+    - args: [{ from: 'xxxxx', limit: 20, only: 'highlight' }]
+      path: '/notifications'
+      query:
+        :from: 'xxxxx'
+        :limit: 20
+        :only: 'highlight'
+      body: null
+    - args: [{ limit: 200 }]
+      path: '/notifications'
+      query:
+        :limit: 200
+      body: null
+  results:
+    200: |
+      {
+        "next_token": "abcdef",
+        "notifications": [
+          {
+            "actions": [
+              "notify"
+            ],
+            "profile_tag": "hcbvkzxhcvb",
+            "read": true,
+            "room_id": "!abcdefg:example.com",
+            "ts": 1475508881945,
+            "event": {
+              "content": {
+                "body": "This is an example text message",
+                "msgtype": "m.text",
+                "format": "org.matrix.custom.html",
+                "formatted_body": "<b>This is an example text message</b>"
+              },
+              "type": "m.room.message",
+              "event_id": "$143273582443PhrSn:example.org",
+              "room_id": "!jEsUZKDJdhlrceRyVU:example.org",
+              "sender": "@example:example.org",
+              "origin_server_ts": 1432735824653,
+              "unsigned": {
+                "age": 1234
+              }
+            }
+          }
+        ]
+      }
 GET|/_matrix/client/r0/pushrules/: {}
 GET|/_matrix/client/r0/pushrules/{scope}/{kind}/{ruleId}: {}
 DELETE|/_matrix/client/r0/pushrules/{scope}/{kind}/{ruleId}: {}
