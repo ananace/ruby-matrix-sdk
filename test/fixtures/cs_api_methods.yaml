@@ -1524,8 +1524,29 @@ GET|/_matrix/client/r0/pushrules/{scope}/{kind}/{ruleId}:
       }
 DELETE|/_matrix/client/r0/pushrules/{scope}/{kind}/{ruleId}: {}
 PUT|/_matrix/client/r0/pushrules/{scope}/{kind}/{ruleId}: {}
-GET|/_matrix/client/r0/pushrules/{scope}/{kind}/{ruleId}/enabled: {}
-PUT|/_matrix/client/r0/pushrules/{scope}/{kind}/{ruleId}/enabled: {}
+GET|/_matrix/client/r0/pushrules/{scope}/{kind}/{ruleId}/enabled:
+  method: :get_pushrule_enabled
+  requests:
+    - args: [{ kind: 'content', id: 'nocake' }]
+      path: '/pushrules/global/content/nocake/enabled'
+      query: null
+      body: null
+  results:
+    200: |
+      {
+        "enabled": true
+      }
+PUT|/_matrix/client/r0/pushrules/{scope}/{kind}/{ruleId}/enabled:
+  method: :set_pushrule_enabled
+  requests:
+    - args: [true, { kind: 'content', id: 'nocake' }]
+      path: '/pushrules/global/content/nocake/enabled'
+      query: null
+      body:
+        :enabled: true
+  results:
+    200: |
+      {}
 GET|/_matrix/client/r0/pushrules/{scope}/{kind}/{ruleId}/actions: {}
 PUT|/_matrix/client/r0/pushrules/{scope}/{kind}/{ruleId}/actions: {}
 POST|/_matrix/client/r0/search: {}

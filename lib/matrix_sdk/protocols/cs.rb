@@ -1538,6 +1538,43 @@ module MatrixSdk::Protocols::CS
     request(:get, :client_r0, "/pushrules/#{scope}/#{kind}/#{id}")
   end
 
+  # Checks if a push rule for the current user is enabled
+  #
+  # @param [String] scope ('global') The scope to look up push rules from
+  # @param [:override,:underride,:sender,:room,:content] kind The kind of push rule to look up
+  # @param [String] id The ID of the rule that's being retrieved
+  # @return [Response] A response hash containing an :enabled key for if the rule is enabled or not
+  # @see https://matrix.org/docs/spec/client_server/latest#get-matrix-client-r0-pushrules-scope-kind-ruleid-enabled
+  #      The Matrix Spec, for more information about the parameters and data
+  def get_pushrule_enabled(scope: 'global', kind:, id:)
+    scope = ERB::Util.url_encode scope.to_s
+    kind = ERB::Util.url_encode kind.to_s
+    id = ERB::Util.url_encode id.to_s
+
+    request(:get, :client_r0, "/pushrules/#{scope}/#{kind}/#{id}/enabled")
+  end
+
+  # Enabled/Disables a specific push rule for the current user
+  #
+  # @param [Boolean] enabled Should the push rule be enabled or not
+  # @param [String] scope ('global') The scope to look up push rules from
+  # @param [:override,:underride,:sender,:room,:content] kind The kind of push rule to look up
+  # @param [String] id The ID of the rule that's being retrieved
+  # @return [Response] An empty response hash if the push rule was enabled/disabled successfully
+  # @see https://matrix.org/docs/spec/client_server/latest#put-matrix-client-r0-pushrules-scope-kind-ruleid-enabled
+  #      The Matrix Spec, for more information about the parameters and data
+  def set_pushrule_enabled(enabled, scope: 'global', kind:, id:)
+    scope = ERB::Util.url_encode scope.to_s
+    kind = ERB::Util.url_encode kind.to_s
+    id = ERB::Util.url_encode id.to_s
+
+    body = {
+      enabled: enabled
+    }
+
+    request(:put, :client_r0, "/pushrules/#{scope}/#{kind}/#{id}/enabled", body: body)
+  end
+
   # Gets the MXID of the currently logged-in user
   # @return [Response] An object containing the key :user_id
   def whoami?(**params)
