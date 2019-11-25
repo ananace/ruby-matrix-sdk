@@ -1547,8 +1547,39 @@ PUT|/_matrix/client/r0/pushrules/{scope}/{kind}/{ruleId}/enabled:
   results:
     200: |
       {}
-GET|/_matrix/client/r0/pushrules/{scope}/{kind}/{ruleId}/actions: {}
-PUT|/_matrix/client/r0/pushrules/{scope}/{kind}/{ruleId}/actions: {}
+GET|/_matrix/client/r0/pushrules/{scope}/{kind}/{ruleId}/actions:
+  method: :get_pushrule_actions
+  requests:
+    - args: [{ kind: 'content', id: 'nocake' }]
+      path: '/pushrules/global/content/nocake/actions'
+      query: null
+      body: null
+  results:
+    200: |
+      {
+        "actions": [
+          "notify"
+        ]
+      }
+PUT|/_matrix/client/r0/pushrules/{scope}/{kind}/{ruleId}/actions:
+  method: :set_pushrule_actions
+  requests:
+    - args: [['notify', 'coalesce'], { kind: 'content', id: 'nocake' }]
+      path: '/pushrules/global/content/nocake/actions'
+      query: null
+      body:
+        :actions:
+          - notify
+          - coalesce
+    - args: ['notify', { kind: 'content', id: 'nocake' }]
+      path: '/pushrules/global/content/nocake/actions'
+      query: null
+      body:
+        :actions:
+          - notify
+  results:
+    200: |
+      {}
 POST|/_matrix/client/r0/search: {}
 GET|/_matrix/client/r0/user/{userId}/rooms/{roomId}/tags:
   method: :get_user_tags

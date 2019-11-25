@@ -1575,6 +1575,45 @@ module MatrixSdk::Protocols::CS
     request(:put, :client_r0, "/pushrules/#{scope}/#{kind}/#{id}/enabled", body: body)
   end
 
+  # Gets the current list of actions for a specific push rule for the current user
+  #
+  # @param [String] scope ('global') The scope to look up push rules from
+  # @param [:override,:underride,:sender,:room,:content] kind The kind of push rule to look up
+  # @param [String] id The ID of the rule that's being retrieved
+  # @return [Response] A response hash containing an :enabled key for if the rule is enabled or not
+  # @see https://matrix.org/docs/spec/client_server/latest#get-matrix-client-r0-pushrules-scope-kind-ruleid-actions
+  #      The Matrix Spec, for more information about the parameters and data
+  def get_pushrule_actions(scope: 'global', kind:, id:)
+    scope = ERB::Util.url_encode scope.to_s
+    kind = ERB::Util.url_encode kind.to_s
+    id = ERB::Util.url_encode id.to_s
+
+    request(:get, :client_r0, "/pushrules/#{scope}/#{kind}/#{id}/actions")
+  end
+
+  # Replaces the list of actions for a push rule for the current user
+  #
+  # @param [String,Array[String]] actions The list of actions to apply on the push rule
+  # @param [String] scope ('global') The scope to look up push rules from
+  # @param [:override,:underride,:sender,:room,:content] kind The kind of push rule to look up
+  # @param [String] id The ID of the rule that's being retrieved
+  # @return [Response] An empty response hash if the push rule actions were modified successfully
+  # @see https://matrix.org/docs/spec/client_server/latest#put-matrix-client-r0-pushrules-scope-kind-ruleid-actions
+  #      The Matrix Spec, for more information about the parameters and data
+  def set_pushrule_actions(actions, scope: 'global', kind:, id:)
+    scope = ERB::Util.url_encode scope.to_s
+    kind = ERB::Util.url_encode kind.to_s
+    id = ERB::Util.url_encode id.to_s
+
+    actions = [actions] unless actions.is_a? Array
+
+    body = {
+      actions: actions
+    }
+
+    request(:put, :client_r0, "/pushrules/#{scope}/#{kind}/#{id}/actions", body: body)
+  end
+
   # Gets the MXID of the currently logged-in user
   # @return [Response] An object containing the key :user_id
   def whoami?(**params)
