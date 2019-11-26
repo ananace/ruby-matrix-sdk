@@ -1202,7 +1202,27 @@ POST|/_matrix/client/r0/keys/query:
         }
       }
 POST|/_matrix/client/r0/keys/claim: {}
-GET|/_matrix/client/r0/keys/changes: {}
+GET|/_matrix/client/r0/keys/changes:
+  method: :get_key_changes
+  requests:
+    - args: [{ from: s72594_4483_1934, to: s75689_5632_2435 }]
+      path: '/keys/changes'
+      query:
+        :from: s72594_4483_1934
+        :to: s75689_5632_2435
+      body: null
+  results:
+    200: |
+      {
+        "changed": [
+          "@alice:example.com",
+          "@bob:example.org"
+        ],
+        "left": [
+          "@clara:example.com",
+          "@doug:example.org"
+        ]
+      }
 GET|/_matrix/client/r0/pushers:
   method: :get_pushers
   requests:

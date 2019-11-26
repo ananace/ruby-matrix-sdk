@@ -1450,6 +1450,22 @@ module MatrixSdk::Protocols::CS
     request(:post, :client_r0, '/keys/query', body: body)
   end
 
+  # Retrieve device key changes between two sync requests
+  #
+  # @param [String] from The sync token denoting the start of the range
+  # @param [String] to The sync token denoting the end of the range
+  # @return [Response] The users with device key changes during the specified range
+  # @see https://matrix.org/docs/spec/client_server/latest#get-matrix-client-r0-keys-changes
+  #      The Matrix Spec, for more information about the parameters and data
+  def get_key_changes(from:, to:)
+    query = {
+      from: from,
+      to: to
+    }
+
+    request(:get, :client_r0, '/keys/changes', query: query)
+  end
+
   # Gets the list of registered pushers for the current user
   #
   # @return [Response] A response hash containing all the currently registered pushers for the current user
