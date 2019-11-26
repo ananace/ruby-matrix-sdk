@@ -1201,7 +1201,36 @@ POST|/_matrix/client/r0/keys/query:
           }
         }
       }
-POST|/_matrix/client/r0/keys/claim: {}
+POST|/_matrix/client/r0/keys/claim:
+  method: :claim_one_time_keys
+  requests:
+    - args: [{ '@alice:example.com': { 'JLAFKJWSCS': 'signed_curve25519' } }]
+      path: '/keys/claim'
+      query: null
+      body:
+        :timeout: 10000
+        :one_time_keys:
+          :'@alice:example.com':
+            :'JLAFKJWSCS': 'signed_curve25519' 
+  results:
+    200: |
+      {
+        "failures": {},
+        "one_time_keys": {
+          "@alice:example.com": {
+            "JLAFKJWSCS": {
+              "signed_curve25519:AAAAHg": {
+                "key": "zKbLg+NrIjpnagy+pIY6uPL4ZwEG2v+8F9lmgsnlZzs",
+                "signatures": {
+                  "@alice:example.com": {
+                    "ed25519:JLAFKJWSCS": "FLWxXqGbwrb8SM3Y795eB6OA8bwBcoMZFXBqnTn58AYWZSqiD45tlBVcDa2L7RwdKXebW/VzDlnfVJ+9jok1Bw"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
 GET|/_matrix/client/r0/keys/changes:
   method: :get_key_changes
   requests:

@@ -1450,6 +1450,21 @@ module MatrixSdk::Protocols::CS
     request(:post, :client_r0, '/keys/query', body: body)
   end
 
+  # Claim one-time keys for pre-key messaging
+  #
+  # @param [Hash] one_time_keys Hash mapping user IDs to hashes of device IDs and key types
+  # @param [Numeric] timeout (10) The timeout - in seconds - for the request
+  # @return [Response] A response hash containing one-time keys for the requested users and devices
+  # @see https://matrix.org/docs/spec/client_server/latest#post-matrix-client-r0-keys-claim
+  #      The Matrix Spec, for more information about the parameters and data
+  def claim_one_time_keys(one_time_keys, timeout: 10)
+    body = {
+      one_time_keys: one_time_keys,
+      timeout: timeout * 1000
+    }
+    request(:post, :client_r0, '/keys/claim', body: body)
+  end
+
   # Retrieve device key changes between two sync requests
   #
   # @param [String] from The sync token denoting the start of the range
