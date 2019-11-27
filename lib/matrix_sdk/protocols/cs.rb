@@ -1124,6 +1124,18 @@ module MatrixSdk::Protocols::CS
     request(:put, :client_r0, "/user/#{user_id}/rooms/#{room_id}/account_data/#{type_key}", body: account_data, query: query)
   end
 
+  # Retrieve user information
+  #
+  # @param [String] user_id The MXID to look up
+  # @return [Response] A response hash containing the requested user's information
+  # @see https://matrix.org/docs/spec/client_server/latest#get-matrix-client-r0-admin-whois-userid
+  #      The Matrix Spec, for more information about the parameters and data
+  def whois(user_id)
+    user_id = ERB::Util.url_encode user_id.to_s
+
+    request(:get, :client_r0, "/admin/whois/#{user_id}")
+  end
+
   def get_filter(user_id, filter_id, **params)
     query = {}
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
