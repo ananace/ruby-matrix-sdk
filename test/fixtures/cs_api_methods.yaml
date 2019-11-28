@@ -982,7 +982,29 @@ GET|/_matrix/client/r0/voip/turnServer:
         "ttl": 86400
       }
     429: *429
-PUT|/_matrix/client/r0/rooms/{roomId}/typing/{userId}: {}
+PUT|/_matrix/client/r0/rooms/{roomId}/typing/{userId}:
+  method: :set_typing
+  requests:
+    - args: ['!wefh3sfukhs:example.com', '@alice:example.com']
+      path: '/rooms/%21wefh3sfukhs%3Aexample.com/typing/%40alice%3Aexample.com'
+      query: null
+      body:
+        :typing: true
+    - args: ['!wefh3sfukhs:example.com', '@alice:example.com', { typing: false }]
+      path: '/rooms/%21wefh3sfukhs%3Aexample.com/typing/%40alice%3Aexample.com'
+      query: null
+      body:
+        :typing: false
+    - args: ['!wefh3sfukhs:example.com', '@alice:example.com', { timeout: 10 }]
+      path: '/rooms/%21wefh3sfukhs%3Aexample.com/typing/%40alice%3Aexample.com'
+      query: null
+      body:
+        :typing: true
+        :timeout: 10000
+  results:
+    200: |
+      {}
+    429: *429
 POST|/_matrix/client/r0/rooms/{roomId}/receipt/{receiptType}/{eventId}: {}
 POST|/_matrix/client/r0/rooms/{roomId}/read_markers: {}
 PUT|/_matrix/client/r0/presence/{userId}/status:

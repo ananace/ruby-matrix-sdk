@@ -1236,6 +1236,27 @@ module MatrixSdk::Protocols::CS
     request(:get, :client_r0, '/voip/turnServer')
   end
 
+  # Sets the typing status for a user
+  #
+  # @param [String,MXID] room_id The ID of the room to set the typing status in
+  # @param [String,MXID] user_id The ID of the user to set the typing status for
+  # @param [Boolean] typing Is the user typing or not
+  # @param [Numeric] timeout The timeout in seconds for how long the typing status should be valid
+  # @return [Response] An empty response hash if the typing change was successful
+  # @see https://matrix.org/docs/spec/client_server/latest#put-matrix-client-r0-rooms-roomid-typing-userid
+  #      The Matrix Spec, for more information about the event and data
+  def set_typing(room_id, user_id, typing: true, timeout: nil)
+    room_id = ERB::Util.url_encode room_id.to_s
+    user_id = ERB::Util.url_encode user_id.to_s
+
+    body = {
+      typing: typing,
+      timeout: timeout ? timeout * 1000 : nil
+    }.compact
+
+    request(:put, :client_r0, "/rooms/#{room_id}/typing/#{user_id}", body: body)
+  end
+
   # Gets the presence status of a user
   #
   # @param [String,MXID] user_id The User ID to read the status for
