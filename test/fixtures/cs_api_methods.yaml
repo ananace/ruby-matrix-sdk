@@ -212,10 +212,12 @@ GET|/_matrix/client/r0/account/3pid:
       }
 POST|/_matrix/client/r0/account/3pid:
   deprecated: true
+POST|/_matrix/client/r0/account/3pid/bind: {}
 POST|/_matrix/client/r0/account/3pid/delete: {}
 POST|/_matrix/client/r0/account/3pid/unbind: {}
 POST|/_matrix/client/r0/account/3pid/email/requestToken: {}
 POST|/_matrix/client/r0/account/3pid/msisdn/requestToken: {}
+POST|/_matrix/client/r0/account/password: {}
 GET|/_matrix/client/r0/account/whoami:
   method: :whoami?
   results:
@@ -686,6 +688,7 @@ POST|/_matrix/client/r0/rooms/{roomId}/join:
         "error": "You are not invited to this room."
       }
     429: *429
+POST|/_matrix/client/r0/rooms/{roomId}/upgrade: {}
 POST|/_matrix/client/r0/join/{roomIdOrAlias}:
   method: :join_room
   requests:
@@ -1706,6 +1709,7 @@ DELETE|/_matrix/client/r0/user/{userId}/rooms/{roomId}/tags/{tag}:
   results:
     200: |
       {}
+GET|/_matrix/client/r0/user/{userId}/account_data/{type}: {}
 PUT|/_matrix/client/r0/user/{userId}/account_data/{type}:
   method: :set_account_data
   requests:
@@ -1717,6 +1721,7 @@ PUT|/_matrix/client/r0/user/{userId}/account_data/{type}:
   results:
     200: |
       {}
+GET|/_matrix/client/r0/user/{userId}/rooms/{roomId}/account_data/{type}: {}
 PUT|/_matrix/client/r0/user/{userId}/rooms/{roomId}/account_data/{type}:
   method: :set_room_account_data
   requests:
