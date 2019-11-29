@@ -1100,7 +1100,20 @@ GET|/_matrix/media/r0/config:
         "m.upload.size": 50000000
       }
     429: *429
-PUT|/_matrix/client/r0/sendToDevice/{eventType}/{txnId}: {}
+PUT|/_matrix/client/r0/sendToDevice/{eventType}/{txnId}:
+  method: :send_to_device
+  requests:
+    - args: ['m.new_device', { messages: { '@alice:example.com': { 'TLLBEANAAG': { 'example_content_key': 'value' } } }, txn_id: 35 }]
+      path: '/sendToDevice/m.new_device/35'
+      query: null
+      body:
+        :messages:
+          :@alice:example.com:
+            :TLLBEANAAG:
+              :example_content_key: value
+  results:
+    200: |
+      {}
 GET|/_matrix/client/r0/devices:
   method: :get_devices
   requests:

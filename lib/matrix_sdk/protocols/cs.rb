@@ -1344,6 +1344,28 @@ module MatrixSdk::Protocols::CS
     request(:get, :media_r0, '/config')
   end
 
+  # Sends events directly to the specified devices
+  #
+  # @param [String] event_type The type of event to send
+  # @param [Hash] messages The hash of events to send and devices to send them to
+  # @param [Hash] params Additional parameters
+  # @option params [Integer] :txn_id The ID of the transaction, automatically generated if not specified
+  # @see https://matrix.org/docs/spec/client_server/latest#put-matrix-client-r0-sendtodevice-eventtype-txnid
+  #      The Matrix Spec, for more information about the data
+  def send_to_device(event_type, messages:, **params)
+    txn_id = transaction_id
+    txn_id = params.fetch(:txn_id, "#{txn_id}#{Time.now.to_i}")
+
+    event_type = ERB::Util.url_encode event_type.to_s
+    txn_id = ERB::Util.url_encode txn_id.to_s
+
+    body = {
+      messages: messages
+    }.compact
+
+    request(:put, :client_r0, "/sendToDevice/#{event_type}/#{txn_id}", body: body)
+  end
+
   # Gets the room ID for an alias
   # @param [String,MXID] room_alias The room alias to look up
   # @return [Response] An object containing the :room_id key and a key of :servers that know of the room
