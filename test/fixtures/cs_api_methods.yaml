@@ -108,6 +108,16 @@ POST|_matrix/client/r0/register:
       }
     429: *429
 POST|_matrix/client/r0/register/email/requestToken:
+  method: :register_email_request
+  requests:
+    - args: ['monkeys_are_GREAT', 'alice@example.org', { next_link: 'https://example.org/congratulations.html' }]
+      path: '/register/email/requestToken'
+      query: null
+      body:
+        :client_secret: 'monkeys_are_GREAT'
+        :email: 'alice@example.org'
+        :send_attempt: 1
+        :next_link: 'https://example.org/congratulations.html'
   results:
     200: |
       {
