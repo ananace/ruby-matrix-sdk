@@ -238,6 +238,26 @@ module MatrixSdk::Protocols::CS
     request(:post, :client_r0, '/account/password', body: body, query: query)
   end
 
+  # Requests an authentication token based on an email address
+  #
+  # @param secret [String] A random string containing only the characters `[0-9a-zA-Z.=_-]`
+  # @param email [String] The email address to register
+  # @param attempt [Integer] The current attempt count to register the email+secret combo, increase to send another verification email
+  # @param next_link [String,URI] An URL to redirect to after verification is finished
+  # @return [Response] A hash containing the :sid id for the current request
+  # @see https://matrix.org/docs/spec/client_server/latest#post-matrix-client-r0-register-email-requesttoken
+  #      For options that are permitted in this call
+  def request_email_login_token(secret, email, attempt: 1, next_link: nil)
+    body = {
+      client_secret: secret,
+      email: email,
+      send_attempt: attempt,
+      next_link: next_link
+    }.compact
+
+    request(:post, :client_r0, '/account/password/email/requestToken', body: body)
+  end
+
   def get_3pids(**params)
     query = {}
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)

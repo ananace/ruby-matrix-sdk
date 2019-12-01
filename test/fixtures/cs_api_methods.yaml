@@ -192,8 +192,32 @@ POST|_matrix/client/r0/account/password:
         ]
       }
     429: *429
-POST|/_matrix/client/r0/account/password/email/requestToken: {}
-POST|/_matrix/client/r0/account/password/msisdn/requestToken: {}
+POST|/_matrix/client/r0/account/password/email/requestToken:
+  method: :request_email_login_token
+  requests:
+    - args: ['monkeys_are_GREAT', 'alice@example.org', { next_link: 'https://example.org/congratulations.html' }]
+      path: '/account/password/email/requestToken'
+      query: null
+      body:
+        :client_secret: 'monkeys_are_GREAT'
+        :email: 'alice@example.org'
+        :send_attempt: 1
+        :next_link: 'https://example.org/congratulations.html'
+  results:
+    200: |
+      {
+        "sid": "123abc"
+      }
+    400: |
+      {
+        "errcode": "M_THREEPID_IN_USE",
+        "error": "The specified address is already in use"
+      }
+    403: |
+      {
+        "errcode": "M_THREEPID_DENIED",
+        "error": "Third party identifier is not allowed"
+      }
 POST|/_matrix/client/r0/account/deactivate: {}
 GET|/_matrix/client/r0/register/available:
   method: :username_available?
