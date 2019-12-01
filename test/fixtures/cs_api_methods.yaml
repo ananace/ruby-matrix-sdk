@@ -134,6 +134,17 @@ POST|_matrix/client/r0/register/email/requestToken:
         "error": "Third party identifier is not allowed"
       }
 POST|_matrix/client/r0/register/msisdn/requestToken:
+  method: :register_msisdn_request
+  requests:
+    - args: ['monkeys_are_GREAT', 'GB', '07700900001', { next_link: 'https://example.org/congratulations.html' }]
+      path: '/register/msisdn/requestToken'
+      query: null
+      body:
+        :client_secret: 'monkeys_are_GREAT'
+        :country: 'GB'
+        :phone_number: '07700900001'
+        :send_attempt: 1
+        :next_link: 'https://example.org/congratulations.html'
   results:
     200: |
       {

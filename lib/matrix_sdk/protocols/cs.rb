@@ -116,6 +116,28 @@ module MatrixSdk::Protocols::CS
     request(:post, :client_r0, '/register/email/requestToken', body: body)
   end
 
+  # Requests to register a phone number to the current account
+  #
+  # @param secret [String] A random string containing only the characters `[0-9a-zA-Z.=_-]`
+  # @param country [String] The two-letter ISO-3166-1 country identifier of the destination country of the number
+  # @param number [String] The phone number itself
+  # @param attempt [Integer] The current attempt count to register the email+secret combo, increase to send another verification email
+  # @param next_link [String,URI] An URL to redirect to after verification is finished
+  # @return [Response] A hash containing the :sid id for the current request
+  # @see https://matrix.org/docs/spec/client_server/latest#post-matrix-client-r0-register-email-requesttoken
+  #      For options that are permitted in this call
+  def register_msisdn_request(secret, country, number, attempt: 1, next_link: nil)
+    body = {
+      client_secret: secret,
+      country: country,
+      phone_number: number,
+      send_attempt: attempt,
+      next_link: next_link
+    }.compact
+
+    request(:post, :client_r0, '/register/msisdn/requestToken', body: body)
+  end
+
   # Checks if a given username is available and valid for registering
   #
   # @example Verifying a username
