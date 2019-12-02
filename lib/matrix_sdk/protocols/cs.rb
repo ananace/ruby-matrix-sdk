@@ -258,6 +258,28 @@ module MatrixSdk::Protocols::CS
     request(:post, :client_r0, '/account/password/email/requestToken', body: body)
   end
 
+  # Requests an authentication token based on a phone number
+  #
+  # @param secret [String] A random string containing only the characters `[0-9a-zA-Z.=_-]`
+  # @param country [String] The two-letter ISO-3166-1 country identifier of the destination country of the number
+  # @param number [String] The phone number itself
+  # @param attempt [Integer] The current attempt count to register the email+secret combo, increase to send another verification email
+  # @param next_link [String,URI] An URL to redirect to after verification is finished
+  # @return [Response] A hash containing the :sid id for the current request
+  # @see https://matrix.org/docs/spec/client_server/latest#post-matrix-client-r0-register-email-requesttoken
+  #      For options that are permitted in this call
+  def request_msisdn_login_token(secret, country, number, attempt: 1, next_link: nil)
+    body = {
+      client_secret: secret,
+      country: country,
+      phone_number: number,
+      send_attempt: attempt,
+      next_link: next_link
+    }.compact
+
+    request(:post, :client_r0, '/account/password/msisdn/requestToken', body: body)
+  end
+
   def get_3pids(**params)
     query = {}
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)

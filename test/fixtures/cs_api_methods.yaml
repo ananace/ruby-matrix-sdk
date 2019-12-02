@@ -218,6 +218,33 @@ POST|/_matrix/client/r0/account/password/email/requestToken:
         "errcode": "M_THREEPID_DENIED",
         "error": "Third party identifier is not allowed"
       }
+POST|/_matrix/client/r0/account/password/msisdn/requestToken:
+  method: :request_msisdn_login_token
+  requests:
+    - args: ['monkeys_are_GREAT', 'GB', '07700900001', { next_link: 'https://example.org/congratulations.html' }]
+      path: '/account/password/msisdn/requestToken'
+      query: null
+      body:
+        :client_secret: 'monkeys_are_GREAT'
+        :country: 'GB'
+        :phone_number: '07700900001'
+        :send_attempt: 1
+        :next_link: 'https://example.org/congratulations.html'
+  results:
+    200: |
+      {
+        "sid": "123abc"
+      }
+    400: |
+      {
+        "errcode": "M_THREEPID_IN_USE",
+        "error": "The specified address is already in use"
+      }
+    403: |
+      {
+        "errcode": "M_THREEPID_DENIED",
+        "error": "Third party identifier is not allowed"
+      }
 POST|/_matrix/client/r0/account/deactivate: {}
 GET|/_matrix/client/r0/register/available:
   method: :username_available?
