@@ -245,7 +245,7 @@ module MatrixSdk::Protocols::CS
   # @param attempt [Integer] The current attempt count to register the email+secret combo, increase to send another verification email
   # @param next_link [String,URI] An URL to redirect to after verification is finished
   # @return [Response] A hash containing the :sid id for the current request
-  # @see https://matrix.org/docs/spec/client_server/latest#post-matrix-client-r0-register-email-requesttoken
+  # @see https://matrix.org/docs/spec/client_server/latest#post-matrix-client-r0-account-password-email-requesttoken
   #      For options that are permitted in this call
   def request_email_login_token(secret, email, attempt: 1, next_link: nil)
     body = {
@@ -266,7 +266,7 @@ module MatrixSdk::Protocols::CS
   # @param attempt [Integer] The current attempt count to register the email+secret combo, increase to send another verification email
   # @param next_link [String,URI] An URL to redirect to after verification is finished
   # @return [Response] A hash containing the :sid id for the current request
-  # @see https://matrix.org/docs/spec/client_server/latest#post-matrix-client-r0-register-email-requesttoken
+  # @see https://matrix.org/docs/spec/client_server/latest#post-matrix-client-r0-account-password-msisdn-requesttoken
   #      For options that are permitted in this call
   def request_msisdn_login_token(secret, country, number, attempt: 1, next_link: nil)
     body = {
