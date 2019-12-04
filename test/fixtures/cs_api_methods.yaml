@@ -245,7 +245,43 @@ POST|/_matrix/client/r0/account/password/msisdn/requestToken:
         "errcode": "M_THREEPID_DENIED",
         "error": "Third party identifier is not allowed"
       }
-POST|/_matrix/client/r0/account/deactivate: {}
+POST|/_matrix/client/r0/account/deactivate:
+  method: :deactivate_account
+  requests:
+    - args: [{ type: 'example.type.foo', session: 'xxxxx', example_credential: 'verypoorsharedsecret' }, { id_server: 'example.org' }]
+      path: '/account/deactivate'
+      query: null
+      body:
+        :auth:
+          :type: 'example.type.foo'
+          :session: 'xxxxx'
+          :example_credential: 'verypoorsharedsecret'
+        :id_server: 'example.org'
+  results:
+    200: |
+      {
+        "id_server_unbind_result": "success"
+      }
+    401: |
+      {
+        "flows": [
+          {
+            "stages": [
+              "example.type.foo"
+            ]
+          }
+        ],
+        "params": {
+          "example.type.baz": {
+            "example_key": "foobar"
+          }
+        },
+        "session": "xxxxxxyz",
+        "completed": [
+          "example.type.foo"
+        ]
+      }
+    429: *429
 GET|/_matrix/client/r0/register/available:
   method: :username_available?
   requests:

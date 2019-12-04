@@ -280,6 +280,22 @@ module MatrixSdk::Protocols::CS
     request(:post, :client_r0, '/account/password/msisdn/requestToken', body: body)
   end
 
+  # Deactivates the current account, logging out all connected devices and preventing future logins
+  #
+  # @param auth_data [Hash] Interactive authentication data to verify the request
+  # @param id_server [String] Override the ID server to unbind all 3PIDs from
+  # @return [Response] A hash containing the :sid id for the current request
+  # @see https://matrix.org/docs/spec/client_server/latest#post-matrix-client-r0-register-email-requesttoken
+  #      For options that are permitted in this call
+  def deactivate_account(auth_data, id_server: nil)
+    body = {
+      auth: auth_data,
+      id_server: id_server
+    }.compact
+
+    request(:post, :client_r0, '/account/deactivate', body: body)
+  end
+
   def get_3pids(**params)
     query = {}
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
