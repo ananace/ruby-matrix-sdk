@@ -284,8 +284,8 @@ module MatrixSdk::Protocols::CS
   #
   # @param auth_data [Hash] Interactive authentication data to verify the request
   # @param id_server [String] Override the ID server to unbind all 3PIDs from
-  # @return [Response] A hash containing the :sid id for the current request
-  # @see https://matrix.org/docs/spec/client_server/latest#post-matrix-client-r0-register-email-requesttoken
+  # @return [Response]
+  # @see https://matrix.org/docs/spec/client_server/latest#post-matrix-client-r0-account-deactivate
   #      For options that are permitted in this call
   def deactivate_account(auth_data, id_server: nil)
     body = {
