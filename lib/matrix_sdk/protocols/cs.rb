@@ -303,6 +303,24 @@ module MatrixSdk::Protocols::CS
     request(:get, :client_r0, '/account/3pid', query: query)
   end
 
+  # Finishes a 3PID addition to the current user
+  #
+  # @param secret [String] The shared secret with the HS
+  # @param session [String] The session ID to finish the request for
+  # @param auth_data [Hash] Interactive authentication data to verify the request
+  # @return [Response]
+  # @see https://matrix.org/docs/spec/client_server/latest#post-matrix-client-r0-account-3pid-add
+  #      For options that are permitted in this call
+  def complete_3pid_add(secret:, session:, auth_data: nil)
+    body = {
+      sid: session,
+      client_secret: secret,
+      auth: auth_data
+    }.compact
+
+    request(:post, :client_r0, '/account/3pid/add', body: body)
+  end
+
   # Gets the list of rooms joined by the current user
   #
   # @return [Response] An array of room IDs under the key :joined_rooms

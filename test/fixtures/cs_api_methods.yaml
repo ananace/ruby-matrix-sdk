@@ -318,8 +318,39 @@ GET|/_matrix/client/r0/account/3pid:
           }
         ]
       }
-POST|/_matrix/client/r0/account/3pid:
-  deprecated: true
+# POST|/_matrix/client/r0/account/3pid:
+#   deprecated: true
+POST|/_matrix/client/r0/account/3pid/add:
+  method: :complete_3pid_add
+  requests:
+    - args: [{session: 'abc123987', secret: "d0n'tT3ll"}]
+      query: null
+      body:
+        :client_secret: "d0n'tT3ll"
+        :sid: 'abc123987'
+  results:
+    200: |
+      {}
+    401: |
+      {
+        "flows": [
+          {
+            "stages": [
+              "example.type.foo"
+            ]
+          }
+        ],
+        "params": {
+          "example.type.baz": {
+            "example_key": "foobar"
+          }
+        },
+        "session": "xxxxxxyz",
+        "completed": [
+          "example.type.foo"
+        ]
+      }
+    429: *429
 POST|/_matrix/client/r0/account/3pid/bind: {}
 POST|/_matrix/client/r0/account/3pid/delete: {}
 POST|/_matrix/client/r0/account/3pid/unbind: {}
