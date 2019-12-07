@@ -351,7 +351,20 @@ POST|/_matrix/client/r0/account/3pid/add:
         ]
       }
     429: *429
-POST|/_matrix/client/r0/account/3pid/bind: {}
+POST|/_matrix/client/r0/account/3pid/bind:
+  method: :bind_3pid
+  requests:
+    - args: [{secret: "d0n'tT3ll", id_server: 'example.org', id_server_token: 'abc123_OpaqueString', session: 'abc123987'}]
+      query: null
+      body:
+        :client_secret: "d0n'tT3ll"
+        :id_server: 'example.org'
+        :id_server_token: 'abc123_OpaqueString'
+        :sid: 'abc123987'
+  results:
+    200: |
+      {}
+    429: *429
 POST|/_matrix/client/r0/account/3pid/delete: {}
 POST|/_matrix/client/r0/account/3pid/unbind: {}
 POST|/_matrix/client/r0/account/3pid/email/requestToken: {}

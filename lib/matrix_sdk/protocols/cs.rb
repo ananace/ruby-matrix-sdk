@@ -321,6 +321,26 @@ module MatrixSdk::Protocols::CS
     request(:post, :client_r0, '/account/3pid/add', body: body)
   end
 
+  # Finishes binding a 3PID to the current user
+  #
+  # @param secret [String] The shared secret with the identity server
+  # @param id_server [String] The identity server being acted against
+  # @param id_server_token [String] A previous identity server token
+  # @param session [String] The session ID to finish the bind for
+  # @return [Response]
+  # @see https://matrix.org/docs/spec/client_server/latest#post-matrix-client-r0-account-3pid-bind
+  #      For options that are permitted in this call
+  def bind_3pid(secret:, id_server:, id_server_token:, session:)
+    body = {
+      client_secret: secret,
+      id_server: id_server,
+      id_server_token: id_server_token,
+      sid: session
+    }
+
+    request(:post, :client_r0, '/account/3pid/bind', body: body)
+  end
+
   # Gets the list of rooms joined by the current user
   #
   # @return [Response] An array of room IDs under the key :joined_rooms
