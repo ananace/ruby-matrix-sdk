@@ -341,6 +341,24 @@ module MatrixSdk::Protocols::CS
     request(:post, :client_r0, '/account/3pid/bind', body: body)
   end
 
+  # Deletes a 3PID from the current user, this method might not unbind it from the identity server
+  #
+  # @param medium [:email,:msisdn] The medium of 3PID being removed
+  # @param address [String] The address that is to be removed
+  # @param id_server [String] The identity server being acted against
+  # @return [Response]
+  # @see https://matrix.org/docs/spec/client_server/latest#post-matrix-client-r0-account-3pid-delete
+  #      For options that are permitted in this call
+  def delete_3pid(medium, address, id_server:)
+    body = {
+      address: address,
+      id_server: id_server,
+      medium: medium
+    }
+
+    request(:post, :client_r0, '/account/3pid/delete', body: body)
+  end
+
   # Gets the list of rooms joined by the current user
   #
   # @return [Response] An array of room IDs under the key :joined_rooms

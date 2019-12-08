@@ -365,7 +365,27 @@ POST|/_matrix/client/r0/account/3pid/bind:
     200: |
       {}
     429: *429
-POST|/_matrix/client/r0/account/3pid/delete: {}
+POST|/_matrix/client/r0/account/3pid/delete:
+  method: :delete_3pid
+  requests:
+    - args: ['email', 'example@example.org', {id_server: 'example.org'}]
+      query: null
+      body:
+        :address: 'example@example.org'
+        :id_server: 'example.org'
+        :medium: 'email'
+    - args: ['msisdn', '07700900001', {id_server: 'example.org'}]
+      query: null
+      body:
+        :address: '07700900001'
+        :id_server: 'example.org'
+        :medium: 'msisdn'
+  results:
+    200: |
+      {
+        "id_server_unbind_result": "success"
+      }
+    429: *429
 POST|/_matrix/client/r0/account/3pid/unbind: {}
 POST|/_matrix/client/r0/account/3pid/email/requestToken: {}
 POST|/_matrix/client/r0/account/3pid/msisdn/requestToken: {}
