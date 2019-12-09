@@ -9,12 +9,10 @@ BOT_FILTER = {
   room: {
     ephemeral: { senders: [], types: [] },
     state: {
-      limit: 5,
       types: ['m.room.*'],
       lazy_load_members: true
     },
     timeline: {
-      limit: 5,
       types: ['m.room.message']
     },
     account_data: { senders: [], types: [] }
@@ -25,9 +23,6 @@ class MatrixBot
   def initialize(hs_url, token)
     @hs_url = hs_url
     @token = token
-
-    # TODO: Store this between runs for actual usage.
-    @last_batch = nil
   end
 
   def run
@@ -39,6 +34,7 @@ class MatrixBot
     loop do
       begin
         client.sync filter: BOT_FILTER
+        save_batch
       rescue MatrixSdk::MatrixError => e
         puts e
       end
@@ -62,7 +58,17 @@ class MatrixBot
   private
 
   def client
-    @client ||= MatrixSdk::Client.new @hs_url, access_token: @token, client_cache: :none
+    @client ||= MatrixSdk::Client.new @hs_url, access_token: @token, client_cache: :none, next_batch: last_batch
+  end
+
+  def last_batch
+    @last_batch ||= File.read('/tmp/testbot.batch')
+  rescue Errno::ENOENT
+    nil
+  end
+
+  def save_batch
+    File.write('/tmp/testbot.batch', client.next_batch)
   end
 end
 
