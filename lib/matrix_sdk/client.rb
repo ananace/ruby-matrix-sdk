@@ -327,6 +327,15 @@ module MatrixSdk
 
     alias listen_for_events sync
 
+    def ensure_room(room_id)
+      room_id = room_id.to_s unless room_id.is_a? String
+      @rooms.fetch(room_id) do
+        room = Room.new(self, room_id)
+        @rooms[room_id] = room unless cache == :none
+        room
+      end
+    end
+
     private
 
     def listen_forever(timeout: 30, bad_sync_timeout: 5, sync_interval: 30, **params)
@@ -358,15 +367,6 @@ module MatrixSdk
       @api.device_id = data[:device_id]
       @api.homeserver = data[:home_server]
       access_token
-    end
-
-    def ensure_room(room_id)
-      room_id = room_id.to_s unless room_id.is_a? String
-      @rooms.fetch(room_id) do
-        room = Room.new(self, room_id)
-        @rooms[room_id] = room unless cache == :none
-        room
-      end
     end
 
     def handle_state(room_id, state_event)
