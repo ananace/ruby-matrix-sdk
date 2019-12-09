@@ -52,7 +52,17 @@ class MatrixBot
     origin_ts = Time.at(message[:origin_server_ts] / 1000.0)
     diff = Time.now - origin_ts
 
-    room.send_notice("#{sender.user_id}: Pong! (Ping took #{(diff * 1000).to_i}ms)")
+    plaintext = '%<sender>s: Pong! (ping took %<time>u ms to arrive)'
+    html = '<a href="https://matrix.to/#/%<sender>s">%<sender>s</a>: Pong! (<a href="https://matrix.to/#/%<room>s/%<event>s">ping</a> took %<time>u ms to arrive)'
+
+    data = {
+      sender: sender.id,
+      room: room.id,
+      event: message.event_id,
+      time: (diff * 1000).to_i
+    }
+
+    room.send_html(format(html, data), format(plaintext, data), 'm.notice')
   end
 
   private
