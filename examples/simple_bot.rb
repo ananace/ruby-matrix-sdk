@@ -55,14 +55,26 @@ class MatrixBot
     plaintext = '%<sender>s: Pong! (ping took %<time>u ms to arrive)'
     html = '<a href="https://matrix.to/#/%<sender>s">%<sender>s</a>: Pong! (<a href="https://matrix.to/#/%<room>s/%<event>s">ping</a> took %<time>u ms to arrive)'
 
-    data = {
+    formatdata = {
       sender: sender.id,
       room: room.id,
       event: message.event_id,
       time: (diff * 1000).to_i
     }
 
-    room.send_html(format(html, data), format(plaintext, data), 'm.notice')
+    eventdata = {
+      body: format(plaintext, formatdata),
+      format: 'org.matrix.custom.html',
+      formatted_body: format(html, formatdata),
+      msgtype: 'm.notice',
+      pong: {
+        from: MatrixSdk::MXID.new(sender.id).domain,
+        ms: formatdata[:time],
+        ping: formatdata[:event]
+      }
+    }
+
+    client.api.send_message_event(room.id, 'm.room.message', eventdata)
   end
 
   private
