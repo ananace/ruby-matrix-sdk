@@ -408,10 +408,12 @@ module MatrixSdk
       end
 
       data[:rooms][:invite].each do |room_id, invite|
+        invite[:room_id] = room_id.to_s
         fire_invite_event(MatrixEvent.new(self, invite), room_id.to_s)
       end
 
       data[:rooms][:leave].each do |room_id, left|
+        left[:room_id] = room_id.to_s
         fire_leave_event(MatrixEvent.new(self, left), room_id.to_s)
       end
 
