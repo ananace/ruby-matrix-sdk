@@ -1,4 +1,4 @@
-## 1.6.0 - **Unreleased**
+## 2.0.0 - **Unreleased**
 
 **NB**, this release includes backwards-incompatible changes;  
 - Changes room state lookup to separate specific state lookups from full state retrieval.
