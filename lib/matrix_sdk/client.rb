@@ -11,7 +11,7 @@ module MatrixSdk
     include MatrixSdk::Logging
     extend Forwardable
 
-    attr_reader :api
+    attr_reader :api, :next_batch
     attr_accessor :cache, :sync_filter
 
     events :error, :event, :presence_event, :invite_event, :leave_event, :ephemeral_event
