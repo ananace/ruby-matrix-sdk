@@ -7,6 +7,8 @@
   `#get_room_state_all` is now the method to use.
 
 - Adds multiple CS API endpoints
+- Adds `:room_id` key to all room events
+- Exposes some previously private client abstraction methods (`#ensure_room`, `#next_batch`) for easier bot usage
 - Changes room abstraction member lookups to use `#get_room_joined_members`, reducing transferred data amounts
 
 ## 1.5.0 - 2019-10-25
