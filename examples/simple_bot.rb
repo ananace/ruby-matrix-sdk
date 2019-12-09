@@ -45,7 +45,7 @@ class MatrixBot
     room = client.ensure_room message.room_id
     sender = client.get_user message.sender
 
-    return unless message.content[:body] == '!pingr'
+    return unless message.content[:body] == '!ping'
 
     puts "[#{Time.now.strftime '%H:%M'}] <#{sender.id} in #{room.id}> #{message.content[:body]}"
 
