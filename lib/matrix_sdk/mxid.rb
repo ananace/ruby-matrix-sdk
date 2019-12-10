@@ -17,9 +17,13 @@ module MatrixSdk
       raise ArgumentError, 'Identifier is not a valid MXID' unless valid?
     end
 
-    def to_s
+    def homeserver
       port_s = port ? ':' + port.to_s : ''
-      "#{sigil}#{localpart}#{domain ? ':' + domain + port_s : ''}"
+      domain ? ':' + domain + port_s : ''
+    end
+
+    def to_s
+      "#{sigil}#{localpart}#{homeserver}"
     end
 
     # Returns the type of the ID
