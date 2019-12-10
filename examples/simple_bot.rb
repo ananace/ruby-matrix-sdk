@@ -63,7 +63,6 @@ class MatrixBot
     }
 
     from_id = MatrixSdk::MXID.new(sender.id)
-    from_str = "#{from_id.domain}#{from_id.port ? ":#{from_id.port}" : ''}"
 
     eventdata = {
       body: format(plaintext, formatdata),
@@ -71,7 +70,7 @@ class MatrixBot
       formatted_body: format(html, formatdata),
       msgtype: 'm.notice',
       pong: {
-        from: from_str,
+        from: from_id.homeserver,
         ms: formatdata[:time],
         ping: formatdata[:event]
       }
