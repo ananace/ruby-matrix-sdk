@@ -46,7 +46,12 @@ class MatrixBot
   end
 
   def on_message(message)
-    return unless message.content[:body] == '!ping'
+    msgstr = message.content[:body]
+
+    return unless msgstr =~ /^!ping\s*/
+
+    msgstr.gsub!(/!ping\s*/, '')
+    msgstr = " \"#{msgstr}\"" unless msgstr.empty?
 
     room = client.ensure_room message.room_id
     sender = client.get_user message.sender
@@ -56,14 +61,15 @@ class MatrixBot
     origin_ts = Time.at(message[:origin_server_ts] / 1000.0)
     diff = Time.now - origin_ts
 
-    plaintext = '%<sender>s: Pong! (ping took %<time>u ms to arrive)'
-    html = '<a href="https://matrix.to/#/%<sender>s">%<sender>s</a>: Pong! (<a href="https://matrix.to/#/%<room>s/%<event>s">ping</a> took %<time>u ms to arrive)'
+    plaintext = '%<sender>s: Pong! (ping%<msg>s took %<time>u ms to arrive)'
+    html = '<a href="https://matrix.to/#/%<sender>s">%<sender>s</a>: Pong! (<a href="https://matrix.to/#/%<room>s/%<event>s">ping</a>%<msg>s took %<time>u ms to arrive)'
 
     formatdata = {
       sender: sender.id,
       room: room.id,
       event: message.event_id,
-      time: (diff * 1000).to_i
+      time: (diff * 1000).to_i,
+      msg: msgstr
     }
 
     from_id = MatrixSdk::MXID.new(sender.id)
