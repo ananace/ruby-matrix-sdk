@@ -56,10 +56,10 @@ class MatrixBot
     room = client.ensure_room message.room_id
     sender = client.get_user message.sender
 
-    puts "[#{Time.now.strftime '%H:%M'}] <#{sender.id} in #{room.id}> #{message.content[:body]}"
-
     origin_ts = Time.at(message[:origin_server_ts] / 1000.0)
     diff = Time.now - origin_ts
+
+    puts "[#{Time.now.strftime '%H:%M'}] <#{sender.id} in #{room.id} @ #{diff}ms> \"#{message.content[:body]}\""
 
     plaintext = '%<sender>s: Pong! (ping%<msg>s took %<time>u ms to arrive)'
     html = '<a href="https://matrix.to/#/%<sender>s">%<sender>s</a>: Pong! (<a href="https://matrix.to/#/%<room>s/%<event>s">ping</a>%<msg>s took %<time>u ms to arrive)'
