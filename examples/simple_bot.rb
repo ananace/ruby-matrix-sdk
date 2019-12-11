@@ -4,10 +4,10 @@ require 'matrix_sdk'
 
 # A filter to simplify syncs
 BOT_FILTER = {
-  presence: { senders: [], types: [] },
-  account_data: { senders: [], types: [] },
+  presence: { types: [] },
+  account_data: { types: [] },
   room: {
-    ephemeral: { senders: [], types: [] },
+    ephemeral: { types: [] },
     state: {
       types: ['m.room.*'],
       lazy_load_members: true
@@ -15,14 +15,14 @@ BOT_FILTER = {
     timeline: {
       types: ['m.room.message']
     },
-    account_data: { senders: [], types: [] }
+    account_data: { types: [] }
   }
 }.freeze
 
 class MatrixBot
-  def initialize(hs_url, token)
+  def initialize(hs_url, access_token)
     @hs_url = hs_url
-    @token = token
+    @token = access_token
   end
 
   def run
@@ -31,10 +31,14 @@ class MatrixBot
     # Read all message events
     client.on_event.add_handler('m.room.message') { |ev| on_message(ev) }
 
+    # Run an empty sync to get to a `since` token without old data
+    empty_sync = deep_copy(BOT_FILTER)
+    empty_sync[:room].map { |_k, v| v[:types] = [] }
+    client.sync filter: empty_sync
+
     loop do
       begin
         client.sync filter: BOT_FILTER
-        save_batch
       rescue MatrixSdk::MatrixError => e
         puts e
       end
@@ -82,17 +86,11 @@ class MatrixBot
   private
 
   def client
-    @client ||= MatrixSdk::Client.new @hs_url, access_token: @token, client_cache: :none, next_batch: last_batch
+    @client ||= MatrixSdk::Client.new @hs_url, access_token: @token, client_cache: :none
   end
 
-  def last_batch
-    @last_batch ||= File.read('/tmp/testbot.batch')
-  rescue Errno::ENOENT
-    nil
-  end
-
-  def save_batch
-    File.write('/tmp/testbot.batch', client.next_batch)
+  def deep_copy(hash)
+    Marshal.load(Marshal.dump(hash))
   end
 end
 
