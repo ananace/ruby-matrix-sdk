@@ -8,6 +8,7 @@
 
 - Adds multiple CS API endpoints
 - Adds `:room_id` key to all room events
+- Separates homeserver part stringification for MXIDs
 - Exposes some previously private client abstraction methods (`#ensure_room`, `#next_batch`) for easier bot usage
 - Changes room abstraction member lookups to use `#get_room_joined_members`, reducing transferred data amounts
 
