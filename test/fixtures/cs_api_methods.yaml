@@ -1900,7 +1900,18 @@ DELETE|/_matrix/client/r0/user/{userId}/rooms/{roomId}/tags/{tag}:
   results:
     200: |
       {}
-GET|/_matrix/client/r0/user/{userId}/account_data/{type}: {}
+GET|/_matrix/client/r0/user/{userId}/account_data/{type}:
+  method: :get_account_data
+  requests:
+    - args: ['@alice:example.com', 'org.example.custom.config']
+      path: '/user/%40alice%3Aexample.com/account_data/org.example.custom.config'
+      query: {}
+      body: null
+  results:
+    200: |
+      {
+        "custom_account_data_key": "custom_config_value"
+      }
 PUT|/_matrix/client/r0/user/{userId}/account_data/{type}:
   method: :set_account_data
   requests:
@@ -1912,7 +1923,18 @@ PUT|/_matrix/client/r0/user/{userId}/account_data/{type}:
   results:
     200: |
       {}
-GET|/_matrix/client/r0/user/{userId}/rooms/{roomId}/account_data/{type}: {}
+GET|/_matrix/client/r0/user/{userId}/rooms/{roomId}/account_data/{type}:
+  method: :get_room_account_data
+  requests:
+    - args: ['@alice:example.com', '!726s6s6q:example.com', 'org.example.custom.config']
+      path: '/user/%40alice%3Aexample.com/rooms/%21726s6s6q%3Aexample.com/account_data/org.example.custom.config'
+      query: {}
+      body: null
+  results:
+    200: |
+      {
+        "custom_account_data_key": "custom_config_value"
+      }
 PUT|/_matrix/client/r0/user/{userId}/rooms/{roomId}/account_data/{type}:
   method: :set_room_account_data
   requests:
