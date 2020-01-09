@@ -264,7 +264,20 @@ module MatrixSdk
       @rooms.values.find { |r| r.aliases.include? room_id_or_alias.to_s }
     end
 
+    # Get a User instance from a MXID
+    #
+    # @param user_id [String,MXID,:self] The MXID to look up, will also accept :self in order to get the currently logged-in user
+    # @return [User] The User instance for the specified user
+    # @note The method doesn't perform any existence checking, so the returned User object may point to a non-existent user
     def get_user(user_id)
+      user_id = mxid if user_id == :self
+
+      user_id = MXID.new user_id.to_s unless user_id.is_a? MXID
+      raise ArgumentError, 'Must be a User ID' unless user_id.user?
+
+      # To still use regular string storage in the hash itself
+      user_id = user_id.to_s
+
       if cache == :all
         @users[user_id] ||= User.new(self, user_id)
       else
