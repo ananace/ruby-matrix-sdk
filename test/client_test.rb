@@ -187,6 +187,24 @@ class ClientTest < Test::Unit::TestCase
     assert_equal '@alice:example.com', cl.mxid
   end
 
+  def test_get_user
+    cl = MatrixSdk::Client.new 'https://example.com'
+
+    user1 = cl.get_user '@alice:example.com'
+    refute_nil user1
+    assert_equal '@alice:example.com', user1.id
+
+    cl.api.expects(:access_token).returns('placeholder')
+    cl.api.expects(:whoami?).returns(user_id: '@alice:example.com')
+
+    user2 = cl.get_user :self
+    assert_equal user2, user1
+
+    assert_raises(ArgumentError) { cl.get_user '#room:example.com' }
+    assert_raises(ArgumentError) { cl.get_user 'not an MXID' }
+    assert_raises(ArgumentError) { cl.get_user :someone_else }
+  end
+
   def test_threading
     cl = MatrixSdk::Client.new 'https://example.com'
     cl.expects(:sync)
