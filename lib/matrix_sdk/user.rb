@@ -7,10 +7,6 @@ module MatrixSdk
   class User
     extend MatrixSdk::Extensions
 
-    # @!attribute [r] id
-    #   @return [String] the MXID of the user
-    # @!attribute [r] client
-    #   @return [Client] the client for the user
     attr_reader :id, :client
     alias user_id :id
 
@@ -32,14 +28,14 @@ module MatrixSdk
       end
     end
 
-    # @!attribute [r] display_name
     # @return [String] the display name
+    # @see MatrixSdk::Protocols::CS#get_display_name
     def display_name
       @display_name ||= client.api.get_display_name(id)[:displayname]
     end
 
-    # @!attribute [w] display_name
     # @param name [String] the display name to set
+    # @see MatrixSdk::Protocols::CS#set_display_name
     def display_name=(name)
       client.api.set_display_name(id, name)
       @display_name = name
@@ -51,26 +47,42 @@ module MatrixSdk
       display_name || id
     end
 
-    # @!attribute [r] avatar_url
+    # Gets the avatar for the user
+    #
+    # @see MatrixSdk::Protocols::CS#get_avatar_url
     def avatar_url
       @avatar_url ||= client.api.get_avatar_url(id)[:avatar_url]
     end
 
-    # @!attribute [w] avatar_url
+    # Set a new avatar for the user
+    #
+    # Only works for the current user object, as requested by
+    #     client.get_user(:self)
+    #
+    # @param url [String,URI::MATRIX] the new avatar URL
+    # @note Requires a mxc:// URL, check example on
+    #   {MatrixSdk::Protocols::CS#set_avatar_url} for how this can be done
+    # @see MatrixSdk::Protocols::CS#set_avatar_url
     def avatar_url=(url)
       client.api.set_avatar_url(id, url)
       @avatar_url = url
     end
 
-    # @!attribute[r] presence
+    # Gets the user's current presence as a symbol
+    # Should be one of :online, :offline, or :unavailable
+    #
+    # @see MatrixSdk::Protocols::CS#get_presence_status
     # @note This information is not cached in the abstraction layer
     def presence
       raw_presence[:presence].to_sym
     end
 
-    # @!attribute[w] presence
+    # Updates the user's current presence
+    #
+    # @param new_presence [:online,:offline,:unavailable] The new presence status to set
+    # @see MatrixSdk::Protocols::CS#set_presence_status
     def presence=(new_presence)
-      raise ArgumentError, 'Presence must be one of :online, :offline, :unavaiable' unless %i[online offline unavailable].include?(presence)
+      raise ArgumentError, 'Presence must be one of :online, :offline, :unavailable' unless %i[online offline unavailable].include?(presence)
 
       client.api.set_presence_status(id, new_presence)
     end
@@ -81,17 +93,24 @@ module MatrixSdk
       raw_presence[:currently_active] == true
     end
 
-    # @!attribute[r] status_msg
+    # Gets the user-specified status message - if any
+    #
+    # @see MatrixSdk::Protocols::CS#get_presence_status
     # @note This information is not cached in the abstraction layer
     def status_msg
       raw_presence[:status_msg]
     end
 
-    # @!attribute[w] status_msg
+    # Sets the user-specified status message
+    #
+    # @param message [String,nil] The message to set, or nil for no message
+    # @see MatrixSdk::Protocols::CS#set_presence_status
     def status_msg=(message)
       client.api.set_presence_status(id, presence, message: message)
     end
 
+    # Gets the last time the user was active at, from the server's side
+    #
     # @return [Time] when the user was last active
     # @note This information is not cached in the abstraction layer
     def last_active
@@ -101,6 +120,9 @@ module MatrixSdk
       Time.now - (since / 1000)
     end
 
+    # Returns all the device keys for the user, retrieving them if necessary
+    #
+    # @note This information is currently cached for as long as the user object is valid
     def device_keys
       @device_keys ||= client.api.keys_query(device_keys: { id => [] }).yield_self do |resp|
         resp[:device_keys][id.to_sym]

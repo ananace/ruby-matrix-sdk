@@ -1371,6 +1371,27 @@ module MatrixSdk::Protocols::CS
     request(:get, :client_r0, "/profile/#{user_id}/avatar_url", query: query)
   end
 
+  # Sets the avatar URL for a user
+  #
+  # @example Reuploading a gravatar as an avatar
+  #   require 'digest/md5'
+  #
+  #   # Get a 256x256 gravatar of user@example.com, returning 404 if one doesn't exist
+  #   email = 'user@example.com'
+  #   url = "https://www.gravatar.com/avatar/#{Digest::MD5.hexdigest email.striprim.downcase}?d=404&s=256"
+  #
+  #   data = Net::HTTP.get_response(URI(url))
+  #   data.value
+  #
+  #   # Reupload the gravatar to your connected HS before setting the resulting MXC URL as the new avatar
+  #   mxc = api.media_upload(data.body, data.content_type)[:content_uri]
+  #   api.set_avatar_url(api.whoami?[:user_id], mxc)
+  #
+  # @param [String,MXID] user_id The ID of the user to set the avatar for
+  # @param [String,URI::MATRIX] url The new avatar URL, should be a mxc:// URL
+  # @return [Response] An empty response hash if the change was successful
+  # @see https://matrix.org/docs/spec/client_server/latest#put-matrix-client-r0-profile-userid-avatar-url
+  #      The Matrix Spec, for more information about the event and data
   def set_avatar_url(user_id, url, **params)
     query = {}
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
