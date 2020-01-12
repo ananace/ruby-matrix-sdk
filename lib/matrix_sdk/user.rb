@@ -68,16 +68,17 @@ module MatrixSdk
       @avatar_url = url
     end
 
-    # Gets the user's current presence as a symbol
-    # Should be one of :online, :offline, or :unavailable
+    # Get the user's current presence status
     #
+    # @return [Symbol] One of :online, :offline, :unavailable
     # @see MatrixSdk::Protocols::CS#get_presence_status
     # @note This information is not cached in the abstraction layer
     def presence
       raw_presence[:presence].to_sym
     end
 
-    # Updates the user's current presence
+    # Gets the user's current presence as a symbol
+    # Should be one of :online, :offline, or :unavailable
     #
     # @param new_presence [:online,:offline,:unavailable] The new presence status to set
     # @see MatrixSdk::Protocols::CS#set_presence_status
@@ -112,6 +113,7 @@ module MatrixSdk
     # Gets the last time the user was active at, from the server's side
     #
     # @return [Time] when the user was last active
+    # @see MatrixSdk::Protocols::CS#get_presence_status
     # @note This information is not cached in the abstraction layer
     def last_active
       since = raw_presence[:last_active_ago]
@@ -120,9 +122,7 @@ module MatrixSdk
       Time.now - (since / 1000)
     end
 
-    # Returns all the device keys for the user, retrieving them if necessary
-    #
-    # @note This information is currently cached for as long as the user object is valid
+    # Returns all the current device keys for the user, retrieving them if necessary
     def device_keys
       @device_keys ||= client.api.keys_query(device_keys: { id => [] }).yield_self do |resp|
         resp[:device_keys][id.to_sym]
