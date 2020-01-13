@@ -77,7 +77,7 @@ module MatrixSdk
       raw_presence[:presence].to_sym
     end
 
-    # Gets the user's current presence as a symbol
+    # Sets the user's current presence status
     # Should be one of :online, :offline, or :unavailable
     #
     # @param new_presence [:online,:offline,:unavailable] The new presence status to set
