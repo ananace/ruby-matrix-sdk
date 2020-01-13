@@ -53,7 +53,7 @@ module MatrixSdk
       @rooms = {}
       @users = {}
       @cache = client_cache
-      @identity_server = params.fetch(:identity_server, nil)
+      @identity_server = nil
 
       @sync_token = nil
       @sync_thread = nil
