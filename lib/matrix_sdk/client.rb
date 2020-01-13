@@ -75,24 +75,41 @@ module MatrixSdk
       @mxid = params[:user_id]
     end
 
+    # Gets the currently logged in user's MXID
+    #
+    # @return [MXID] The MXID of the current user
     def mxid
       @mxid ||= begin
-        api.whoami?[:user_id] if api&.access_token
+        MXID.new api.whoami?[:user_id] if api&.access_token
       end
     end
 
     alias user_id mxid
 
+    # Gets the current user presence status object
+    #
+    # @return [Response] The user presence
+    # @see User#presence
+    # @see Protocols::CS#get_presence_status
     def presence
       api.get_presence_status(mxid).tap { |h| h.delete :user_id }
     end
 
+    # Sets the current user's presence status
+    #
+    # @param status [:online,:offline,:unavailable] The new status to use
+    # @param message [String] A custom status message to set
+    # @see User#presence=
+    # @see Protocols::CS#set_presence_status
     def set_presence(status, message: nil)
-      raise ArgumentError, 'Presence must be one of :online, :offline, :unavaiable' unless %i[online offline unavailable].include?(status)
+      raise ArgumentError, 'Presence must be one of :online, :offline, :unavailable' unless %i[online offline unavailable].include?(status)
 
       api.set_presence_status(mxid, status, message: message)
     end
 
+    # Gets a list of all the public rooms on the connected HS
+    #
+    # @note This will try to list all public rooms on the HS, and may take a while on larger instances
     def public_rooms
       rooms = []
       since = nil
@@ -116,6 +133,12 @@ module MatrixSdk
       rooms
     end
 
+    # Gets a list of all relevant rooms, either the ones currently handled by
+    # the client, or the list of currently joined ones if no rooms are handled
+    #
+    # @return [Array[Room]] All the currently handled rooms
+    # @note This will always return the empty array if the cache level is set
+    #       to :none
     def rooms
       if @rooms.empty? && cache != :none
         api.get_joined_rooms.joined_rooms.each do |id|
@@ -126,6 +149,10 @@ module MatrixSdk
       @rooms.values
     end
 
+    # Refresh the list of currently handled rooms, replacing it with the user's
+    # currently joined rooms.
+    #
+    # @note This will be a no-op if the cache level is set to :none
     def reload_rooms!
       return true if cache == :none
 
@@ -139,12 +166,23 @@ module MatrixSdk
     end
     alias refresh_rooms! reload_rooms!
 
+    # Register - and log in - on the connected HS as a guest
     def register_as_guest
       data = api.register(kind: :guest)
       post_authentication(data)
     end
 
-    def register_with_password(username, password, full_state: true, **params)
+    # Register a new user account on the connected HS
+    #
+    # This will also trigger an initial sync unless no_sync is set
+    #
+    # @note This method will currently always use auth type 'm.login.dummy'
+    # @param username [String] The new user's name
+    # @param password [String] The new user's password
+    # @param params [Hash] Additional options
+    # @option params [Boolean] :no_sync Skip the initial sync on registering
+    # @option params [Boolean] :allow_sync_retry Allow sync to retry on failure
+    def register_with_password(username, password, **params)
       username = username.to_s unless username.is_a?(String)
       password = password.to_s unless password.is_a?(String)
 
@@ -156,10 +194,21 @@ module MatrixSdk
 
       return if params[:no_sync]
 
-      sync full_state: full_state,
+      sync full_state: true,
            allow_sync_retry: params.fetch(:allow_sync_retry, nil)
     end
 
+    # Logs in as a user on the connected HS
+    #
+    # This will also trigger an initial sync unless no_sync is set
+    #
+    # @param username [String] The username of the user
+    # @param password [String] The password of the user
+    # @param sync_timeout [Numeric] The timeout of the initial sync on login
+    # @param full_state [Boolean] Should the initial sync retrieve full state
+    # @param params [Hash] Additional options
+    # @option params [Boolean] :no_sync Skip the initial sync on registering
+    # @option params [Boolean] :allow_sync_retry Allow sync to retry on failure
     def login(username, password, sync_timeout: 15, full_state: false, **params)
       username = username.to_s unless username.is_a?(String)
       password = password.to_s unless password.is_a?(String)
@@ -177,6 +226,17 @@ module MatrixSdk
            allow_sync_retry: params.fetch(:allow_sync_retry, nil)
     end
 
+    # Logs in as a user on the connected HS
+    #
+    # This will also trigger an initial sync unless no_sync is set
+    #
+    # @param username [String] The username of the user
+    # @param token [String] The token to log in with
+    # @param sync_timeout [Numeric] The timeout of the initial sync on login
+    # @param full_state [Boolean] Should the initial sync retrieve full state
+    # @param params [Hash] Additional options
+    # @option params [Boolean] :no_sync Skip the initial sync on registering
+    # @option params [Boolean] :allow_sync_retry Allow sync to retry on failure
     def login_with_token(username, token, sync_timeout: 15, full_state: false, **params)
       username = username.to_s unless username.is_a?(String)
       token = token.to_s unless token.is_a?(String)
@@ -194,16 +254,19 @@ module MatrixSdk
            allow_sync_retry: params.fetch(:allow_sync_retry, nil)
     end
 
+    # Logs out of the current session
     def logout
       api.logout
       @api.access_token = nil
       @mxid = nil
     end
 
+    # Check if there's a currently logged in session
     def logged_in?
-      !(mxid.nil? || @api.access_token.nil?)
+      !@api.access_token.nil?
     end
 
+    # Retrieve a list of all registered third-party IDs for the current user
     def registered_3pids
       data = api.get_3pids
       data.threepids.each do |obj|
@@ -234,7 +297,12 @@ module MatrixSdk
       data
     end
 
+    # Creates a new room
+    #
+    # @param room_alias [String] A default alias to set on the room, should only be the localpart
+    # @see Protocols::CS#create_room
     def create_room(room_alias = nil, **params)
+
       data = api.create_room(params.merge(room_alias: room_alias))
       ensure_room(data.room_id)
     end
