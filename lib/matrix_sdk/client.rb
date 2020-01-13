@@ -81,15 +81,7 @@ module MatrixSdk
       end
     end
 
-    def mxid=(id)
-      id = MXID.new id.to_s unless id.is_a? MXID
-      raise ArgumentError, 'Must be a User ID' unless id.user?
-
-      @mxid = id
-    end
-
     alias user_id mxid
-    alias user_id= mxid=
 
     def presence
       api.get_presence_status(mxid).tap { |h| h.delete :user_id }
