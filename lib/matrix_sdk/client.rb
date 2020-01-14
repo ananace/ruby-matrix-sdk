@@ -307,12 +307,21 @@ module MatrixSdk
       ensure_room(data.room_id)
     end
 
+    # Joins an already created room
+    #
+    # @param room_id_or_alias [String,MXID] A room alias (#room:exmaple.com) or a room ID (!id:example.com)
+    # @param server_name [Array[String]] A list of servers to attempt the join through, required for IDs
+    # @see Protocols::CS#join_room
     def join_room(room_id_or_alias, server_name: [])
       server_name = [server_name] unless server_name.is_a? Array
       data = api.join_room(room_id_or_alias, server_name: server_name)
       ensure_room(data.fetch(:room_id, room_id_or_alias))
     end
 
+    # Find a room in the locally cached list of rooms that the current user is part of
+    #
+    # @param room_id_or_alias [String,MXID] A room ID or alias
+    # @param only_canonical [Boolean] Only match alias against the canonical alias
     def find_room(room_id_or_alias, only_canonical: false)
       room_id_or_alias = MXID.new(room_id_or_alias.to_s) unless room_id_or_alias.is_a? MXID
       raise ArgumentError, 'Must be a room id or alias' unless %i[room_id room_alias].include? room_id_or_alias.type
