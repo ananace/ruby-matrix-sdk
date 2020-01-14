@@ -324,7 +324,7 @@ module MatrixSdk
     # @param only_canonical [Boolean] Only match alias against the canonical alias
     def find_room(room_id_or_alias, only_canonical: false)
       room_id_or_alias = MXID.new(room_id_or_alias.to_s) unless room_id_or_alias.is_a? MXID
-      raise ArgumentError, 'Must be a room id or alias' unless %i[room_id room_alias].include? room_id_or_alias.type
+      raise ArgumentError, 'Must be a room id or alias' unless room_id_or_alias.room?
 
       return @rooms.fetch(room_id_or_alias.to_s, nil) if room_id_or_alias.room_id?
 
