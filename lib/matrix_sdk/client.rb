@@ -354,10 +354,23 @@ module MatrixSdk
       end
     end
 
+    # Remove a room alias
+    #
+    # @param room_alias [String,MXID] The room alias to remove
+    # @see Protocols::CS#remove_room_alias
     def remove_room_alias(room_alias)
+      room_alias = MXID.new room_alias.to_s unless room_alias.is_a? MXID
+      raise ArgumentError, 'Must be a room alias' unless room_alias.room_alias?
+
       api.remove_room_alias(room_alias)
     end
 
+    # Upload a piece of data to the media repo
+    #
+    # @return [URI::MATRIX] A Matrix content (mxc://) URL pointing to the uploaded data
+    # @param content [String] The data to upload
+    # @param content_type [String] The MIME type of the data
+    # @see Protocols::CS#media_upload
     def upload(content, content_type)
       data = api.media_upload(content, content_type)
       return data[:content_uri] if data.key? :content_uri
@@ -365,6 +378,9 @@ module MatrixSdk
       raise MatrixUnexpectedResponseError, 'Upload succeeded, but no media URI returned'
     end
 
+    # Starts a background thread that will listen to new events
+    #
+    # @see sync For What parameters are accepted
     def start_listener_thread(**params)
       @should_listen = true
       thread = Thread.new { listen_forever(params) }
@@ -372,6 +388,7 @@ module MatrixSdk
       thread.run
     end
 
+    # Stops the running background thread if one is active
     def stop_listener_thread
       return unless @sync_thread
 
@@ -380,10 +397,21 @@ module MatrixSdk
       @sync_thread = nil
     end
 
+    # Check if there's a thread listening for events
     def listening?
       @sync_thread&.alive? == true
     end
 
+    # Run a message sync round, triggering events as necessary
+    #
+    # @param skip_store_batch [Boolean] Should this sync skip storing the returned next_batch token,
+    #        doing this would mean the next sync re-runs from the same point. Useful with use of filters.
+    # @param params [Hash] Additional options
+    # @option params [String,Hash] :filter (#sync_filter) A filter to use for this sync
+    # @option params [Numeric] :timeout (30) A timeout value in seconds for the sync request
+    # @option params [Numeric] :allow_sync_retry (0) The number of retries allowed for this sync request
+    # @option params [String] :since An override of the "since" token to provide to the sync request
+    # @see Protocols::CS#sync
     def sync(skip_store_batch: false, **params)
       extra_params = {
         filter: sync_filter,
@@ -405,12 +433,20 @@ module MatrixSdk
       @next_batch = data[:next_batch] unless skip_store_batch
 
       handle_sync_response(data)
+      true
     end
 
     alias listen_for_events sync
 
+    # Ensures that a room exists in the cache
+    #
+    # @param room_id [String,MXID] The room ID to ensure
+    # @return [Room] The handled room object for the requested room
     def ensure_room(room_id)
-      room_id = room_id.to_s unless room_id.is_a? String
+      room_id = MXID.new room_id.to_s unless room_id.is_a? MXID
+      raise ArgumentError, 'Must be a room ID' unless room_id.room_id?
+
+      room_id = room_id.to_s
       @rooms.fetch(room_id) do
         room = Room.new(self, room_id)
         @rooms[room_id] = room unless cache == :none
