@@ -11,6 +11,15 @@ module MatrixSdk
     include MatrixSdk::Logging
     extend Forwardable
 
+    # @!attribute api [r] The underlying API connection
+    #   @return [Api] The underlying API connection
+    # @!attribute next_batch [r] The batch token for a running sync
+    #   @return [String] The opaque batch token
+    # @!attribute cache [rw] The cache level
+    #   @return [:all,:some,:none] The level of caching to do
+    # @!attribute sync_filter [rw] The global sync filter
+    #   @return [Hash,String] A filter definition, either as defined by the
+    #           Matrix spec, or as an identifier returned by a filter creation request
     attr_reader :api, :next_batch
     attr_accessor :cache, :sync_filter
 
@@ -22,6 +31,17 @@ module MatrixSdk
                    :access_token, :access_token=, :device_id, :device_id=, :homeserver, :homeserver=,
                    :validate_certificate, :validate_certificate=
 
+    # Create a new client instance from only a Matrix HS domain
+    #
+    # This will use the well-known delegation lookup to find the correct client URL
+    #
+    # @note This method will not verify that the created client has a valid connection,
+    #       it will only perform the necessary lookups to build a connection URL.
+    # @return [Client] The new client instance
+    # @param domain [String] The domain name to look up
+    # @param params [Hash] Additional parameters to pass along to {Api.new_for_domain} as well as {initialize}
+    # @see Api.new_for_domain
+    # @see #initialize
     def self.new_for_domain(domain, **params)
       api = MatrixSdk::Api.new_for_domain(domain, keep_wellknown: true)
       return new(api, params) unless api.well_known.key? 'm.identity_server'
@@ -110,6 +130,7 @@ module MatrixSdk
     # Gets a list of all the public rooms on the connected HS
     #
     # @note This will try to list all public rooms on the HS, and may take a while on larger instances
+    # @return [Array[Room]] The public rooms
     def public_rooms
       rooms = []
       since = nil
@@ -153,6 +174,7 @@ module MatrixSdk
     # currently joined rooms.
     #
     # @note This will be a no-op if the cache level is set to :none
+    # @return [Boolean] If the refresh succeeds
     def reload_rooms!
       return true if cache == :none
 
@@ -262,6 +284,9 @@ module MatrixSdk
     end
 
     # Check if there's a currently logged in session
+    #
+    # @note This will not check if the session is valid, only if it exists
+    # @return [Boolean] If there's a current session
     def logged_in?
       !@api.access_token.nil?
     end
@@ -300,6 +325,7 @@ module MatrixSdk
     # Creates a new room
     #
     # @param room_alias [String] A default alias to set on the room, should only be the localpart
+    # @return [Room] The resulting room
     # @see Protocols::CS#create_room
     def create_room(room_alias = nil, **params)
 
@@ -311,6 +337,7 @@ module MatrixSdk
     #
     # @param room_id_or_alias [String,MXID] A room alias (#room:exmaple.com) or a room ID (!id:example.com)
     # @param server_name [Array[String]] A list of servers to attempt the join through, required for IDs
+    # @return [Room] The resulting room
     # @see Protocols::CS#join_room
     def join_room(room_id_or_alias, server_name: [])
       server_name = [server_name] unless server_name.is_a? Array
@@ -322,6 +349,8 @@ module MatrixSdk
     #
     # @param room_id_or_alias [String,MXID] A room ID or alias
     # @param only_canonical [Boolean] Only match alias against the canonical alias
+    # @return [Room] The found room
+    # @return [nil] If no room was found
     def find_room(room_id_or_alias, only_canonical: false)
       room_id_or_alias = MXID.new(room_id_or_alias.to_s) unless room_id_or_alias.is_a? MXID
       raise ArgumentError, 'Must be a room id or alias' unless room_id_or_alias.room?
@@ -337,6 +366,7 @@ module MatrixSdk
     #
     # @param user_id [String,MXID,:self] The MXID to look up, will also accept :self in order to get the currently logged-in user
     # @return [User] The User instance for the specified user
+    # @raise [ArgumentError] If the input isn't a valid user ID
     # @note The method doesn't perform any existence checking, so the returned User object may point to a non-existent user
     def get_user(user_id)
       user_id = mxid if user_id == :self
