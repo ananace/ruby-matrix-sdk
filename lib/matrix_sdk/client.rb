@@ -189,6 +189,8 @@ module MatrixSdk
     alias refresh_rooms! reload_rooms!
 
     # Register - and log in - on the connected HS as a guest
+    #
+    # @note This feature is not commonly supported by many HSes
     def register_as_guest
       data = api.register(kind: :guest)
       post_authentication(data)
@@ -292,6 +294,9 @@ module MatrixSdk
     end
 
     # Retrieve a list of all registered third-party IDs for the current user
+    #
+    # @return [Response] A response hash containing the key :threepids
+    # @see Protocols::CS#get_3pids
     def registered_3pids
       data = api.get_3pids
       data.threepids.each do |obj|
