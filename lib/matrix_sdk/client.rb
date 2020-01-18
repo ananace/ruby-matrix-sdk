@@ -417,6 +417,8 @@ module MatrixSdk
     #
     # @see sync For What parameters are accepted
     def start_listener_thread(**params)
+      return if listening?
+
       @should_listen = true
       thread = Thread.new { listen_forever(params) }
       @sync_thread = thread
