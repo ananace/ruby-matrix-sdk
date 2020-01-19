@@ -58,10 +58,32 @@ module MatrixSdk
 
     alias room_id id
 
+    # Create a new room instance
+    #
+    # @note This method isn't supposed to be used directly, rather rooms should
+    #       be retrieved from the Client abstraction.
+    #
+    # @param client [Client] The underlying connection
+    # @param room_id [MXID] The room ID
+    # @param data [Hash] Additional data to assign to the room
+    # @option data [String] :name The current name of the room
+    # @option data [String] :topic The current topic of the room
+    # @option data [String,MXID] :canonical_alias The canonical alias of the room
+    # @option data [Array(String,MXID)] :aliases All non-canonical aliases of the room
+    # @option data [:invite,:public] :join_rule The join rule for the room
+    # @option data [:can_join,:forbidden] :guest_access The guest access setting for the room
+    # @option data [Boolean] :world_readable If the room is readable by the entire world
+    # @option data [Array(User)] :members The list of joined members
+    # @option data [Array(Object)] :events The list of current events in the room
+    # @option data [Boolean] :members_loaded If the list of members is already loaded
+    # @option data [Integer] :event_history_limit (10) The limit of events to store for the room
+    # @option data [String,URI] :avatar_url The avatar URL for the room
+    # @option data [String] :prev_batch The previous batch token for backfill
     def initialize(client, room_id, data = {})
+      raise ArgumentError, 'Must be given a Client instance' unless client.is_a? Client
+      raise ArgumentError, 'room_id must be a valid Room ID' unless room_id.is_a?(MXID) && room_id.room_id?
+
       event_initialize
-      @client = client
-      @id = room_id.to_s
 
       @name = nil
       @topic = nil
@@ -81,6 +103,9 @@ module MatrixSdk
       data.each do |k, v|
         instance_variable_set("@#{k}", v) if instance_variable_defined? "@#{k}"
       end
+
+      @client = client
+      @id = room_id.to_s
 
       @name_checked = Time.new(0)
 
