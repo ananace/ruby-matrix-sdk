@@ -478,7 +478,7 @@ module MatrixSdk
     # Ensures that a room exists in the cache
     #
     # @param room_id [String,MXID] The room ID to ensure
-    # @return [Room] The handled room object for the requested room
+    # @return [Room] The room object for the requested room
     def ensure_room(room_id)
       room_id = MXID.new room_id.to_s unless room_id.is_a? MXID
       raise ArgumentError, 'Must be a room ID' unless room_id.room_id?
