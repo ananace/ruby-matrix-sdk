@@ -141,6 +141,8 @@ module MatrixSdk
     end
 
     # Populates and returns the #members array
+    #
+    # @return [Array(User)] The list of members in the room
     def joined_members
       return members if @members_loaded && !members.empty?
 
@@ -153,8 +155,13 @@ module MatrixSdk
       members
     end
 
+    # Gets the current name of the room, querying the API if necessary
+    #
+    # @note Will cache the current name for 15 minutes
+    #
+    # @return [String,nil] The room name - if any
     def name
-      return @name if Time.now - @name_checked < 10
+      return @name if Time.now - @name_checked < 900
 
       @name_checked = Time.now
       @name ||= client.api.get_room_name(id)
@@ -164,6 +171,8 @@ module MatrixSdk
     end
 
     # Gets the avatar url of the room - if any
+    #
+    # @return [String,nil] The avatar URL - if any
     def avatar_url
       @avatar_url ||= client.api.get_room_avatar(id).url
     rescue MatrixNotFoundError
@@ -194,23 +203,26 @@ module MatrixSdk
     #
 
     # Sends a plain-text message to the room
+    #
     # @param text [String] the message to send
     def send_text(text)
       client.api.send_message(id, text)
     end
 
     # Sends a custom HTML message to the room
+    #
     # @param html [String] the HTML message to send
     # @param body [String,nil] a plain-text representation of the object
-    #        (Will default to the HTML with tags stripped away)
-    # @param msg_type [String] A message type for the message
+    #        (Will default to the HTML with all tags stripped away)
+    # @param msgtype [String] ('m.text') The message type for the message
+    # @param format [String] ('org.matrix.custom.html') The message format
     # @see https://matrix.org/docs/spec/client_server/r0.3.0.html#m-room-message-msgtypes
     #      Possible message types as defined by the spec
-    def send_html(html, body = nil, msg_type = 'm.text')
+    def send_html(html, body = nil, msgtype: nil, format: nil)
       content = {
         body: body || html.gsub(/<\/?[^>]*>/, ''),
-        msgtype: msg_type,
-        format: 'org.matrix.custom.html',
+        msgtype: msgtype || 'm.text',
+        format: format || 'org.matrix.custom.html',
         formatted_body: html
       }
 
@@ -218,12 +230,14 @@ module MatrixSdk
     end
 
     # Sends an emote (/me) message to the room
+    #
     # @param text [String] the emote to send
     def send_emote(text)
       client.api.send_emote(id, text)
     end
 
     # Sends a link to a generic file to the room
+    #
     # @param url [String,URI] the URL to the file
     # @param name [String] the name of the file
     # @param file_info [Hash] extra information about the file
@@ -237,12 +251,14 @@ module MatrixSdk
     end
 
     # Sends a notice (bot) message to the room
+    #
     # @param text [String] the notice to send
     def send_notice(text)
       client.api.send_notice(id, text)
     end
 
     # Sends a link to an image to the room
+    #
     # @param url [String,URI] the URL to the image
     # @param name [String] the name of the image
     # @param image_info [Hash] extra information about the image
@@ -258,6 +274,7 @@ module MatrixSdk
     end
 
     # Sends a location object to the room
+    #
     # @param geo_uri [String,URI] the geo-URL (e.g. geo:<coords>) of the location
     # @param name [String] the name of the location
     # @param thumbnail_url [String,URI] the URL to a thumbnail image of the location
@@ -268,6 +285,7 @@ module MatrixSdk
     end
 
     # Sends a link to a video to the room
+    #
     # @param url [String,URI] the URL to the video
     # @param name [String] the name of the video
     # @param video_info [Hash] extra information about the video
@@ -284,6 +302,7 @@ module MatrixSdk
     end
 
     # Sends a link to an audio clip to the room
+    #
     # @param url [String,URI] the URL to the audio clip
     # @param name [String] the name of the audio clip
     # @param audio_info [Hash] extra information about the audio clip
@@ -296,6 +315,7 @@ module MatrixSdk
     end
 
     # Redacts a message from the room
+    #
     # @param event_id [String] the ID of the event to redact
     # @param reason [String,nil] the reason for the redaction
     def redact_message(event_id, reason = nil)
@@ -304,6 +324,7 @@ module MatrixSdk
     end
 
     # Backfills messages into the room history
+    #
     # @param reverse [Boolean] whether to fill messages in reverse or not
     # @param limit [Integer] the maximum number of messages to backfill
     # @note This will trigger the `on_event` events as messages are added
@@ -323,6 +344,7 @@ module MatrixSdk
     #
 
     # Invites a user into the room
+    #
     # @param user_id [String,User] the MXID of the user
     # @return [Boolean] wether the action succeeded
     def invite_user(user_id)
@@ -332,6 +354,7 @@ module MatrixSdk
     end
 
     # Kicks a user from the room
+    #
     # @param user_id [String,User] the MXID of the user
     # @param reason [String] the reason for the kick
     # @return [Boolean] wether the action succeeded
@@ -342,6 +365,7 @@ module MatrixSdk
     end
 
     # Bans a user from the room
+    #
     # @param user_id [String,User] the MXID of the user
     # @param reason [String] the reason for the ban
     # @return [Boolean] wether the action succeeded
@@ -352,6 +376,7 @@ module MatrixSdk
     end
 
     # Unbans a user from the room
+    #
     # @param user_id [String,User] the MXID of the user
     # @return [Boolean] wether the action succeeded
     def unban_user(user_id)
@@ -361,6 +386,7 @@ module MatrixSdk
     end
 
     # Requests to be removed from the room
+    #
     # @return [Boolean] wether the request succeeded
     def leave
       client.api.leave_room(id)
@@ -369,6 +395,7 @@ module MatrixSdk
     end
 
     # Retrieves a custom entry from the room-specific account data
+    #
     # @param type [String] the data type to retrieve
     # @return [Hash] the data that was stored under the given type
     def get_account_data(type)
@@ -376,6 +403,7 @@ module MatrixSdk
     end
 
     # Stores a custom entry into the room-specific account data
+    #
     # @param type [String] the data type to store
     # @param account_data [Hash] the data to store
     def set_account_data(type, account_data)
@@ -384,6 +412,7 @@ module MatrixSdk
     end
 
     # Changes the room-specific user profile
+    #
     # @param display_name [String] the new display name to use in the room
     # @param avatar_url [String,URI] the new avatar URL to use in the room
     # @note the avatar URL should be a mxc:// URI
@@ -401,6 +430,7 @@ module MatrixSdk
     end
 
     # Returns a list of the room tags
+    #
     # @return [Response] A list of the tags and their data, with add and remove methods implemented
     # @example Managing tags
     #   room.tags
@@ -428,6 +458,7 @@ module MatrixSdk
     end
 
     # Remove a tag from the room
+    #
     # @param [String] tag The tag to remove
     def remove_tag(tag)
       client.api.remove_user_tag(client.mxid, id, tag)
@@ -435,6 +466,7 @@ module MatrixSdk
     end
 
     # Add a tag to the room
+    #
     # @param [String] tag The tag to add
     # @param [Hash] data The data to assign to the tag
     def add_tag(tag, **data)
