@@ -5,6 +5,7 @@
   This will require changes in client code where `#get_room_state` is called to retrieve
   all state, as it now requires a state key. For retrieving full room state,
   `#get_room_state_all` is now the method to use.
+- Changes some advanced parameters to named parameters, ensure your code is updated if it makes use of them
 
 - Adds multiple CS API endpoints
 - Adds `:room_id` key to all room events
