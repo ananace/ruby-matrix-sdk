@@ -478,6 +478,7 @@ module MatrixSdk
     # State updates
     #
 
+    # Refreshes the room state caches for name, topic, and aliases
     def reload!
       reload_name!
       reload_topic!
@@ -486,12 +487,16 @@ module MatrixSdk
     end
     alias refresh! reload!
 
+    # Sets a new name on the room
+    #
+    # @param name [String] The new name to set
     def name=(name)
       client.api.set_room_name(id, name)
       @name = name
     end
 
     # Reloads the name of the room
+    #
     # @return [Boolean] if the name was changed or not
     def reload_name!
       data = begin
@@ -505,12 +510,16 @@ module MatrixSdk
     end
     alias refresh_name! reload_name!
 
+    # Sets a new topic on the room
+    #
+    # @param topic [String] The new topic to set
     def topic=(topic)
       client.api.set_room_topic(id, topic)
       @topic = topic
     end
 
     # Reloads the topic of the room
+    #
     # @return [Boolean] if the topic was changed or not
     def reload_topic!
       data = begin
@@ -525,6 +534,7 @@ module MatrixSdk
     alias refresh_topic! reload_topic!
 
     # Add an alias to the room
+    #
     # @return [Boolean] if the addition was successful or not
     def add_alias(room_alias)
       client.api.set_room_alias(id, room_alias)
@@ -533,6 +543,7 @@ module MatrixSdk
     end
 
     # Reloads the list of aliases by an API query
+    #
     # @return [Boolean] if the alias list was updated or not
     # @note The list of aliases is not sorted, ordering changes will result in
     #       alias list updates.
@@ -555,26 +566,41 @@ module MatrixSdk
     end
     alias refresh_aliases! reload_aliases!
 
+    # Sets if the room should be invite only or not
+    #
+    # @param invite_only [Boolean] If it should be invite only or not
     def invite_only=(invite_only)
       self.join_rule = invite_only ? :invite : :public
       @join_rule == :invite
     end
 
+    # Sets the join rule of the room
+    #
+    # @param join_rule [:invite,:public] The join rule of the room
     def join_rule=(join_rule)
       client.api.set_join_rule(id, join_rule)
-      @join_rule = join_rule
+      @join_rule = join_rules
     end
 
+    # Sets if guests are allowed in the room
+    #
+    # @param allow_guests [Boolean] If guests are allowed to join or not
     def allow_guests=(allow_guests)
       self.guest_access = (allow_guests ? :can_join : :forbidden)
       @guest_access == :can_join
     end
 
+    # Sets the guest access status for the room
+    #
+    # @param guest_access [:can_join,:forbidden] The new guest access status of the room
     def guest_access=(guest_access)
       client.api.set_guest_access(id, guest_access)
       @guest_access = guest_access
     end
 
+    # Sets a new avatar URL for the room
+    #
+    # @param avatar_url [URI::MATRIX] The mxc:// URL for the new room avatar
     def avatar_url=(avatar_url)
       avatar_url = URI(avatar_url) unless avatar_url.is_a? URI
       raise ArgumentError, 'Must be a valid MXC URL' unless avatar_url.is_a? URI::MATRIX
@@ -584,6 +610,7 @@ module MatrixSdk
     end
 
     # Modifies the power levels of the room
+    #
     # @param users [Hash] the user-specific power levels to set or remove
     # @param users_default [Hash] the default user power levels to set
     # @return [Boolean] if the change was successful
@@ -604,6 +631,7 @@ module MatrixSdk
     end
 
     # Modifies the required power levels for actions in the room
+    #
     # @param events [Hash] the event-specific power levels to change
     # @param params [Hash] other power-level params to change
     # @return [Boolean] if the change was successful
