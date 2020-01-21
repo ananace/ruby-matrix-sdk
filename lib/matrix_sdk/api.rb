@@ -153,6 +153,14 @@ module MatrixSdk
           ))
     end
 
+    # Check if a protocol is enabled on the API connection
+    #
+    # @example Checking for identity server API support
+    #   api.protocol? :IS
+    #   # => false
+    #
+    # @param protocol [Symbol] The protocol to check
+    # @return [Boolean] Is the protocol enabled
     def protocol?(protocol)
       protocols.include? protocol
     end
