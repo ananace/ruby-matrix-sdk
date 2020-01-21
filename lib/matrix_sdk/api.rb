@@ -98,6 +98,7 @@ module MatrixSdk
       target_uri = nil
 
       if !port.nil? && !port.empty?
+        # If the domain is fully qualified according to Matrix (FQDN and port) then skip discovery
         target_uri = URI("https://#{domain}:#{port}")
       elsif target == :server
         # Attempt SRV record discovery
@@ -110,6 +111,7 @@ module MatrixSdk
                      end
 
         if target_uri.nil?
+          # Attempt .well-known discovery for server-to-server
           well_known = begin
                          data = Net::HTTP.get("https://#{domain}/.well-known/matrix/server")
                          JSON.parse(data)
