@@ -17,6 +17,19 @@ module MatrixSdk
       raise ArgumentError, 'Identifier is not a valid MXID' unless valid?
     end
 
+    # Gets the homeserver part of the ID
+    #
+    # @example A simple MXID
+    #   id = MXID.new('@alice:example.org')
+    #   id.homeserver
+    #   # => 'example.org'
+    #
+    # @example A fully qualified MXID
+    #   id = MXID.new('@user:some.direct.domain:443')
+    #   id.homeserver
+    #   # => 'some.direct.domain:443'
+    #
+    # @return [String]
     def homeserver
       port_s = port ? ':' + port.to_s : ''
       domain ? ':' + domain + port_s : ''
