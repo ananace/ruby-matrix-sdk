@@ -201,6 +201,28 @@ module MatrixSdk
       @proxy_uri = proxy_uri
     end
 
+    # Perform a raw Matrix API request
+    #
+    # @example Simple API query
+    #   api.request(:get, :client_r0, '/account/whoami')
+    #   # => { :user_id => "@alice:matrix.org" }
+    #
+    # @example Advanced API request
+    #   api.request(:post,
+    #               :media_r0,
+    #               '/upload',
+    #               body_stream: open('./file'),
+    #               headers: { 'content-type' => 'image/png' })
+    #   # => { :content_uri => "mxc://example.com/AQwafuaFswefuhsfAFAgsw" }
+    #
+    # @param method [Symbol] The method to use, can be any of the ones under Net::HTTP
+    # @param api [Symbol] The API symbol to use, :client_r0 is the current CS one
+    # @param path [String] The API path to call, this is the part that comes after the API definition in the spec
+    # @param options [Hash] Additional options to pass along to the request
+    # @option options [Hash] :query Query parameters to set on the URL
+    # @option options [Hash,String] :body The body to attach to the request, will be JSON-encoded if sent as a hash
+    # @option options [IO] :body_stream A body stream to attach to the request
+    # @option options [Hash] :headers Additional headers to set on the request
     def request(method, api, path, **options)
       url = homeserver.dup.tap do |u|
         u.path = api_to_path(api) + path
