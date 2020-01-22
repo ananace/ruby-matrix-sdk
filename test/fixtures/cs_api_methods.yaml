@@ -1981,7 +1981,18 @@ GET|/_matrix/client/r0/admin/whois/{userId}:
 GET|/_matrix/client/r0/rooms/{roomId}/context/{eventId}: {}
 # GET|/_matrix/client/r0/login/cas/redirect: {}
 # GET|/_matrix/client/r0/login/cas/ticket: {}
-POST|/_matrix/client/r0/rooms/{roomId}/report/{eventId}: {}
+POST|/_matrix/client/r0/rooms/{roomId}/report/{eventId}:
+  method: :report_event
+  requests:
+    - args: ['!637q39766251:example.com', '$something:example.com', { score: -100, reason: 'This makes me sad' }]
+      path: '/rooms/%21637q39766251%3Aexample.com/report/%24something%3Aexample.com'
+      query: {}
+      body:
+        :score: -100
+        :reason: 'This makes me sad'
+  results:
+    200: |
+      {}
 GET|/_matrix/client/r0/thirdparty/protocols: {}
 GET|/_matrix/client/r0/thirdparty/protocol/{protocol}: {}
 GET|/_matrix/client/r0/thirdparty/location/{protocol}: {}

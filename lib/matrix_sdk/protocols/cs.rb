@@ -667,6 +667,29 @@ module MatrixSdk::Protocols::CS
     send_message_event(room_id, 'm.room.message', content, params)
   end
 
+  # Report an event in a room
+  #
+  # @param room_id [MXID,String] The room ID in which the event occurred
+  # @param room_id [MXID,String] The event ID to report
+  # @param score [Integer] The severity of the report, range between -100 - 0
+  # @param reason [String] The reason for the report
+  # @see https://matrix.org/docs/spec/client_server/latest#post-matrix-client-r0-rooms-roomid-report-eventid
+  #      The Matrix Spec, for more information about the call and response
+  def report_event(room_id, event_id, score:, reason:, **params)
+    query = {}
+    query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
+
+    body = {
+      score: score,
+      reason: reason
+    }
+
+    room_id = ERB::Util.url_encode room_id.to_s
+    event_id = ERB::Util.url_encode event_id.to_s
+
+    request(:post, :client_r0, "/rooms/#{room_id}/report/#{event_id}", body: body, query: query)
+  end
+
   # Retrieve additional messages in a room
   #
   # @param room_id [MXID,String] The room ID to retrieve messages for
