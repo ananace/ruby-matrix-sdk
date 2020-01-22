@@ -325,6 +325,16 @@ module MatrixSdk
       true
     end
 
+    # Reports a message in the room
+    #
+    # @param event_id [MXID,String] The ID of the event to redact
+    # @param reason [String] The reason for the report
+    # @param score [Integer] The severity of the report in the range of -100 - 0
+    def report_message(event_id, reason:, score: -100)
+      client.api.report_event(id, event_id, reason: reason, score: score)
+      true
+    end
+
     # Backfills messages into the room history
     #
     # @param reverse [Boolean] whether to fill messages in reverse or not
