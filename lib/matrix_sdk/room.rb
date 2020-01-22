@@ -81,7 +81,9 @@ module MatrixSdk
     # @option data [String] :prev_batch The previous batch token for backfill
     def initialize(client, room_id, data = {})
       raise ArgumentError, 'Must be given a Client instance' unless client.is_a? Client
-      raise ArgumentError, 'room_id must be a valid Room ID' unless room_id.is_a?(MXID) && room_id.room_id?
+
+      room_id = MXID.new room_id unless room_id.is_a?(MXID)
+      raise ArgumentError, 'room_id must be a valid Room ID' unless room_id.room_id?
 
       event_initialize
 
