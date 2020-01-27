@@ -64,11 +64,12 @@ class MatrixBot
     plaintext = '%<sender>s: Pong! (ping%<msg>s took %<time>s to arrive)'
     html = '<a href="https://matrix.to/#/%<sender>s">%<sender>s</a>: Pong! (<a href="https://matrix.to/#/%<room>s/%<event>s">ping</a>%<msg>s took %<time>s to arrive)'
 
+    milliseconds = (diff * 1000).to_i
     formatdata = {
       sender: sender.id,
       room: room.id,
       event: message.event_id,
-      time: duration_format((diff * 1000).to_i),
+      time: duration_format(milliseconds),
       msg: msgstr
     }
 
@@ -81,7 +82,7 @@ class MatrixBot
       msgtype: 'm.notice',
       pong: {
         from: from_id.homeserver,
-        ms: formatdata[:time],
+        ms: milliseconds,
         ping: formatdata[:event]
       }
     }
