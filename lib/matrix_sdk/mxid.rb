@@ -32,11 +32,16 @@ module MatrixSdk
     # @return [String]
     def homeserver
       port_s = port ? ':' + port.to_s : ''
-      domain ? ':' + domain + port_s : ''
+      domain ? domain + port_s : ''
+    end
+
+    # Gets the homserver part of the ID as a suffix (':homeserver')
+    def homeserver_suffix
+      ':' + homeserver_clean if domain
     end
 
     def to_s
-      "#{sigil}#{localpart}#{homeserver}"
+      "#{sigil}#{localpart}#{homeserver_suffix}"
     end
 
     # Returns the type of the ID
