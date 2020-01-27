@@ -37,7 +37,7 @@ module MatrixSdk
 
     # Gets the homserver part of the ID as a suffix (':homeserver')
     def homeserver_suffix
-      ':' + homeserver_clean if domain
+      ':' + homeserver if domain
     end
 
     def to_s
