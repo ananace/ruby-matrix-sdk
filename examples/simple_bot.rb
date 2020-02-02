@@ -48,7 +48,14 @@ class MatrixBot
   def on_message(message)
     msgstr = message.content[:body]
 
-    return unless msgstr =~ /^!ping\s*/
+    return unless msgstr =~ /^!(ping|echo)\s*/
+
+    handle_ping(message) if msgstr.start_with? '!ping'
+    handle_echo(message) if msgstr.start_with? '!echo'
+  end
+
+  def handle_ping(message)
+    msgstr = message.content[:body]
 
     msgstr.gsub!(/!ping\s*/, '')
     msgstr = " \"#{msgstr}\"" unless msgstr.empty?
@@ -88,6 +95,18 @@ class MatrixBot
     }
 
     client.api.send_message_event(room.id, 'm.room.message', eventdata)
+  end
+
+  def handle_echo(message)
+    msgstr = message.content[:body]
+    msgstr.gsub!(/!echo\s*/, '')
+
+    room = client.ensure_room message.room_id
+    sender = client.get_user message.sender
+
+    puts "[#{Time.now.strftime '%H:%M'}] <#{sender.id} in #{room.id}> \"#{message.content[:body]}\""
+
+    room.send_notice(msgstr)
   end
 
   private
