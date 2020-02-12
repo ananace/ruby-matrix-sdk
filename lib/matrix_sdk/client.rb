@@ -329,11 +329,14 @@ module MatrixSdk
 
     # Creates a new room
     #
+    # @example Creating a room with an alias
+    #   client.create_room('myroom')
+    #   #<MatrixSdk::Room ... >
+    #
     # @param room_alias [String] A default alias to set on the room, should only be the localpart
     # @return [Room] The resulting room
     # @see Protocols::CS#create_room
     def create_room(room_alias = nil, **params)
-
       data = api.create_room(params.merge(room_alias: room_alias))
       ensure_room(data.room_id)
     end
