@@ -14,6 +14,7 @@
 - Separates homeserver part stringification for MXIDs
 - Exposes some previously private client abstraction methods (`#ensure_room`, `#next_batch`) for easier bot usage
 - Changes room abstraction member lookups to use `#get_room_joined_members`, reducing transferred data amounts
+- Fixes debug print of methods that return arrays (e.g. CS `/room/{id}/state`)
 
 ## 1.5.0 - 2019-10-25
 
