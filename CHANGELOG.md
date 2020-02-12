@@ -6,6 +6,7 @@
   all state, as it now requires a state key. For retrieving full room state,
   `#get_room_state_all` is now the method to use.
 - Changes some advanced parameters to named parameters, ensure your code is updated if it makes use of them
+- Fixes SSL verification to actually verify certs (#9)
 
 - Adds multiple CS API endpoints
 - Adds `:room_id` key to all room events

@@ -335,7 +335,7 @@ module MatrixSdk
       @http.open_timeout = open_timeout
       @http.read_timeout = read_timeout
       @http.use_ssl = homeserver.scheme == 'https'
-      @http.verify_mode = validate_certificate ? ::OpenSSL::SSL::VERIFY_NONE : nil
+      @http.verify_mode = validate_certificate ? ::OpenSSL::SSL::VERIFY_PEER : ::OpenSSL::SSL::VERIFY_NONE
       @http.start
       @http
     end
