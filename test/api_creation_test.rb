@@ -207,7 +207,7 @@ class ApiTest < Test::Unit::TestCase
     http = api.send :http
 
     assert_equal 5, http.read_timeout
-    assert_equal OpenSSL::SSL::VERIFY_NONE, http.verify_mode
+    assert_equal OpenSSL::SSL::VERIFY_PEER, http.verify_mode
 
     api = MatrixSdk::Api.new 'https://example.com'
 

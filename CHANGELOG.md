@@ -1,4 +1,4 @@
-## 2.0.0 - **Unreleased**
+## 2.0.0 - 2020-02-14
 
 **NB**, this release includes backwards-incompatible changes;  
 - Changes room state lookup to separate specific state lookups from full state retrieval.
@@ -6,6 +6,7 @@
   all state, as it now requires a state key. For retrieving full room state,
   `#get_room_state_all` is now the method to use.
 - Changes some advanced parameters to named parameters, ensure your code is updated if it makes use of them
+- Fixes SSL verification to actually verify certs (#9)
 
 - Adds multiple CS API endpoints
 - Adds `:room_id` key to all room events
@@ -13,6 +14,7 @@
 - Separates homeserver part stringification for MXIDs
 - Exposes some previously private client abstraction methods (`#ensure_room`, `#next_batch`) for easier bot usage
 - Changes room abstraction member lookups to use `#get_room_joined_members`, reducing transferred data amounts
+- Fixes debug print of methods that return arrays (e.g. CS `/room/{id}/state`)
 
 ## 1.5.0 - 2019-10-25
 
