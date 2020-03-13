@@ -161,6 +161,7 @@ module MatrixSdk
     def protocols
       self
         .class.included_modules
+        .reject { |m| m&.name.nil? }
         .select { |m| m.name.start_with? 'MatrixSdk::Protocols::' }
         .map { |m| m.name.split('::').last.to_sym }
     end
