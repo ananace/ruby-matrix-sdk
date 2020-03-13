@@ -304,7 +304,7 @@ module MatrixSdk
 
     private
 
-    def print_http(http)
+    def print_http(http, body: true)
       return unless logger.debug?
 
       if http.is_a? Net::HTTPRequest
@@ -318,10 +318,12 @@ module MatrixSdk
         logger.debug "#{dir} #{h}"
       end
       logger.debug dir
-      clean_body = JSON.parse(http.body) rescue nil if http.body
-      clean_body.keys.each { |k| clean_body[k] = '[ REDACTED ]' if %w[password access_token].include?(k) }.to_json if clean_body.is_a? Hash
-      clean_body = clean_body.to_s if clean_body
-      logger.debug "#{dir} #{clean_body.length < 200 ? clean_body : clean_body.slice(0..200) + "... [truncated, #{clean_body.length} Bytes]"}" if clean_body
+      if body
+        clean_body = JSON.parse(http.body) rescue nil if http.body
+        clean_body.keys.each { |k| clean_body[k] = '[ REDACTED ]' if %w[password access_token].include?(k) }.to_json if clean_body.is_a? Hash
+        clean_body = clean_body.to_s if clean_body
+        logger.debug "#{dir} #{clean_body.length < 200 ? clean_body : clean_body.slice(0..200) + "... [truncated, #{clean_body.length} Bytes]"}" if clean_body
+      end
     rescue StandardError => e
       logger.warn "#{e.class} occured while printing request debug; #{e.message}\n#{e.backtrace.join "\n"}"
     end
