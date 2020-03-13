@@ -247,6 +247,7 @@ module MatrixSdk
     # @option options [Hash,String] :body The body to attach to the request, will be JSON-encoded if sent as a hash
     # @option options [IO] :body_stream A body stream to attach to the request
     # @option options [Hash] :headers Additional headers to set on the request
+    # @option options [Boolean] :skip_auth (false) Skip authentication
     def request(method, api, path, **options)
       url = homeserver.dup.tap do |u|
         u.path = api_to_path(api) + path
@@ -264,7 +265,7 @@ module MatrixSdk
         request.content_length = (request.body || request.body_stream).size
       end
 
-      request['authorization'] = "Bearer #{access_token}" if access_token
+      request['authorization'] = "Bearer #{access_token}" if access_token && !options.fetch(:skip_auth, false)
       if options.key? :headers
         options[:headers].each do |h, v|
           request[h.to_s.downcase] = v
