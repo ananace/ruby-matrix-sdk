@@ -11,10 +11,6 @@ module MatrixSdk
   class Api
     extend MatrixSdk::Extensions
     include MatrixSdk::Logging
-    include MatrixSdk::Protocols::AS
-    include MatrixSdk::Protocols::CS
-    include MatrixSdk::Protocols::IS
-    include MatrixSdk::Protocols::SS
 
     USER_AGENT = "Ruby Matrix SDK v#{MatrixSdk::VERSION}"
     DEFAULT_HEADERS = {
@@ -23,7 +19,7 @@ module MatrixSdk
     }.freeze
 
     attr_accessor :access_token, :connection_address, :connection_port, :device_id, :autoretry, :global_headers
-    attr_reader :homeserver, :validate_certificate, :open_timeout, :read_timeout, :protocols, :well_known, :proxy_uri
+    attr_reader :homeserver, :validate_certificate, :open_timeout, :read_timeout, :well_known, :proxy_uri
 
     ignore_inspect :access_token, :logger
 
@@ -70,6 +66,10 @@ module MatrixSdk
       @global_headers = DEFAULT_HEADERS.dup
       @global_headers.merge!(params.fetch(:global_headers)) if params.key? :global_headers
       @http = nil
+
+      ([params.fetch(:protocols, [:CS])].flatten - protocols).each do |proto|
+        self.class.include MatrixSdk::Protocols.const_get(proto)
+      end
 
       login(user: @homeserver.user, password: @homeserver.password) if @homeserver.user && @homeserver.password && !@access_token && !params[:skip_login] && protocol?(:CS)
       @homeserver.userinfo = '' unless params[:skip_login]
@@ -153,6 +153,20 @@ module MatrixSdk
             address: target_uri.host,
             port: target_uri.port
           ))
+    end
+
+    # Get a list of enabled protocols on the API client
+    #
+    # @example
+    #   MatrixSdk::Api.new_for_domain('matrix.org').protocols
+    #   # => [:IS, :CS]
+    #
+    # @return [Symbol[]] An array of enabled APIs
+    def protocols
+      self
+        .class.included_modules
+        .select { |m| m.name.start_with? 'MatrixSdk::Protocols::' }
+        .map { |m| m.name.split('::').last.to_sym }
     end
 
     # Check if a protocol is enabled on the API connection
