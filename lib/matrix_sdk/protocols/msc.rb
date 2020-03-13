@@ -56,6 +56,7 @@ module MatrixSdk::Protocols::MSC
     req['authorization'] = "Bearer #{access_token}"
     req['last-event-id'] = since if since
 
+    # rubocop:disable Metrics/BlockLength
     thread = Thread.new do
       print_http(req)
       http.request req do |response|
@@ -94,6 +95,7 @@ module MatrixSdk::Protocols::MSC
         end
       end
     end
+    # rubocop:enable Metrics/BlockLength
 
     thread.abort_on_exception = true
     thread.run
