@@ -47,10 +47,6 @@ module MatrixSdk
       @homeserver.path.gsub!(/\/?_matrix\/?/, '') if @homeserver.path =~ /_matrix\/?$/
       raise ArgumentError, 'Please use the base URL for your HS (without /_matrix/)' if @homeserver.path.include? '/_matrix/'
 
-      @protocols = params.fetch(:protocols, %i[CS])
-      @protocols = [@protocols] unless @protocols.is_a? Array
-      @protocols << :CS if @protocols.include?(:AS) && !@protocols.include?(:CS)
-
       @proxy_uri = params.fetch(:proxy_uri, nil)
       @connection_address = params.fetch(:address, nil)
       @connection_port = params.fetch(:port, nil)
