@@ -27,6 +27,9 @@ module MatrixSdk
     autoload :CS, 'matrix_sdk/protocols/cs'
     autoload :IS, 'matrix_sdk/protocols/is'
     autoload :SS, 'matrix_sdk/protocols/ss'
+
+    # Non-final protocol extensions
+    autoload :MSC, 'matrix_sdk/protocols/msc'
   end
 
   def self.debug!
