@@ -119,7 +119,6 @@ module MatrixSdk::Protocols::MSC
     end
     # rubocop:enable Metrics/BlockLength
 
-    thread.abort_on_exception = true
     thread.run
 
     thread
