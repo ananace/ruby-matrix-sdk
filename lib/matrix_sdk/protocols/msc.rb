@@ -2,16 +2,13 @@
 
 # Preliminary support for unmerged MSCs (Matrix Spec Changes)
 module MatrixSdk::Protocols::MSC
-  def self.included(_)
-    @msc = {}
-  end
-
   def refresh_mscs
     @msc = {}
   end
 
   # Check if there's support for MSC2108 - Sync over Server Sent Events
   def msc2108?
+    @msc ||= {}
     @msc[2108] ||= \
       begin
         request(:get, :client_r0, '/sync/sse', skip_auth: true, headers: { accept: 'text/event-stream' })
@@ -20,6 +17,9 @@ module MatrixSdk::Protocols::MSC
       rescue MatrixSdk::MatrixRequestError
         false
       end
+  rescue StandardError => e
+    logger.debug "Failed to check MSC2108 status;\n#{e.inspect}"
+    false
   end
 
   # Sync over Server Sent Events - MSC2108
@@ -41,7 +41,7 @@ module MatrixSdk::Protocols::MSC
   def msc2108_sync_sse(since: nil, **params, &on_data)
     raise ArgumentError, 'Must be given a block accepting two args - data and { event:, id: }' \
       unless on_data.is_a?(Proc) && on_data.arity == 2
-    raise MatrixNotAuthorizedError unless access_token
+    raise 'Needs to be logged in' unless access_token # TODO: Better error
 
     query = params.select do |k, _v|
       %i[filter full_state set_presence].include? k
