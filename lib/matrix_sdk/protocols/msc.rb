@@ -86,8 +86,9 @@ module MatrixSdk::Protocols::MSC
 
         buffer = ''
         response.read_body do |chunk|
-          buffer += chunk
           logger.debug "< MSC2108: Received #{chunk.length}B of data."
+          buffer += chunk
+          logger.debug "< MSC2108: Handling #{buffer.count(/^event:/)} events simultaneously." if buffer.count(/^event:/) > 1
 
           while (index = buffer.index(/\r\n\r\n|\n\n/))
             stream = buffer.slice!(0..index)
