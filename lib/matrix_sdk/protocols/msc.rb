@@ -63,6 +63,27 @@ module MatrixSdk::Protocols::MSC
         print_http(response, body: false)
         raise MatrixRequestError.new_by_code(JSON.parse(response.body, symbolize_names: true), response.code) unless response.is_a? Net::HTTPSuccess
 
+        socket = response.instance_variable_get :@socket
+        if socket.is_a? Net::BufferedIO
+          socket.instance_eval do
+            def rbuf_fill
+              bufsize_override = 1024
+              case rv = @io.read_nonblock(bufsize_override, exception: false)
+              when String
+                @rbuf << rv
+                rv.clear
+                return
+              when :wait_readable
+                @io.to_io.wait_readable(@read_timeout) or raise Net::ReadTimeout
+              when :wait_writable
+                @io.to_io.wait_writable(@read_timeout) or raise Net::ReadTimeout
+              when nil
+                raise EOFError, 'end of file reached'
+              end while true
+            end
+          end
+        end
+
         buffer = ''
         response.read_body do |chunk|
           buffer += chunk
