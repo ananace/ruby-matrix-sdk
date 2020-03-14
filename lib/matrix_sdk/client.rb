@@ -442,7 +442,10 @@ module MatrixSdk
       return unless @sync_thread
 
       @should_listen = false
-      @sync_thread.join if @sync_thread.alive?
+      if @sync_thread.alive?
+        ret = @sync_thread.join(1)
+        @sync_thread.kill unless ret
+      end
       @sync_thread = nil
     end
 
