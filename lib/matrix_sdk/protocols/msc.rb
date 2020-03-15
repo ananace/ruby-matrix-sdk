@@ -114,9 +114,11 @@ module MatrixSdk::Protocols::MSC
               end
             end
 
-            data = JSON.parse(data, symbolize_names: true)
+            if event == 'sync'
+              data = JSON.parse(data, symbolize_names: true)
 
-            yield((MatrixSdk::Response.new self, data), event: event, id: id)
+              yield((MatrixSdk::Response.new self, data), event: event, id: id)
+            end
           end
 
           unless ctx[:run]
