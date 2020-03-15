@@ -8,4 +8,4 @@ $LOAD_PATH.unshift File.expand_path('../lib', __dir__)
 require 'matrix_sdk'
 
 require 'test/unit'
-require 'mocha/setup'
+require 'mocha/test_unit'
