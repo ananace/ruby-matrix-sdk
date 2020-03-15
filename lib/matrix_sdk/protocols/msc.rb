@@ -90,6 +90,8 @@ module MatrixSdk::Protocols::MSC
           end
         end
 
+        logger.debug 'MSC2108: Starting SSE stream.'
+
         buffer = ''
         response.read_body do |chunk|
           buffer += chunk
@@ -111,6 +113,9 @@ module MatrixSdk::Protocols::MSC
               end
               /^id:(.+)$/.match(part) do |m_id|
                 id = m_id[1].strip
+              end
+              /:(.+)$/.match(part) do |m_comment|
+                logger.debug "MSC2108: Received comment '#{m_comment[1].strip}'"
               end
             end
 
