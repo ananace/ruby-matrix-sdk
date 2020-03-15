@@ -1,6 +1,7 @@
 ## 2.1.0 - **Unreleased**
 
-- Finish up MSC support, get sync over SSE working flawlessly
+- Adds unique query IDs as well as duration in API debug output, to make it easier to track long requests
+- Finishes up MSC support, get sync over SSE working flawlessly
 
 ## 2.0.1 - 2020-03-13
 
