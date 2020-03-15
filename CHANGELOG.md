@@ -4,7 +4,7 @@
 
 ## 2.0.1 - 2020-03-13
 
-- Add code for handling non-final MSC's in protocols
+- Adds code for handling non-final MSC's in protocols
   - Currently implementing clients parts of MSC2018 for Sync over Server Sent Events
 
 ## 2.0.0 - 2020-02-14
