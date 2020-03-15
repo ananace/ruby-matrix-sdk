@@ -273,14 +273,20 @@ module MatrixSdk
       loop do
         raise MatrixConnectionError, "Server still too busy to handle request after #{failures} attempts, try again later" if failures >= 10
 
-        print_http(request)
+        req_id = ('A'..'Z').to_a.shuffle[0,4].join
+
+        print_http(request, id: req_id)
         begin
+          dur_start = Time.now
           response = http.request request
+          dur_end = Time.now
+          duration = dur_end - dur_start
         rescue EOFError => e
           logger.error 'Socket closed unexpectedly'
           raise e
         end
-        print_http(response)
+        print_http(response, duration: duration, id: req_id)
+
         data = JSON.parse(response.body, symbolize_names: true) rescue nil
 
         if response.is_a? Net::HTTPTooManyRequests
@@ -301,15 +307,15 @@ module MatrixSdk
 
     private
 
-    def print_http(http, body: true)
+    def print_http(http, body: true, duration: nil, id: nil)
       return unless logger.debug?
 
       if http.is_a? Net::HTTPRequest
-        dir = '>'
+        dir = "#{id ? id + ' : ' : nil}>"
         logger.debug "#{dir} Sending a #{http.method} request to `#{http.path}`:"
       else
-        dir = '<'
-        logger.debug "#{dir} Received a #{http.code} #{http.message} response:"
+        dir = "#{id ? id + ' : ' : nil}<"
+        logger.debug "#{dir} Received a #{http.code} #{http.message} response:#{duration ? " [#{(duration * 1000).to_i}ms]" : nil}"
       end
       http.to_hash.map { |k, v| "#{k}: #{k == 'authorization' ? '[ REDACTED ]' : v.join(', ')}" }.each do |h|
         logger.debug "#{dir} #{h}"
