@@ -429,7 +429,6 @@ module MatrixSdk
         params[:since] = @next_batch if @next_batch
 
         thread, cancel_token = api.msc2108_sync_sse(params) do |data, event:, id:|
-          logger.debug "Handling SSE event '#{event}' from '#{id}'"
           @next_batch = id if id
           handle_sync_response(data) if event.to_sym == :sync
         end
