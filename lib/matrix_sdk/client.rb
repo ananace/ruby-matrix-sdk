@@ -424,7 +424,10 @@ module MatrixSdk
 
       @should_listen = true
       if api.protocol?(:MSC) && api.msc2108?
+        params[:filter] = sync_filter unless params.key? :filter
+        params[:filter] = params[:filter].to_json unless params[:filter].nil? || params[:filter].is_a?(String)
         params[:since] = @next_batch if @next_batch
+
         thread, cancel_token = api.msc2108_sync_sse(params) do |data, event:, id:|
           logger.debug "Handling SSE event '#{event}' from '#{id}'"
           @next_batch = id if id
