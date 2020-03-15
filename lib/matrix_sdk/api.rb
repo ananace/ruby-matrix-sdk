@@ -273,7 +273,7 @@ module MatrixSdk
       loop do
         raise MatrixConnectionError, "Server still too busy to handle request after #{failures} attempts, try again later" if failures >= 10
 
-        req_id = ('A'..'Z').to_a.shuffle[0,4].join
+        req_id = ('A'..'Z').to_a.sample(4).join
 
         print_http(request, id: req_id)
         begin
