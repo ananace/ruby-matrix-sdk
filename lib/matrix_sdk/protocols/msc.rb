@@ -53,6 +53,7 @@ module MatrixSdk::Protocols::MSC
       u.query = URI.encode_www_form(query)
     end)
     req['accept'] = 'text/event-stream'
+    req['accept-encoding'] = 'identity' # Disable compression on the SSE stream
     req['authorization'] = "Bearer #{access_token}"
     req['last-event-id'] = since if since
 
