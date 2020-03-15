@@ -1,3 +1,7 @@
+## 2.1.0 - **Unreleased**
+
+- Finish up MSC support, get sync over SSE working flawlessly
+
 ## 2.0.1 - 2020-03-13
 
 - Add code for handling non-final MSC's in protocols
