@@ -56,13 +56,18 @@ module MatrixSdk::Protocols::MSC
     req['authorization'] = "Bearer #{access_token}"
     req['last-event-id'] = since if since
 
+    cancellation_token = { run: true }
+
     # rubocop:disable Metrics/BlockLength
-    thread = Thread.new do
+    thread = Thread.new(cancellation_token) do |ctx|
       print_http(req)
       http.request req do |response|
+        break unless ctx[:run]
+
         print_http(response, body: false)
         raise MatrixRequestError.new_by_code(JSON.parse(response.body, symbolize_names: true), response.code) unless response.is_a? Net::HTTPSuccess
 
+        # Override buffer size for BufferedIO 
         socket = response.instance_variable_get :@socket
         if socket.is_a? Net::BufferedIO
           socket.instance_eval do
@@ -114,13 +119,19 @@ module MatrixSdk::Protocols::MSC
 
             yield((MatrixSdk::Response.new self, data), event: event, id: id)
           end
+
+          unless ctx[:run]
+            socket.close
+            break
+          end
         end
+        break unless ctx[:run]
       end
     end
     # rubocop:enable Metrics/BlockLength
 
     thread.run
 
-    thread
+    return thread, cancellation_token
   end
 end

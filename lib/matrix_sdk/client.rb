@@ -425,11 +425,13 @@ module MatrixSdk
       @should_listen = true
       if api.protocol?(:MSC) && api.msc2108?
         params[:since] = @next_batch if @next_batch
-        thread = api.msc2108_sync_sse(params) do |data, event:, id:|
+        thread, cancel_token = api.msc2108_sync_sse(params) do |data, event:, id:|
           logger.debug "Handling SSE event '#{event}' from '#{id}'"
           @next_batch = id if id
           handle_sync_response(data) if event.to_sym == :sync
         end
+
+        @should_listen = cancel_token
       else
         thread = Thread.new { listen_forever(params) }
       end
@@ -441,9 +443,13 @@ module MatrixSdk
     def stop_listener_thread
       return unless @sync_thread
 
-      @should_listen = false
+      if @should_listen.is_a? Hash
+        @should_listen[:run] = false
+      else
+        @should_listen = false
+      end
       if @sync_thread.alive?
-        ret = @sync_thread.join(1)
+        ret = @sync_thread.join(2)
         @sync_thread.kill unless ret
       end
       @sync_thread = nil
