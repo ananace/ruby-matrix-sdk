@@ -124,10 +124,12 @@ module MatrixSdk::Protocols::MSC
               end
             end
 
-            next unless %w[sync].include? event
-
-            data = JSON.parse(data, symbolize_names: true)
-            yield((MatrixSdk::Response.new self, data), event: event, id: id)
+            if %w[sync sync_error].include? event
+              data = JSON.parse(data, symbolize_names: true)
+              yield((MatrixSdk::Response.new self, data), event: event, id: id)
+            elsif event
+              logger.info "MSC2108 : #{stream_id} : Received unknown event '#{event}'; #{data}"
+            end
           end
 
           unless ctx[:run]

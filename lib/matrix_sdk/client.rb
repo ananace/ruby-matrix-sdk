@@ -428,9 +428,19 @@ module MatrixSdk
         params[:filter] = params[:filter].to_json unless params[:filter].nil? || params[:filter].is_a?(String)
         params[:since] = @next_batch if @next_batch
 
+        errors = 0
         thread, cancel_token = api.msc2108_sync_sse(params) do |data, event:, id:|
           @next_batch = id if id
-          handle_sync_response(data) if event.to_sym == :sync
+          if event.to_sym == :sync
+            handle_sync_response(data)
+            errors = 0
+          elsif event.to_sym == :sync_error
+            logger.error "SSE Sync error received; #{data.type}: #{data.message}"
+            errors += 1
+
+            # TODO: Allow configuring
+            raise 'Aborting due to excessive errors' if errors >= 5
+          end
         end
 
         @should_listen = cancel_token
