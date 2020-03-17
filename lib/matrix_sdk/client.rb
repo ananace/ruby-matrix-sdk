@@ -524,8 +524,6 @@ module MatrixSdk
       end
     end
 
-    private
-
     def listen_forever(timeout: 30, bad_sync_timeout: 5, sync_interval: 30, **params)
       orig_bad_sync_timeout = bad_sync_timeout + 0
       while @should_listen
@@ -548,6 +546,8 @@ module MatrixSdk
       logger.error [e.message, *e.backtrace].join($RS)
       fire_error(ErrorEvent.new(e, :listener_thread))
     end
+
+    private
 
     def post_authentication(data)
       @mxid = data[:user_id]
