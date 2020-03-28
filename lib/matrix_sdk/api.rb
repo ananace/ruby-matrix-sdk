@@ -283,7 +283,7 @@ module MatrixSdk
           duration = dur_end - dur_start
         rescue EOFError => e
           logger.error 'Socket closed unexpectedly'
-          raise e
+          raise
         end
         print_http(response, duration: duration, id: req_id)
 
