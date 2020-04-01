@@ -55,9 +55,12 @@ class MatrixBot
   end
 
   def handle_ping(message)
+    # Cut ping message to max 20 characters, and remove whitespace
     msgstr = message.content[:body]
+                    .gsub(/!ping\s*/, '')
+                    .[](0..20)
+                    .strip
 
-    msgstr.gsub!(/!ping\s*/, '')
     msgstr = " \"#{msgstr}\"" unless msgstr.empty?
 
     room = client.ensure_room message.room_id
