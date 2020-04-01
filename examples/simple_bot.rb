@@ -101,6 +101,8 @@ class MatrixBot
     msgstr = message.content[:body]
     msgstr.gsub!(/!echo\s*/, '')
 
+    return if msgstr.empty?
+
     room = client.ensure_room message.room_id
     sender = client.get_user message.sender
 
