@@ -281,7 +281,7 @@ module MatrixSdk
           response = http.request request
           dur_end = Time.now
           duration = dur_end - dur_start
-        rescue EOFError => e
+        rescue EOFError
           logger.error 'Socket closed unexpectedly'
           raise
         end
