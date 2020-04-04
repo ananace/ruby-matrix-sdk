@@ -90,6 +90,12 @@ class MatrixBot
       format: 'org.matrix.custom.html',
       formatted_body: format(html, formatdata),
       msgtype: 'm.notice',
+      'm.relates_to': {
+        event_id: formatdata[:event],
+        from: from_id.homeserver,
+        ms: milliseconds,
+        rel_type: 'xyz.maubot.pong'
+      },
       pong: {
         from: from_id.homeserver,
         ms: milliseconds,
