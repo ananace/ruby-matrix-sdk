@@ -28,13 +28,14 @@ class MatrixBot
   def run
     # Join all invited rooms
     client.on_invite_event.add_handler { |ev| client.join_room(ev[:room_id]) }
-    # Read all message events
-    client.on_event.add_handler('m.room.message') { |ev| on_message(ev) }
 
     # Run an empty sync to get to a `since` token without old data
     empty_sync = deep_copy(BOT_FILTER)
     empty_sync[:room].map { |_k, v| v[:types] = [] }
     client.sync filter: empty_sync
+
+    # Read all message events
+    client.on_event.add_handler('m.room.message') { |ev| on_message(ev) }
 
     loop do
       begin
