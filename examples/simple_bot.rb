@@ -47,6 +47,8 @@ class MatrixBot
   end
 
   def on_message(message)
+    return unless message.content[:msgtype] == 'm.text'
+
     msgstr = message.content[:body]
 
     return unless msgstr =~ /^!(ping|echo)\s*/
