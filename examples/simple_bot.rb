@@ -29,7 +29,9 @@ class MatrixBot
     # Join all invited rooms
     client.on_invite_event.add_handler { |ev| client.join_room(ev[:room_id]) }
 
-    # Run an empty sync to get to a `since` token without old data
+    # Run an empty sync to get to a `since` token without old data.
+    # Storing the `since` token is also valid for bot use-cases, but in the
+    # case of ping responses there's never any need to reply to old data.
     empty_sync = deep_copy(BOT_FILTER)
     empty_sync[:room].map { |_k, v| v[:types] = [] }
     client.sync filter: empty_sync
