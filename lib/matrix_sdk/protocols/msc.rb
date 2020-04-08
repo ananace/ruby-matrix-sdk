@@ -24,9 +24,6 @@ module MatrixSdk::Protocols::MSC
 
   # Sync over Server Sent Events - MSC2108
   #
-  # @note With the default Ruby Net::HTTP server, body fragments are cached up to 16kB,
-  #       which will result in large batches and delays if your filters trim a lot of data.
-  #
   # @example Syncing over SSE
   #   @since = 'some token'
   #   api.msc2108_sync_sse(since: @since) do |data, event:, id:|
