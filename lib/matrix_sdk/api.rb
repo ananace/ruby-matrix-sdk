@@ -305,6 +305,15 @@ module MatrixSdk
       end
     end
 
+    # Generate a transaction ID
+    #
+    # @return [String] An arbitrary transaction ID
+    def transaction_id
+      ret = @transaction_id ||= 0
+      @transaction_id = @transaction_id.succ
+      ret
+    end
+
     private
 
     def print_http(http, body: true, duration: nil, id: nil)
@@ -329,12 +338,6 @@ module MatrixSdk
       end
     rescue StandardError => e
       logger.warn "#{e.class} occured while printing request debug; #{e.message}\n#{e.backtrace.join "\n"}"
-    end
-
-    def transaction_id
-      ret = @transaction_id ||= 0
-      @transaction_id = @transaction_id.succ
-      ret
     end
 
     def api_to_path(api)
