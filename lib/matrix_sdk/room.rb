@@ -590,7 +590,7 @@ module MatrixSdk
     #
     # @param join_rule [:invite,:public] The join rule of the room
     def join_rule=(join_rule)
-      client.api.set_join_rule(id, join_rule)
+      client.api.set_room_join_rules(id, join_rule)
       @join_rule = join_rule
     end
 

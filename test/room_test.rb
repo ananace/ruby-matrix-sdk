@@ -127,11 +127,11 @@ class RoomTest < Test::Unit::TestCase
     @api.expects(:set_room_alias).with(@id, '#room:example.com')
     @room.add_alias('#room:example.com')
 
-    @api.expects(:set_join_rule).with(@id, :invite).twice
+    @api.expects(:send_state_event).with(@id, 'm.room.join_rules', { join_rule: :invite }, {}).twice
     @room.invite_only = true
     @room.join_rule = :invite
 
-    @api.expects(:set_join_rule).with(@id, :public).twice
+    @api.expects(:send_state_event).with(@id, 'm.room.join_rules', { join_rule: :public }, {}).twice
     @room.invite_only = false
     @room.join_rule = :public
 
