@@ -606,7 +606,7 @@ module MatrixSdk
     #
     # @param guest_access [:can_join,:forbidden] The new guest access status of the room
     def guest_access=(guest_access)
-      client.api.set_guest_access(id, guest_access)
+      client.api.set_room_guest_access(id, guest_access)
       @guest_access = guest_access
     end
 

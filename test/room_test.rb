@@ -135,11 +135,11 @@ class RoomTest < Test::Unit::TestCase
     @room.invite_only = false
     @room.join_rule = :public
 
-    @api.expects(:set_guest_access).with(@id, :can_join).twice
+    @api.expects(:send_state_event).with(@id, 'm.room.guest_access', { guest_access: :can_join }, {}).twice
     @room.allow_guests = true
     @room.guest_access = :can_join
 
-    @api.expects(:set_guest_access).with(@id, :forbidden).twice
+    @api.expects(:send_state_event).with(@id, 'm.room.guest_access', { guest_access: :forbidden }, {}).twice
     @room.allow_guests = false
     @room.guest_access = :forbidden
   end
