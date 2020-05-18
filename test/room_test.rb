@@ -118,13 +118,13 @@ class RoomTest < Test::Unit::TestCase
     assert_nil tags[:'test.tag']
     assert_not_nil tags[:'example.tag']
 
-    @api.expects(:set_room_name).with(@id, 'name')
+    @api.expects(:send_state_event).with(@id, 'm.room.name', { name: 'name' }, {})
     @room.name = 'name'
 
-    @api.expects(:set_room_topic).with(@id, 'topic')
+    @api.expects(:send_state_event).with(@id, 'm.room.topic', { topic: 'topic' }, {})
     @room.topic = 'topic'
 
-    @api.expects(:set_room_alias).with(@id, '#room:example.com')
+    @api.expects(:request).with(:put, :client_r0, '/directory/room/%23room%3Aexample.com', body: { room_id: '!room:example.com' }, query: {})
     @room.add_alias('#room:example.com')
 
     @api.expects(:send_state_event).with(@id, 'm.room.join_rules', { join_rule: :invite }, {}).twice
