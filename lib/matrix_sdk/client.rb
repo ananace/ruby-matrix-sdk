@@ -574,9 +574,9 @@ module MatrixSdk
       when 'm.room.aliases'
         room.instance_variable_get('@aliases').concat content[:aliases]
       when 'm.room.join_rules'
-        room.instance_variable_set '@join_rule', content[:join_rule].to_s.to_sym
+        room.instance_variable_set '@join_rule', content[:join_rule].nil? ? nil : content[:join_rule].to_sym
       when 'm.room.guest_access'
-        room.instance_variable_set '@guest_access', content[:guest_access].to_s.to_sym
+        room.instance_variable_set '@guest_access', content[:guest_access].nil? ? nil : content[:guest_access].to_sym
       when 'm.room.member'
         return unless cache == :all
 
