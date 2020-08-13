@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'uri'
+
 module URI
   # A mxc:// Matrix content URL
   class MATRIX < Generic
