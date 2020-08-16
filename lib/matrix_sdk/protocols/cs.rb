@@ -1823,7 +1823,7 @@ module MatrixSdk::Protocols::CS
   # @see https://matrix.org/docs/spec/client_server/latest#get-matrix-client-r0-pushrules
   #      The Matrix Spec, for more information about the parameters and data
   def get_pushrules
-    request(:get, :client_r0, '/pushrules')
+    request(:get, :client_r0, '/pushrules/')
   end
 
   # Retrieves a single registered push rule for the current user
