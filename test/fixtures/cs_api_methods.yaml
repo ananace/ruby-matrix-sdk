@@ -1584,7 +1584,7 @@ GET|/_matrix/client/r0/pushrules/:
   method: :get_pushrules
   requests:
     - args: []
-      path: '/pushrules'
+      path: '/pushrules/'
       query: null
       body: null
   results:
