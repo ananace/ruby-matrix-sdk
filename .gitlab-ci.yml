@@ -33,6 +33,10 @@ test:2.6:
   extends: .test
   image: "ruby:2.6"
 
+test:2.7:
+  extends: .test
+  image: "ruby:2.7"
+
 pages:
   image: ruby
   stage: deploy
