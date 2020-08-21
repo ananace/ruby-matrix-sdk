@@ -92,6 +92,8 @@ module MatrixSdk
       uri = URI("http#{ssl ? 's' : ''}://#{domain}")
       well_known = nil
       target_uri = nil
+      logger = ::Logging.logger[self]
+      logger.debug "Resolving #{domain}"
 
       if !port.nil? && !port.empty?
         # If the domain is fully qualified according to Matrix (FQDN and port) then skip discovery
@@ -101,17 +103,26 @@ module MatrixSdk
         target_uri = begin
                        require 'resolv'
                        resolver = Resolv::DNS.new
-                       resolver.getresource("_matrix._tcp.#{domain}")
-                     rescue StandardError
+                       srv = "_matrix._tcp.#{domain}"
+                       logger.debug "Trying DNS #{srv}..."
+                       d = resolver.getresource(srv, Resolv::DNS::Resource::IN::SRV)
+                       d
+                     rescue StandardError => e
+                       logger.debug "DNS lookup failed with #{e.class}: #{e.message}"
                        nil
                      end
 
         if target_uri.nil?
           # Attempt .well-known discovery for server-to-server
           well_known = begin
-                         data = Net::HTTP.get("https://#{domain}/.well-known/matrix/server")
+                         uri = URI("https://#{domain}/.well-known/matrix/server")
+                         logger.debug "Trying #{uri}..."
+                         data = Net::HTTP.start(uri.host, uri.port, use_ssl: true, open_timeout: 5, read_timeout: 5, write_timeout: 5) do |http|
+                           http.get(uri.path).body
+                         end
                          JSON.parse(data)
-                       rescue StandardError
+                       rescue StandardError => e
+                         logger.debug "Well-known failed with #{e.class}: #{e.message}"
                          nil
                        end
 
@@ -122,9 +133,14 @@ module MatrixSdk
       elsif %i[client identity].include? target
         # Attempt .well-known discovery
         well_known = begin
-                       data = Net::HTTP.get("https://#{domain}/.well-known/matrix/client")
-                       JSON.parse(data)
-                     rescue StandardError
+                       uri = URI("https://#{domain}/.well-known/matrix/client")
+                       logger.debug "Trying #{uri}..."
+                       data = Net::HTTP.start(uri.host, uri.port, use_ssl: true, open_timeout: 5, read_timeout: 5, write_timeout: 5) do |http|
+                         http.get(uri.path).body
+                       end
+                       data = JSON.parse(data)
+                     rescue StandardError => e
+                       logger.debug "Well-known failed with #{e.class}: #{e.message}"
                        nil
                      end
 
@@ -138,6 +154,7 @@ module MatrixSdk
           end
         end
       end
+      logger.debug "Using #{target_uri.inspect}"
 
       # Fall back to direct domain connection
       target_uri ||= URI("https://#{domain}:8448")
