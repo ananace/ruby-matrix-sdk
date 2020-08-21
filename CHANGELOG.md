@@ -1,3 +1,10 @@
+## 2.1.1 - 2020-08-21
+
+- Fixes crash if state event content is null (#11)
+- Fixes an uninitialized URI constant exception when requiring only the main library file
+- Fixes the Api#get_pushrules method missing an ending slash in the request URI
+- Fixes discovery code for client/server connections based on domain
+
 ## 2.1.0 - 2020-05-22
 
 - Adds unique query IDs as well as duration in API debug output, to make it easier to track long requests
