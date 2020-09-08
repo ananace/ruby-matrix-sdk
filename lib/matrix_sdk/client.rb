@@ -343,7 +343,7 @@ module MatrixSdk
 
     # Joins an already created room
     #
-    # @param room_id_or_alias [String,MXID] A room alias (#room:exmaple.com) or a room ID (!id:example.com)
+    # @param room_id_or_alias [String,MXID] A room alias (#room:example.com) or a room ID (!id:example.com)
     # @param server_name [Array[String]] A list of servers to attempt the join through, required for IDs
     # @return [Room] The resulting room
     # @see Protocols::CS#join_room
