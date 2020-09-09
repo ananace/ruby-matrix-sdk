@@ -1,5 +1,6 @@
 ## 2.1.2 - **Unreleased**
 
+- Adds method for reading complete member lists for rooms, improves the CS spec adherence
 - Fixes state event handler for rooms not actually passing events
 
 ## 2.1.1 - 2020-08-21

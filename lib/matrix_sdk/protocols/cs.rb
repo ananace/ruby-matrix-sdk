@@ -1637,7 +1637,7 @@ module MatrixSdk::Protocols::CS
 
     room_id = ERB::Util.url_encode room_id.to_s
 
-    request(:get, :client_r0, "/rooms/#{room_id}/members", query: query)
+    request(:get, :client_r0, "/rooms/#{room_id}/members", query: query.merge(params))
   end
 
   # Gets a list of the joined members in a room

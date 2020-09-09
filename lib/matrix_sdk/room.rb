@@ -157,6 +157,17 @@ module MatrixSdk
       members
     end
 
+    # Get all members (member events) in the room
+    #
+    # @note This will also count members who've knocked, been invited, have left, or have been banned.
+    #
+    # @param params [Hash] Additional query parameters to pass to the room member listing - e.g. for filtering purposes.
+    #
+    # @return [Array(User)] The complete list of members in the room, regardless of membership state
+    def all_members(**params)
+      client.api.get_room_members(id, **params)[:chunk].map { |ch| client.get_user(ch[:state_key]) }
+    end
+
     # Gets the current name of the room, querying the API if necessary
     #
     # @note Will cache the current name for 15 minutes
