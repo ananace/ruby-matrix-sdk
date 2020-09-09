@@ -680,5 +680,9 @@ module MatrixSdk
     def put_ephemeral_event(event)
       fire_ephemeral_event MatrixEvent.new(self, event)
     end
+
+    def put_state_event(event)
+      fire_state_event MatrixEvent.new(self, event)
+    end
   end
 end

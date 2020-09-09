@@ -561,6 +561,7 @@ module MatrixSdk
       return unless state_event.key? :type
 
       room = ensure_room(room_id)
+      room.send :put_state_event, state_event
       content = state_event[:content]
       case state_event[:type]
       when 'm.room.name'
@@ -617,7 +618,7 @@ module MatrixSdk
 
         join[:timeline][:events].each do |event|
           event[:room_id] = room_id.to_s
-          handle_state(room_id, event) unless event[:type] == 'm.room.message'
+          handle_state(room_id, event) if event.key? :state_key
           room.send :put_event, event
 
           fire_event(MatrixEvent.new(self, event), event[:type])

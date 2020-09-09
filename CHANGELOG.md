@@ -1,3 +1,7 @@
+## 2.1.2 - **Unreleased**
+
+- Fixes state event handler for rooms not actually passing events
+
 ## 2.1.1 - 2020-08-21
 
 - Fixes crash if state event content is null (#11)
