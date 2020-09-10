@@ -1,4 +1,4 @@
-## 2.1.2 - **Unreleased**
+## 2.1.2 - 2020-09-10
 
 - Adds method for reading complete member lists for rooms, improves the CS spec adherence
 - Adds test for state events
