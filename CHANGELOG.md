@@ -1,7 +1,9 @@
 ## 2.1.2 - **Unreleased**
 
 - Adds method for reading complete member lists for rooms, improves the CS spec adherence
+- Adds test for state events
 - Fixes state event handler for rooms not actually passing events
+- Fixes Api#new_for_domain using a faulty URI in certain cases
 
 ## 2.1.1 - 2020-08-21
 

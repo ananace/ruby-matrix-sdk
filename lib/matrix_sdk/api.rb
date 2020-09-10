@@ -115,10 +115,10 @@ module MatrixSdk
         if target_uri.nil?
           # Attempt .well-known discovery for server-to-server
           well_known = begin
-                         uri = URI("https://#{domain}/.well-known/matrix/server")
-                         logger.debug "Trying #{uri}..."
-                         data = Net::HTTP.start(uri.host, uri.port, use_ssl: true, open_timeout: 5, read_timeout: 5, write_timeout: 5) do |http|
-                           http.get(uri.path).body
+                         wk_uri = URI("https://#{domain}/.well-known/matrix/server")
+                         logger.debug "Trying #{wk_uri}..."
+                         data = Net::HTTP.start(wk_uri.host, wk_uri.port, use_ssl: true, open_timeout: 5, read_timeout: 5, write_timeout: 5) do |http|
+                           http.get(wk_uri.path).body
                          end
                          JSON.parse(data)
                        rescue StandardError => e
@@ -133,10 +133,10 @@ module MatrixSdk
       elsif %i[client identity].include? target
         # Attempt .well-known discovery
         well_known = begin
-                       uri = URI("https://#{domain}/.well-known/matrix/client")
-                       logger.debug "Trying #{uri}..."
-                       data = Net::HTTP.start(uri.host, uri.port, use_ssl: true, open_timeout: 5, read_timeout: 5, write_timeout: 5) do |http|
-                         http.get(uri.path).body
+                       wk_uri = URI("https://#{domain}/.well-known/matrix/client")
+                       logger.debug "Trying #{wk_uri}..."
+                       data = Net::HTTP.start(wk_uri.host, wk_uri.port, use_ssl: true, open_timeout: 5, read_timeout: 5, write_timeout: 5) do |http|
+                         http.get(wk_uri.path).body
                        end
                        data = JSON.parse(data)
                      rescue StandardError => e

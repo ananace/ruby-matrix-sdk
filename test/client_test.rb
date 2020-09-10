@@ -61,13 +61,16 @@ class ClientTest < Test::Unit::TestCase
 
   def test_events
     cl = MatrixSdk::Client.new 'https://example.com'
-
+    room = cl.ensure_room '!726s6s6q:example.com'
 
     cl.instance_variable_get(:@on_presence_event).expects(:fire).once
     cl.instance_variable_get(:@on_invite_event).expects(:fire).once
     cl.instance_variable_get(:@on_leave_event).expects(:fire).once
     cl.instance_variable_get(:@on_event).expects(:fire).twice
     cl.instance_variable_get(:@on_ephemeral_event).expects(:fire).once
+    room.instance_variable_get(:@on_state_event).expects(:fire).twice
+    room.instance_variable_get(:@on_event).expects(:fire).twice
+    room.instance_variable_get(:@on_ephemeral_event).expects(:fire).once
 
     response = JSON.parse(open('test/fixtures/sync_response.json').read, symbolize_names: true)
 

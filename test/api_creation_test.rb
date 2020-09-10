@@ -66,9 +66,10 @@ class ApiTest < Test::Unit::TestCase
       .never
 
     ::Net::HTTP
+      .any_instance
       .expects(:get)
-      .with('https://example.com/.well-known/matrix/client')
-      .returns('{"m.homeserver":{"base_url":"https://matrix.example.com"}}')
+      .with('/.well-known/matrix/client')
+      .returns(OpenStruct.new(body: '{"m.homeserver":{"base_url":"https://matrix.example.com"}}'))
 
     MatrixSdk::Api
       .expects(:new)
@@ -83,6 +84,11 @@ class ApiTest < Test::Unit::TestCase
       .expects(:getresource)
       .returns(Resolv::DNS::Resource::IN::SRV.new(10, 1, 443, 'matrix.example.com'))
 
+    ::Net::HTTP
+      .any_instance
+      .expects(:get)
+      .never
+
     MatrixSdk::Api
       .expects(:new)
       .with(URI('https://example.com'), address: 'matrix.example.com', port: 443)
@@ -95,6 +101,13 @@ class ApiTest < Test::Unit::TestCase
       .any_instance
       .expects(:getresource)
       .raises(::Resolv::ResolvError)
+
+    ::Net::HTTP
+      .any_instance
+      .expects(:get)
+      .with('/.well-known/matrix/server')
+      .once
+      .raises(StandardError)
 
     MatrixSdk::Api
       .expects(:new)
@@ -118,12 +131,16 @@ class ApiTest < Test::Unit::TestCase
       .raises(::Resolv::ResolvError)
 
     ::Net::HTTP
+      .any_instance
       .expects(:get)
-      .with('https://example.com/.well-known/matrix/server')
+      .with('/.well-known/matrix/server')
+      .once
       .raises(StandardError)
     ::Net::HTTP
+      .any_instance
       .expects(:get)
-      .with('https://example.com/.well-known/matrix/client')
+      .with('/.well-known/matrix/client')
+      .once
       .raises(StandardError)
 
     api = MatrixSdk::Api.new_for_domain('example.com', target: :server)
