@@ -63,14 +63,27 @@ class ClientTest < Test::Unit::TestCase
     cl = MatrixSdk::Client.new 'https://example.com'
     room = cl.ensure_room '!726s6s6q:example.com'
 
+    event_collector = mock
+    event_collector.expects(:call).twice
+    ephemeral_event_collector = mock
+    ephemeral_event_collector.expects(:call).once
+
+    filtered_event_collector = mock
+    filtered_event_collector.expects(:call).once
+    filtered_event_collector2 = mock
+    filtered_event_collector2.expects(:call).twice
+
+    room.on_event.add_handler('m.room.message') { |_| filtered_event_collector.call }
+    room.on_state_event.add_handler('m.room.member') { |_| filtered_event_collector2.call }
+    room.on_event.add_handler { |_| event_collector.call }
+    room.on_ephemeral_event.add_handler { |_| ephemeral_event_collector.call }
+
     cl.instance_variable_get(:@on_presence_event).expects(:fire).once
     cl.instance_variable_get(:@on_invite_event).expects(:fire).once
     cl.instance_variable_get(:@on_leave_event).expects(:fire).once
     cl.instance_variable_get(:@on_event).expects(:fire).twice
     cl.instance_variable_get(:@on_ephemeral_event).expects(:fire).once
-    room.instance_variable_get(:@on_state_event).expects(:fire).twice
-    room.instance_variable_get(:@on_event).expects(:fire).twice
-    room.instance_variable_get(:@on_ephemeral_event).expects(:fire).once
+    cl.instance_variable_get(:@on_state_event).expects(:fire).twice
 
     response = JSON.parse(open('test/fixtures/sync_response.json').read, symbolize_names: true)
 

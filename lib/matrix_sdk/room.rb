@@ -42,19 +42,11 @@ module MatrixSdk
     #        The timeline events are what will end up in here
     attr_reader :id, :client, :topic, :aliases, :members, :events
 
-    # @!attribute [r] on_event
-    #   @return [EventHandlerArray] The list of event handlers for all events
-    # @!attribute [r] on_state_event
-    #   @return [EventHandlerArray] The list of event handlers for only state events
-    # @!attribute [r] on_ephemeral_event
-    #   @return [EventHandlerArray] The list of event handlers for only ephemeral events
-    events :event, :state_event, :ephemeral_event
     # @!method inspect
     #   An inspect method that skips a handful of instance variables to avoid
     #   flooding the terminal with debug data.
     #   @return [String] a regular inspect string without the data for some variables
-    ignore_inspect :client, :members, :events, :prev_batch, :logger,
-                   :on_event, :on_state_event, :on_ephemeral_event
+    ignore_inspect :client, :members, :events, :prev_batch, :logger
 
     alias room_id id
 
@@ -85,8 +77,6 @@ module MatrixSdk
       room_id = MXID.new room_id unless room_id.is_a?(MXID)
       raise ArgumentError, 'room_id must be a valid Room ID' unless room_id.room_id?
 
-      event_initialize
-
       @name = nil
       @topic = nil
       @canonical_alias = nil
@@ -113,6 +103,30 @@ module MatrixSdk
 
       logger.debug "Created room #{room_id}"
     end
+
+
+    #
+    # Event handlers
+    #
+    
+    # @!attribute [r] on_event
+    #   @return [EventHandlerArray] The list of event handlers for all events
+    def on_event
+      ensure_room_handlers[:event]
+    end
+
+    # @!attribute [r] on_state_event
+    #   @return [EventHandlerArray] The list of event handlers for only state events
+    def on_state_event
+      ensure_room_handlers[:state_event]
+    end
+
+    # @!attribute [r] on_ephemeral_event
+    #   @return [EventHandlerArray] The list of event handlers for only ephemeral events
+    def on_ephemeral_event
+      ensure_room_handlers[:ephemeral_event]
+    end
+
 
     #
     # State readers
@@ -681,19 +695,35 @@ module MatrixSdk
       members << member unless members.any? { |m| m.id == member.id }
     end
 
+    def room_handlers?
+      client.instance_variable_get(:@room_handlers).key? id
+    end
+
+    def ensure_room_handlers
+      client.instance_variable_get(:@room_handlers)[id] ||= {
+        event: MatrixSdk::EventHandlerArray.new,
+        state_event: MatrixSdk::EventHandlerArray.new,
+        ephemeral_event: MatrixSdk::EventHandlerArray.new,
+      }
+    end
+
     def put_event(event)
+      ensure_room_handlers[:event].fire(MatrixEvent.new(self, event), event[:type]) if room_handlers?
+
       @events.push event
       @events.shift if @events.length > @event_history_limit
-
-      fire_event MatrixEvent.new(self, event)
     end
 
     def put_ephemeral_event(event)
-      fire_ephemeral_event MatrixEvent.new(self, event)
+      return unless room_handlers?
+
+      ensure_room_handlers[:ephemeral_event].fire(MatrixEvent.new(self, event), event[:type])
     end
 
     def put_state_event(event)
-      fire_state_event MatrixEvent.new(self, event)
+      return unless room_handlers?
+
+      ensure_room_handlers[:state_event].fire(MatrixEvent.new(self, event), event[:type])
     end
   end
 end

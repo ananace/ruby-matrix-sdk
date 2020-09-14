@@ -1,3 +1,9 @@
+## 2.1.3 - **Unreleased**
+
+- Adds separate state event handler as Client#on_state_event
+- Fixes state events being sent twice if included in both timeline and state of a sync
+- Improves event handlers for rooms, to not depend on a specific room object instance anymore
+
 ## 2.1.2 - 2020-09-10
 
 - Adds method for reading complete member lists for rooms, improves the CS spec adherence

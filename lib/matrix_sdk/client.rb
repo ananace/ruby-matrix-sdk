@@ -23,7 +23,7 @@ module MatrixSdk
     attr_reader :api, :next_batch
     attr_accessor :cache, :sync_filter
 
-    events :error, :event, :presence_event, :invite_event, :leave_event, :ephemeral_event
+    events :error, :event, :presence_event, :invite_event, :leave_event, :ephemeral_event, :state_event
     ignore_inspect :api,
                    :on_event, :on_presence_event, :on_invite_event, :on_leave_event, :on_ephemeral_event
 
@@ -70,8 +70,6 @@ module MatrixSdk
         @api = Api.new hs_url, params
       end
 
-      @rooms = {}
-      @users = {}
       @cache = client_cache
       @identity_server = nil
 
@@ -79,7 +77,6 @@ module MatrixSdk
       @sync_thread = nil
       @sync_filter = { room: { timeline: { limit: params.fetch(:sync_filter_limit, 20) }, state: { lazy_load_members: true } } }
 
-      @should_listen = false
       @next_batch = nil
 
       @bad_sync_timeout_limit = 60 * 60
@@ -87,6 +84,11 @@ module MatrixSdk
       params.each do |k, v|
         instance_variable_set("@#{k}", v) if instance_variable_defined? "@#{k}"
       end
+
+      @rooms = {}
+      @room_handlers = {}
+      @users = {}
+      @should_listen = false
 
       raise ArgumentError, 'Cache value must be one of of [:all, :some, :none]' unless %i[all some none].include? @cache
 
@@ -560,6 +562,8 @@ module MatrixSdk
     def handle_state(room_id, state_event)
       return unless state_event.key? :type
 
+      on_state_event.fire(MatrixEvent.new(self, state_event), state_event[:type])
+
       room = ensure_room(room_id)
       room.send :put_state_event, state_event
       content = state_event[:content]
@@ -618,7 +622,11 @@ module MatrixSdk
 
         join[:timeline][:events].each do |event|
           event[:room_id] = room_id.to_s
-          handle_state(room_id, event) if event.key? :state_key
+          # Avoid sending two identical state events if it's both in state and timeline
+          if event.key?(:state_key) && !join.dig(:state, :events).find { |ev| ev[:state_key] == event[:state_key] }
+            puts "#{event.inspect}, #{join.dig(:state, :events).find { |ev| ev[:state_key] == event[:state_key] }}"
+            handle_state(room_id, event)
+          end
           room.send :put_event, event
 
           fire_event(MatrixEvent.new(self, event), event[:type])
