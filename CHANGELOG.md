@@ -1,6 +1,7 @@
 ## 2.1.3 - **Unreleased**
 
 - Adds separate state event handler as Client#on_state_event
+- Changes Client sync interval to by-default run at full speed
 - Fixes state events being sent twice if included in both timeline and state of a sync
 - Improves error reporting of broken 200 responses
 - Improves event handlers for rooms, to not depend on a specific room object instance anymore
