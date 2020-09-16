@@ -304,7 +304,11 @@ module MatrixSdk
         end
         print_http(response, duration: duration, id: req_id)
 
-        data = JSON.parse(response.body, symbolize_names: true) rescue nil
+        begin
+          data = JSON.parse(response.body, symbolize_names: true)
+        rescue
+          data = nil
+        end
 
         if response.is_a? Net::HTTPTooManyRequests
           raise MatrixRequestError.new_by_code(data, response.code) unless autoretry
@@ -315,7 +319,13 @@ module MatrixSdk
           next
         end
 
-        return MatrixSdk::Response.new self, data if response.is_a? Net::HTTPSuccess
+        if response.is_a? Net::HTTPSuccess
+          unless data
+            logger.error "Received non-parsable data in 200 response; #{response.body.inspect}"
+            raise MatrixConnectionError, response
+          end
+          return MatrixSdk::Response.new self, data
+        end
         raise MatrixRequestError.new_by_code(data, response.code) if data
 
         raise MatrixConnectionError.class_by_code(response.code), response

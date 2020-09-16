@@ -2,6 +2,7 @@
 
 - Adds separate state event handler as Client#on_state_event
 - Fixes state events being sent twice if included in both timeline and state of a sync
+- Improves error reporting of broken 200 responses
 - Improves event handlers for rooms, to not depend on a specific room object instance anymore
 
 ## 2.1.2 - 2020-09-10
