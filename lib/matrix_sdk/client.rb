@@ -623,9 +623,10 @@ module MatrixSdk
         join[:timeline][:events].each do |event|
           event[:room_id] = room_id.to_s
           # Avoid sending two identical state events if it's both in state and timeline
-          if event.key?(:state_key) && !join.dig(:state, :events).find { |ev| ev[:state_key] == event[:state_key] }
-            puts "#{event.inspect}, #{join.dig(:state, :events).find { |ev| ev[:state_key] == event[:state_key] }}"
-            handle_state(room_id, event)
+          if event.key?(:state_key)
+            state_event = join.dig(:state, :events).find { |ev| ev[:event_id] == event[:event_id] }
+
+            handle_state(room_id, event) unless event == state_event
           end
           room.send :put_event, event
 
