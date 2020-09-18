@@ -108,7 +108,7 @@ module MatrixSdk
     #
     # Event handlers
     #
-    
+
     # @!attribute [r] on_event
     #   @return [EventHandlerArray] The list of event handlers for all events
     def on_event
@@ -537,10 +537,10 @@ module MatrixSdk
     # @return [Boolean] if the name was changed or not
     def reload_name!
       data = begin
-               client.api.get_room_name(id)
-             rescue MatrixNotFoundError
-               nil
-             end
+        client.api.get_room_name(id)
+      rescue MatrixNotFoundError
+        nil
+      end
       changed = data[:name] != @name
       @name = data[:name] if changed
       changed
@@ -560,10 +560,10 @@ module MatrixSdk
     # @return [Boolean] if the topic was changed or not
     def reload_topic!
       data = begin
-               client.api.get_room_topic(id)
-             rescue MatrixNotFoundError
-               nil
-             end
+        client.api.get_room_topic(id)
+      rescue MatrixNotFoundError
+        nil
+      end
       changed = data[:topic] != @topic
       @topic = data[:topic] if changed
       changed
@@ -703,7 +703,7 @@ module MatrixSdk
       client.instance_variable_get(:@room_handlers)[id] ||= {
         event: MatrixSdk::EventHandlerArray.new,
         state_event: MatrixSdk::EventHandlerArray.new,
-        ephemeral_event: MatrixSdk::EventHandlerArray.new,
+        ephemeral_event: MatrixSdk::EventHandlerArray.new
       }
     end
 

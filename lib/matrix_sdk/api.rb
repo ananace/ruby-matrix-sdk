@@ -101,30 +101,30 @@ module MatrixSdk
       elsif target == :server
         # Attempt SRV record discovery
         target_uri = begin
-                       require 'resolv'
-                       resolver = Resolv::DNS.new
-                       srv = "_matrix._tcp.#{domain}"
-                       logger.debug "Trying DNS #{srv}..."
-                       d = resolver.getresource(srv, Resolv::DNS::Resource::IN::SRV)
-                       d
-                     rescue StandardError => e
-                       logger.debug "DNS lookup failed with #{e.class}: #{e.message}"
-                       nil
-                     end
+          require 'resolv'
+          resolver = Resolv::DNS.new
+          srv = "_matrix._tcp.#{domain}"
+          logger.debug "Trying DNS #{srv}..."
+          d = resolver.getresource(srv, Resolv::DNS::Resource::IN::SRV)
+          d
+        rescue StandardError => e
+          logger.debug "DNS lookup failed with #{e.class}: #{e.message}"
+          nil
+        end
 
         if target_uri.nil?
           # Attempt .well-known discovery for server-to-server
           well_known = begin
-                         wk_uri = URI("https://#{domain}/.well-known/matrix/server")
-                         logger.debug "Trying #{wk_uri}..."
-                         data = Net::HTTP.start(wk_uri.host, wk_uri.port, use_ssl: true, open_timeout: 5, read_timeout: 5, write_timeout: 5) do |http|
-                           http.get(wk_uri.path).body
-                         end
-                         JSON.parse(data)
-                       rescue StandardError => e
-                         logger.debug "Well-known failed with #{e.class}: #{e.message}"
-                         nil
-                       end
+            wk_uri = URI("https://#{domain}/.well-known/matrix/server")
+            logger.debug "Trying #{wk_uri}..."
+            data = Net::HTTP.start(wk_uri.host, wk_uri.port, use_ssl: true, open_timeout: 5, read_timeout: 5, write_timeout: 5) do |http|
+              http.get(wk_uri.path).body
+            end
+            JSON.parse(data)
+          rescue StandardError => e
+            logger.debug "Well-known failed with #{e.class}: #{e.message}"
+            nil
+          end
 
           target_uri = well_known['m.server'] if well_known&.key?('m.server')
         else
@@ -133,16 +133,16 @@ module MatrixSdk
       elsif %i[client identity].include? target
         # Attempt .well-known discovery
         well_known = begin
-                       wk_uri = URI("https://#{domain}/.well-known/matrix/client")
-                       logger.debug "Trying #{wk_uri}..."
-                       data = Net::HTTP.start(wk_uri.host, wk_uri.port, use_ssl: true, open_timeout: 5, read_timeout: 5, write_timeout: 5) do |http|
-                         http.get(wk_uri.path).body
-                       end
-                       data = JSON.parse(data)
-                     rescue StandardError => e
-                       logger.debug "Well-known failed with #{e.class}: #{e.message}"
-                       nil
-                     end
+          wk_uri = URI("https://#{domain}/.well-known/matrix/client")
+          logger.debug "Trying #{wk_uri}..."
+          data = Net::HTTP.start(wk_uri.host, wk_uri.port, use_ssl: true, open_timeout: 5, read_timeout: 5, write_timeout: 5) do |http|
+            http.get(wk_uri.path).body
+          end
+          JSON.parse(data)
+        rescue StandardError => e
+          logger.debug "Well-known failed with #{e.class}: #{e.message}"
+          nil
+        end
 
         if well_known
           key = 'm.homeserver'
@@ -306,7 +306,8 @@ module MatrixSdk
 
         begin
           data = JSON.parse(response.body, symbolize_names: true)
-        rescue
+        rescue JSON::JSONError => e
+          logger.debug "#{e.class} error when parsing response. #{e}"
           data = nil
         end
 
