@@ -1,4 +1,4 @@
-## 2.1.3 - **Unreleased**
+## 2.1.3 - 2020-09-18
 
 - Adds separate state event handler as Client#on_state_event
 - Changes Client sync interval to by-default run at full speed
