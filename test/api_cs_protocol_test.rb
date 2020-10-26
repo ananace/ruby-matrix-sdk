@@ -79,6 +79,12 @@ class ApiTest < Test::Unit::TestCase
     assert @api.redact_event('!room:example.com', '$acR1l0raoZnm60CBwAVgqbZqoO/mYU81xysh1u7XcJk', txn_id: 42, reason: 'oops')
   end
 
+  def test_query_handling
+    Net::HTTP::Get.expects(:new).with('/_matrix/client/r0/sync?filter=%7B%22room%22%3A%7B%22timeline%22%3A%7B%22limit%22%3A20%7D%2C%22state%22%3A%7B%22lazy_load_members%22%3Atrue%7D%7D%7D&full_state=false&timeout=15000').raises(RuntimeError, 'Expectation succeeded')
+    e = assert_raises(RuntimeError) { @api.sync(filter: '{"room":{"timeline":{"limit":20},"state":{"lazy_load_members":true}}}', full_state: false, timeout: 15) }
+    assert_equal 'Expectation succeeded', e.message
+  end
+
   def test_content
     room = '!test:example.com'
     type = 'm.room.message'
