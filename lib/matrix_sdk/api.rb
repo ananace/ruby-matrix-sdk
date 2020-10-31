@@ -268,23 +268,6 @@ module MatrixSdk
         u.query = [u.query, URI.encode_www_form(options.fetch(:query))].flatten.compact.join('&') if options[:query]
         u.query = nil if u.query.nil? || u.query.empty?
       end
-      request = Net::HTTP.const_get(method.to_s.capitalize.to_sym).new url.request_uri
-      request.body = options[:body] if options.key? :body
-      request.body = request.body.to_json if options.key?(:body) && !request.body.is_a?(String)
-      request.body_stream = options[:body_stream] if options.key? :body_stream
-
-      global_headers.each { |h, v| request[h] = v }
-      if request.body || request.body_stream
-        request.content_type = 'application/json'
-        request.content_length = (request.body || request.body_stream).size
-      end
-
-      request['authorization'] = "Bearer #{access_token}" if access_token && !options.fetch(:skip_auth, false)
-      if options.key? :headers
-        options[:headers].each do |h, v|
-          request[h.to_s.downcase] = v
-        end
-      end
 
       failures = 0
       loop do
@@ -292,10 +275,11 @@ module MatrixSdk
 
         req_id = ('A'..'Z').to_a.sample(4).join
 
-        print_http(request, id: req_id)
+        req_obj = construct_request(url: url, method: method, **options)
+        print_http(req_obj, id: req_id)
         begin
           dur_start = Time.now
-          response = http.request request
+          response = http.request req_obj
           dur_end = Time.now
           duration = dur_end - dur_start
         rescue EOFError
@@ -343,6 +327,30 @@ module MatrixSdk
     end
 
     private
+
+    def construct_request(method:, url:, **options)
+      request = Net::HTTP.const_get(method.to_s.capitalize.to_sym).new url.request_uri
+
+      # FIXME: Handle bodies better, avoid duplicating work
+      request.body = options[:body] if options.key? :body
+      request.body = request.body.to_json if options.key?(:body) && !request.body.is_a?(String)
+      request.body_stream = options[:body_stream] if options.key? :body_stream
+
+      global_headers.each { |h, v| request[h] = v }
+      if request.body || request.body_stream
+        request.content_type = 'application/json'
+        request.content_length = (request.body || request.body_stream).size
+      end
+
+      request['authorization'] = "Bearer #{access_token}" if access_token && !options.fetch(:skip_auth, false)
+      if options.key? :headers
+        options[:headers].each do |h, v|
+          request[h.to_s.downcase] = v
+        end
+      end
+
+      request
+    end
 
     def print_http(http, body: true, duration: nil, id: nil)
       return unless logger.debug?
