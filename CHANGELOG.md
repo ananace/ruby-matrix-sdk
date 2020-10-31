@@ -1,3 +1,7 @@
+## 2.2.0 - **Unreleased**
+
+- Improves support for JRuby
+
 ## 2.1.3 - 2020-09-18
 
 - Adds separate state event handler as Client#on_state_event
