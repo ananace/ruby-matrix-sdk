@@ -156,6 +156,27 @@ module MatrixSdk
       rooms
     end
 
+    # Gets a list of all direct chat rooms (1:1 chats / direct message chats) for the currenct user
+    #
+    # @return [Hash[String,Array[String]]] A mapping of MXIDs to a list of direct rooms with that user
+    def direct_rooms
+      Hash[api.get_account_data(mxid, 'm.direct').map do |mxid, rooms|
+        [mxid.to_s, rooms]
+      end]
+    end
+
+    # Gets a direct message room for the given user if one exists
+    #
+    # @note Will return the oldest room if multiple exist
+    # @return [Room,nil] A direct message room if one exists
+    def direct_room(mxid)
+      mxid = MatrixSdk::MXID.new mxid.to_s unless mxid.is_a? MatrixSdk::MXID
+      raise ArgumentError, 'Must be a valid user ID' unless mxid.user?
+
+      room_id = direct_rooms[mxid.to_s]&.first
+      ensure_room room_id if room_id
+    end
+
     # Gets a list of all relevant rooms, either the ones currently handled by
     # the client, or the list of currently joined ones if no rooms are handled
     #

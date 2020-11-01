@@ -122,6 +122,14 @@ module MatrixSdk
       Time.now - (since / 1000)
     end
 
+    # Gets a direct message room with the user if one exists
+    #
+    # @return [Room,nil] A direct message room if one exists
+    # @see MatrixSdk::Client#direct_room
+    def direct_room
+      client.direct_room(id)
+    end
+
     # Returns all the current device keys for the user, retrieving them if necessary
     def device_keys
       @device_keys ||= client.api.keys_query(device_keys: { id => [] }).yield_self do |resp|
