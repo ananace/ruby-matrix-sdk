@@ -771,12 +771,17 @@ module MatrixSdk::Protocols::CS
   #
   # @param room_id [MXID,String] The room to get events from.
   # @param event_id [String] The event to get context around.
+  # @param limit [Integer] (10) The limit of messages to retrieve
+  # @option params [String] :filter A filter to limit the retrieval to
   # @return [Response] A response hash with contextual event information
   # @see https://matrix.org/docs/spec/client_server/r0.6.1#get-matrix-client-r0-rooms-roomid-context-eventid
   #      The Matrix Spec, for more information about the call and response
   def get_room_event_context(room_id, event_id, **params)
     query = {}
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
+
+    query[:limit] = params.fetch(:limit) if params.key? :limit
+    query[:filter] = params.fetch(:filter) if params.key? :filter
 
     room_id = ERB::Util.url_encode room_id.to_s
     event_id = ERB::Util.url_encode event_id.to_s
