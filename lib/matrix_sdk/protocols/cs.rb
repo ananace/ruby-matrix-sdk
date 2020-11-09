@@ -770,12 +770,14 @@ module MatrixSdk::Protocols::CS
   # Retrieves number of events that happened just before and after the specified event
   #
   # @param room_id [MXID,String] The room to get events from.
-  # @param event_id [String] The event to get context around.
-  # @param limit [Integer] (10) The limit of messages to retrieve
+  # @param event_id [MXID,String] The event to get context around.
+  # @option limit [Integer] (10) The limit of messages to retrieve
   # @option params [String] :filter A filter to limit the retrieval to
   # @return [Response] A response hash with contextual event information
   # @see https://matrix.org/docs/spec/client_server/r0.6.1#get-matrix-client-r0-rooms-roomid-context-eventid
   #      The Matrix Spec, for more information about the call and response
+  # @example Find event context with filter and limit specified
+  #   api.get_room_event_context('##room_id##', '##event_id##', filter: { types: ['m.room.message'] }.to_json, limit: 20)
   def get_room_event_context(room_id, event_id, **params)
     query = {}
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
