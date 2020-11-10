@@ -777,7 +777,7 @@ module MatrixSdk::Protocols::CS
   # @see https://matrix.org/docs/spec/client_server/r0.6.1#get-matrix-client-r0-rooms-roomid-context-eventid
   #      The Matrix Spec, for more information about the call and response
   # @example Find event context with filter and limit specified
-  #   api.get_room_event_context('##room_id##', '##event_id##', filter: { types: ['m.room.message'] }.to_json, limit: 20)
+  #   api.get_room_event_context('#room:example.com', '$event_id:example.com', filter: { types: ['m.room.message'] }.to_json, limit: 20)
   def get_room_event_context(room_id, event_id, **params)
     query = {}
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
