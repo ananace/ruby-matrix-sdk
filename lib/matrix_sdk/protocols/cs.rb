@@ -771,7 +771,7 @@ module MatrixSdk::Protocols::CS
   #
   # @param room_id [MXID,String] The room to get events from.
   # @param event_id [MXID,String] The event to get context around.
-  # @option limit [Integer] (10) The limit of messages to retrieve
+  # @option params [Integer] :limit (10) The limit of messages to retrieve
   # @option params [String] :filter A filter to limit the retrieval to
   # @return [Response] A response hash with contextual event information
   # @see https://matrix.org/docs/spec/client_server/r0.6.1#get-matrix-client-r0-rooms-roomid-context-eventid
