@@ -32,13 +32,13 @@ module MatrixSdk
     #
     # @return [String]
     def homeserver
-      port_s = port ? ':' + port.to_s : ''
+      port_s = port ? ":#{port}" : ''
       domain ? domain + port_s : ''
     end
 
     # Gets the homserver part of the ID as a suffix (':homeserver')
     def homeserver_suffix
-      ':' + homeserver if domain
+      ":#{homeserver}" if domain
     end
 
     def to_s
@@ -49,18 +49,13 @@ module MatrixSdk
     #
     # @return [Symbol] The MXID type, one of (:user_id, :room_id, :event_id, :group_id, or :room_alias)
     def type
-      case sigil
-      when '@'
-        :user_id
-      when '!'
-        :room_id
-      when '$'
-        :event_id
-      when '+'
-        :group_id
-      when '#'
-        :room_alias
-      end
+      {
+        '@' => :user_id,
+        '!' => :room_id,
+        '$' => :event_id,
+        '+' => :group_id,
+        '#' => :room_alias
+      }[sigil]
     end
 
     # Checks if the ID is valid

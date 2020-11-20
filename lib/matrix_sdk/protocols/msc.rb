@@ -47,7 +47,7 @@ module MatrixSdk::Protocols::MSC
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
 
     req = Net::HTTP::Get.new(homeserver.dup.tap do |u|
-      u.path = api_to_path(:client_r0) + '/sync/sse'
+      u.path = "#{api_to_path :client_r0}/sync/sse"
       u.query = URI.encode_www_form(query)
     end)
     req['accept'] = 'text/event-stream'

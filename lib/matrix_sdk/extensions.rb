@@ -191,7 +191,9 @@ module MatrixSdk
     end
 
     def respond_to_missing?(method, *)
-      event.key? method
+      return true if event.key? method
+
+      super
     end
   end
 end

@@ -1109,7 +1109,7 @@ module MatrixSdk::Protocols::CS
   # @return [Response] The resulting state event
   # @see https://matrix.org/docs/spec/client_server/latest.html#m-room-guest-server-acl
   #      The Matrix Spec, for more information about the event and data
-  def set_room_server_acl(room_id, allow_ip_literals: false, allow:, deny:, **params)
+  def set_room_server_acl(room_id, allow:, deny:, allow_ip_literals: false, **params)
     content = {
       allow_ip_literals: allow_ip_literals,
       allow: allow,
@@ -1736,7 +1736,7 @@ module MatrixSdk::Protocols::CS
   #   # => { :device_keys => { :'@alice:example.com' => { :ABCDEFGHIJ => { ...
   # @see https://matrix.org/docs/spec/client_server/latest#post-matrix-client-r0-keys-query
   #      The Matrix Spec, for more information about the parameters and data
-  def keys_query(timeout: nil, device_keys:, token: nil, **params)
+  def keys_query(device_keys:, timeout: nil, token: nil, **params)
     body = {
       timeout: (timeout || 10) * 1000,
       device_keys: device_keys
@@ -1858,7 +1858,7 @@ module MatrixSdk::Protocols::CS
   # @return [Response] A response hash containing the full data of the requested push rule
   # @see https://matrix.org/docs/spec/client_server/latest#get-matrix-client-r0-pushrules-scope-kind-ruleid
   #      The Matrix Spec, for more information about the parameters and data
-  def get_pushrule(scope: 'global', kind:, id:)
+  def get_pushrule(kind:, id:, scope: 'global')
     scope = ERB::Util.url_encode scope.to_s
     kind = ERB::Util.url_encode kind.to_s
     id = ERB::Util.url_encode id.to_s
@@ -1874,7 +1874,7 @@ module MatrixSdk::Protocols::CS
   # @return [Response] A response hash containing an :enabled key for if the rule is enabled or not
   # @see https://matrix.org/docs/spec/client_server/latest#get-matrix-client-r0-pushrules-scope-kind-ruleid-enabled
   #      The Matrix Spec, for more information about the parameters and data
-  def get_pushrule_enabled(scope: 'global', kind:, id:)
+  def get_pushrule_enabled(kind:, id:, scope: 'global')
     scope = ERB::Util.url_encode scope.to_s
     kind = ERB::Util.url_encode kind.to_s
     id = ERB::Util.url_encode id.to_s
@@ -1891,7 +1891,7 @@ module MatrixSdk::Protocols::CS
   # @return [Response] An empty response hash if the push rule was enabled/disabled successfully
   # @see https://matrix.org/docs/spec/client_server/latest#put-matrix-client-r0-pushrules-scope-kind-ruleid-enabled
   #      The Matrix Spec, for more information about the parameters and data
-  def set_pushrule_enabled(enabled, scope: 'global', kind:, id:)
+  def set_pushrule_enabled(enabled, kind:, id:, scope: 'global')
     scope = ERB::Util.url_encode scope.to_s
     kind = ERB::Util.url_encode kind.to_s
     id = ERB::Util.url_encode id.to_s
@@ -1911,7 +1911,7 @@ module MatrixSdk::Protocols::CS
   # @return [Response] A response hash containing an :enabled key for if the rule is enabled or not
   # @see https://matrix.org/docs/spec/client_server/latest#get-matrix-client-r0-pushrules-scope-kind-ruleid-actions
   #      The Matrix Spec, for more information about the parameters and data
-  def get_pushrule_actions(scope: 'global', kind:, id:)
+  def get_pushrule_actions(kind:, id:, scope: 'global')
     scope = ERB::Util.url_encode scope.to_s
     kind = ERB::Util.url_encode kind.to_s
     id = ERB::Util.url_encode id.to_s
@@ -1928,7 +1928,7 @@ module MatrixSdk::Protocols::CS
   # @return [Response] An empty response hash if the push rule actions were modified successfully
   # @see https://matrix.org/docs/spec/client_server/latest#put-matrix-client-r0-pushrules-scope-kind-ruleid-actions
   #      The Matrix Spec, for more information about the parameters and data
-  def set_pushrule_actions(actions, scope: 'global', kind:, id:)
+  def set_pushrule_actions(actions, kind:, id:, scope: 'global')
     scope = ERB::Util.url_encode scope.to_s
     kind = ERB::Util.url_encode kind.to_s
     id = ERB::Util.url_encode id.to_s

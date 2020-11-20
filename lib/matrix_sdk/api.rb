@@ -356,10 +356,10 @@ module MatrixSdk
       return unless logger.debug?
 
       if http.is_a? Net::HTTPRequest
-        dir = "#{id ? id + ' : ' : nil}>"
+        dir = "#{id ? "#{id} : " : nil}>"
         logger.debug "#{dir} Sending a #{http.method} request to `#{http.path}`:"
       else
-        dir = "#{id ? id + ' : ' : nil}<"
+        dir = "#{id ? "#{id} : " : nil}<"
         logger.debug "#{dir} Received a #{http.code} #{http.message} response:#{duration ? " [#{(duration * 1000).to_i}ms]" : nil}"
       end
       http.to_hash.map { |k, v| "#{k}: #{k == 'authorization' ? '[ REDACTED ]' : v.join(', ')}" }.each do |h|
@@ -368,7 +368,7 @@ module MatrixSdk
       logger.debug dir
       if body
         clean_body = JSON.parse(http.body) rescue nil if http.body
-        clean_body.keys.each { |k| clean_body[k] = '[ REDACTED ]' if %w[password access_token].include?(k) }.to_json if clean_body.is_a? Hash
+        clean_body.each_key { |k| clean_body[k] = '[ REDACTED ]' if %w[password access_token].include?(k) }.to_json if clean_body.is_a? Hash
         clean_body = clean_body.to_s if clean_body
         logger.debug "#{dir} #{clean_body.length < 200 ? clean_body : clean_body.slice(0..200) + "... [truncated, #{clean_body.length} Bytes]"}" if clean_body
       end

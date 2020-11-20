@@ -46,7 +46,9 @@ module MatrixSdk
       attr_reader :api
 
       def respond_to_missing?(name, *_args)
-        key? name
+        return true if key? name
+
+        super
       end
 
       def method_missing(name, *args)

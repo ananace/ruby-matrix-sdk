@@ -104,7 +104,6 @@ module MatrixSdk
       logger.debug "Created room #{room_id}"
     end
 
-
     #
     # Event handlers
     #
@@ -126,7 +125,6 @@ module MatrixSdk
     def on_ephemeral_event
       ensure_room_handlers[:ephemeral_event]
     end
-
 
     #
     # State readers
@@ -365,7 +363,7 @@ module MatrixSdk
     # @param reverse [Boolean] whether to fill messages in reverse or not
     # @param limit [Integer] the maximum number of messages to backfill
     # @note This will trigger the `on_event` events as messages are added
-    def backfill_messages(reverse = false, limit = 10)
+    def backfill_messages(reverse = false, limit = 10) # rubocop:disable Style/OptionalBooleanParameter
       data = client.api.get_room_messages(id, @prev_batch, direction: :b, limit: limit)
 
       events = data[:chunk]

@@ -454,10 +454,11 @@ module MatrixSdk
         errors = 0
         thread, cancel_token = api.msc2108_sync_sse(params) do |data, event:, id:|
           @next_batch = id if id
-          if event.to_sym == :sync
+          case event.to_sym
+          when :sync
             handle_sync_response(data)
             errors = 0
-          elsif event.to_sym == :sync_error
+          when :sync_error
             logger.error "SSE Sync error received; #{data.type}: #{data.message}"
             errors += 1
 

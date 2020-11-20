@@ -18,8 +18,11 @@ Style/Documentation:
 Metrics/ClassLength:
   Enabled: false
 
-Metrics/MethodLength:
+Metrics/BlockLength:
   Max: 50
+
+Metrics/MethodLength:
+  Max: 70
 
 # Matrix has a lot of methods in the CS API
 Metrics/ModuleLength:
