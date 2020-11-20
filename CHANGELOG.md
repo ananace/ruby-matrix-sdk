@@ -1,4 +1,4 @@
-## 2.2.0 - **Unreleased**
+## 2.2.0 - 2020-11-20
 
 - Adds direct message (1:1) room mapping to client abstraction
 - Adds Api#get_room_event_context (#13)
