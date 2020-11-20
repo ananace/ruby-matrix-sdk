@@ -1,7 +1,8 @@
 ## 2.2.0 - **Unreleased**
 
-- Improves support for JRuby
 - Adds direct message room mapping to client abstraction
+- Adds Api#get_room_event_context (#13)
+- Improves support for JRuby
 
 ## 2.1.3 - 2020-09-18
 
