@@ -1,3 +1,7 @@
+## 2.3.0 - **Unreleased**
+
+- Fixes argument error in `#get_room_messages`
+
 ## 2.2.0 - 2020-11-20
 
 - Adds direct message (1:1) room mapping to client abstraction

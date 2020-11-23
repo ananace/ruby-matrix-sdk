@@ -702,7 +702,7 @@ module MatrixSdk::Protocols::CS
   # @return [Response] A response hash with the message information containing :start, :end, and :chunk fields
   # @see https://matrix.org/docs/spec/client_server/latest.html#get-matrix-client-r0-rooms-roomid-messages
   #      The Matrix Spec, for more information about the call and response
-  def get_room_messages(room_id, token, direction, limit: 10, **params)
+  def get_room_messages(room_id, token, direction:, limit: 10, **params)
     query = {
       from: token,
       dir: direction,
