@@ -676,7 +676,7 @@ GET|/_matrix/client/r0/rooms/{roomId}/joined_members:
 GET|/_matrix/client/r0/rooms/{roomId}/messages:
   method: :get_room_messages
   requests:
-    - args: ['!636q39766251:example.com', 's345_678_333', 'b', { limit: 3, filter: { contains_url: true } }]
+    - args: ['!636q39766251:example.com', 's345_678_333', { limit: 3, direction: 'b', filter: { contains_url: true } }]
       path: '/rooms/%21636q39766251%3Aexample.com/messages'
       query:
         :from: 's345_678_333'
