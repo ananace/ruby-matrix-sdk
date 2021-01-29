@@ -38,6 +38,7 @@ module MatrixSdk
     # @option params [Numeric] :read_timeout (240) The timeout in seconds for reading responses
     # @option params [Hash] :global_headers Additional headers to set for all requests
     # @option params [Boolean] :skip_login Should the API skip logging in if the HS URL contains user information
+    # @option params [Boolean] :synapse (true) Is the API connecting to a Synapse instance
     # @option params [Hash] :well_known The .well-known object that the server was discovered through, should not be set manually
     def initialize(homeserver, **params)
       @homeserver = homeserver
@@ -61,6 +62,7 @@ module MatrixSdk
       @well_known = params.fetch(:well_known, {})
       @global_headers = DEFAULT_HEADERS.dup
       @global_headers.merge!(params.fetch(:global_headers)) if params.key? :global_headers
+      @synapse = params.fetch(:synapse, true)
       @http = nil
 
       ([params.fetch(:protocols, [:CS])].flatten - protocols).each do |proto|
@@ -377,6 +379,8 @@ module MatrixSdk
     end
 
     def api_to_path(api)
+      return "/_synapse/#{api.to_s.split('_').join('/')}" if @synapse && api.to_s.start_with?('admin_')
+
       # TODO: <api>_current / <api>_latest
       "/_matrix/#{api.to_s.split('_').join('/')}"
     end

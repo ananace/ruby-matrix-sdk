@@ -246,4 +246,18 @@ class ApiTest < Test::Unit::TestCase
 
     assert_equal 'squid-proxy.example.com', http.proxy_address
   end
+
+  class DummyError < StandardError; end
+  def test_request_paths
+    api = MatrixSdk::Api.new 'https://example.com'
+    
+    Net::HTTP.any_instance.stubs(:start)
+    Net::HTTP.any_instance.expects(:request).with { |req| req.path == '/_matrix/client/r0/account/whoami' }.raises(DummyError)
+
+    assert_raises(DummyError) { api.request(:get, :client_r0, '/account/whoami') }
+
+    Net::HTTP.any_instance.expects(:request).with { |req| req.path == '/_synapse/admin/v1/account_validity/validity' }.raises(DummyError)
+
+    assert_raises(DummyError) { api.request(:post, :admin_v1, '/account_validity/validity') }
+  end
 end
