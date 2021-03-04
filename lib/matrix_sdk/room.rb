@@ -481,7 +481,7 @@ module MatrixSdk
           @room
         end
         tag_obj.define_singleton_method(:add) do |tag, **data|
-          @room.add_tag(tag.to_s.to_sym, data)
+          @room.add_tag(tag.to_s.to_sym, **data)
           self[tag.to_s.to_sym] = data
           self
         end
