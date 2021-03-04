@@ -98,7 +98,7 @@ class ApiTest < Test::Unit::TestCase
       info: {}
     }
 
-    @api.expects(:send_message_event).with(room, type, content, {})
+    @api.expects(:send_message_event).with(room, type, content)
     @api.send_content(room, url, msgbody, msgtype)
 
     msgtype.replace 'm.location'
@@ -107,7 +107,7 @@ class ApiTest < Test::Unit::TestCase
     content.delete :url
     content[:geo_uri] = url
 
-    @api.expects(:send_message_event).with(room, type, content, {})
+    @api.expects(:send_message_event).with(room, type, content)
     @api.send_location(room, url, msgbody)
 
     content = {
@@ -117,84 +117,84 @@ class ApiTest < Test::Unit::TestCase
 
     msgtype.replace 'm.text'
 
-    @api.expects(:send_message_event).with(room, type, content, {})
+    @api.expects(:send_message_event).with(room, type, content)
     @api.send_message(room, msgbody)
 
     msgtype.replace 'm.emote'
 
-    @api.expects(:send_message_event).with(room, type, content, {})
+    @api.expects(:send_message_event).with(room, type, content)
     @api.send_emote(room, msgbody)
 
     msgtype.replace 'm.notice'
 
-    @api.expects(:send_message_event).with(room, type, content, {})
+    @api.expects(:send_message_event).with(room, type, content)
     @api.send_notice(room, msgbody)
   end
 
   def test_specced_state
     id = '!room:example.com'
 
-    @api.expects(:get_room_state).with(id, 'm.room.name', {})
+    @api.expects(:get_room_state).with(id, 'm.room.name')
     @api.get_room_name(id)
 
-    @api.expects(:send_state_event).with(id, 'm.room.name', { name: 'Room name' }, {})
+    @api.expects(:send_state_event).with(id, 'm.room.name', { name: 'Room name' })
     @api.set_room_name(id, 'Room name')
 
-    @api.expects(:get_room_state).with(id, 'm.room.topic', {})
+    @api.expects(:get_room_state).with(id, 'm.room.topic')
     @api.get_room_topic(id)
 
-    @api.expects(:send_state_event).with(id, 'm.room.topic', { topic: 'Room topic' }, {})
+    @api.expects(:send_state_event).with(id, 'm.room.topic', { topic: 'Room topic' })
     @api.set_room_topic(id, 'Room topic')
 
-    @api.expects(:get_room_state).with(id, 'm.room.avatar', {})
+    @api.expects(:get_room_state).with(id, 'm.room.avatar')
     @api.get_room_avatar(id)
 
-    @api.expects(:send_state_event).with(id, 'm.room.avatar', { url: 'Room avatar' }, {})
+    @api.expects(:send_state_event).with(id, 'm.room.avatar', { url: 'Room avatar' })
     @api.set_room_avatar(id, 'Room avatar')
 
-    @api.expects(:get_room_state).with(id, 'm.room.pinned_events', {})
+    @api.expects(:get_room_state).with(id, 'm.room.pinned_events')
     @api.get_room_pinned_events(id)
 
-    @api.expects(:send_state_event).with(id, 'm.room.pinned_events', { pinned: ['event'] }, {})
+    @api.expects(:send_state_event).with(id, 'm.room.pinned_events', { pinned: ['event'] })
     @api.set_room_pinned_events(id, ['event'])
 
-    @api.expects(:get_room_state).with(id, 'm.room.power_levels', {})
+    @api.expects(:get_room_state).with(id, 'm.room.power_levels')
     @api.get_room_power_levels(id)
 
-    @api.expects(:send_state_event).with(id, 'm.room.power_levels', { level: 1, events: {} }, {})
+    @api.expects(:send_state_event).with(id, 'm.room.power_levels', { level: 1, events: {} })
     @api.set_room_power_levels(id, level: 1)
 
-    @api.expects(:get_room_state).with(id, 'm.room.join_rules', {})
+    @api.expects(:get_room_state).with(id, 'm.room.join_rules')
     @api.get_room_join_rules(id)
 
-    @api.expects(:send_state_event).with(id, 'm.room.join_rules', { join_rule: :public }, {})
+    @api.expects(:send_state_event).with(id, 'm.room.join_rules', { join_rule: :public })
     @api.set_room_join_rules(id, :public)
 
-    @api.expects(:get_room_state).with(id, 'm.room.guest_access', {})
+    @api.expects(:get_room_state).with(id, 'm.room.guest_access')
     @api.get_room_guest_access(id)
 
-    @api.expects(:send_state_event).with(id, 'm.room.guest_access', { guest_access: :forbidden }, {})
+    @api.expects(:send_state_event).with(id, 'm.room.guest_access', { guest_access: :forbidden })
     @api.set_room_guest_access(id, :forbidden)
 
-    @api.expects(:get_room_state).with(id, 'm.room.create', {})
+    @api.expects(:get_room_state).with(id, 'm.room.create')
     @api.get_room_creation_info(id)
 
-    @api.expects(:get_room_state).with(id, 'm.room.encryption', {})
+    @api.expects(:get_room_state).with(id, 'm.room.encryption')
     @api.get_room_encryption_settings(id)
 
-    @api.expects(:send_state_event).with(id, 'm.room.encryption', { algorithm: 'm.megolm.v1.aes-sha2', rotation_period_ms: 604_800_000, rotation_period_msgs: 100 }, {})
+    @api.expects(:send_state_event).with(id, 'm.room.encryption', { algorithm: 'm.megolm.v1.aes-sha2', rotation_period_ms: 604_800_000, rotation_period_msgs: 100 })
     @api.set_room_encryption_settings(id)
 
-    @api.expects(:get_room_state).with(id, 'm.room.history_visibility', {})
+    @api.expects(:get_room_state).with(id, 'm.room.history_visibility')
     @api.get_room_history_visibility(id)
 
-    @api.expects(:send_state_event).with(id, 'm.room.history_visibility', { history_visibility: :anyone }, {})
+    @api.expects(:send_state_event).with(id, 'm.room.history_visibility', { history_visibility: :anyone })
     @api.set_room_history_visibility(id, :anyone)
 
-    @api.expects(:get_room_state).with(id, 'm.room.server_acl', {})
+    @api.expects(:get_room_state).with(id, 'm.room.server_acl')
     @api.get_room_server_acl(id)
 
-    @api.expects(:send_state_event).with(id, 'm.room.server_acl', { allow_ip_literals: false, allow: [], deny: [] }, {})
+    @api.expects(:send_state_event).with(id, 'm.room.server_acl', { allow_ip_literals: false, allow: [], deny: [] })
     @api.set_room_server_acl(id, allow: [], deny: [])
   end
 

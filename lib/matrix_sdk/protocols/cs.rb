@@ -584,7 +584,7 @@ module MatrixSdk::Protocols::CS
     }
     content.merge!(params.fetch(:extra_content)) if params.key? :extra_content
 
-    send_message_event(room_id, 'm.room.message', content, params)
+    send_message_event(room_id, 'm.room.message', content, **params)
   end
 
   # Send a geographic location to a room
@@ -610,7 +610,7 @@ module MatrixSdk::Protocols::CS
     content[:info][:thumbnail_url] = params.delete(:thumbnail_url) if params.key? :thumbnail_url
     content[:info][:thumbnail_info] = params.delete(:thumbnail_info) if params.key? :thumbnail_info
 
-    send_message_event(room_id, 'm.room.message', content, params)
+    send_message_event(room_id, 'm.room.message', content, **params)
   end
 
   # Send a plaintext message to a room
@@ -628,7 +628,7 @@ module MatrixSdk::Protocols::CS
       msgtype: params.delete(:msg_type) { 'm.text' },
       body: message
     }
-    send_message_event(room_id, 'm.room.message', content, params)
+    send_message_event(room_id, 'm.room.message', content, **params)
   end
 
   # Send a plaintext emote to a room
@@ -646,7 +646,7 @@ module MatrixSdk::Protocols::CS
       msgtype: params.delete(:msg_type) { 'm.emote' },
       body: emote
     }
-    send_message_event(room_id, 'm.room.message', content, params)
+    send_message_event(room_id, 'm.room.message', content, **params)
   end
 
   # Send a plaintext notice to a room
@@ -664,7 +664,7 @@ module MatrixSdk::Protocols::CS
       msgtype: params.delete(:msg_type) { 'm.notice' },
       body: notice
     }
-    send_message_event(room_id, 'm.room.message', content, params)
+    send_message_event(room_id, 'm.room.message', content, **params)
   end
 
   # Report an event in a room
@@ -804,7 +804,7 @@ module MatrixSdk::Protocols::CS
   # @see https://matrix.org/docs/spec/client_server/latest.html#m-room-name
   #      The Matrix Spec, for more information about the event and data
   def get_room_name(room_id, **params)
-    get_room_state(room_id, 'm.room.name', params)
+    get_room_state(room_id, 'm.room.name', **params)
   end
 
   # Sets the display name of a room
@@ -819,7 +819,7 @@ module MatrixSdk::Protocols::CS
     content = {
       name: name
     }
-    send_state_event(room_id, 'm.room.name', content, params)
+    send_state_event(room_id, 'm.room.name', content, **params)
   end
 
   # Gets the current topic of a room
@@ -832,7 +832,7 @@ module MatrixSdk::Protocols::CS
   # @see https://matrix.org/docs/spec/client_server/latest.html#m-room-topic
   #      The Matrix Spec, for more information about the event and data
   def get_room_topic(room_id, **params)
-    get_room_state(room_id, 'm.room.topic', params)
+    get_room_state(room_id, 'm.room.topic', **params)
   end
 
   # Sets the topic of a room
@@ -847,7 +847,7 @@ module MatrixSdk::Protocols::CS
     content = {
       topic: topic
     }
-    send_state_event(room_id, 'm.room.topic', content, params)
+    send_state_event(room_id, 'm.room.topic', content, **params)
   end
 
   # Gets the current avatar URL of a room
@@ -860,7 +860,7 @@ module MatrixSdk::Protocols::CS
   # @see https://matrix.org/docs/spec/client_server/latest.html#m-room-avatar
   #      The Matrix Spec, for more information about the event and data
   def get_room_avatar(room_id, **params)
-    get_room_state(room_id, 'm.room.avatar', params)
+    get_room_state(room_id, 'm.room.avatar', **params)
   end
 
   # Sets the avatar URL for a room
@@ -875,7 +875,7 @@ module MatrixSdk::Protocols::CS
     content = {
       url: url
     }
-    send_state_event(room_id, 'm.room.avatar', content, params)
+    send_state_event(room_id, 'm.room.avatar', content, **params)
   end
 
   # Gets a list of current aliases of a room
@@ -902,7 +902,7 @@ module MatrixSdk::Protocols::CS
   #      .compact
   #   # => ["#synapse:im.kabi.tk", "#synapse:matrix.org", "#synapse-community:matrix.org", "#synapse-ops:matrix.org", "#synops:matrix.org", ...
   def get_room_aliases(room_id, **params)
-    get_room_state(room_id, 'm.room.aliases', params)
+    get_room_state(room_id, 'm.room.aliases', params) # :FIXME: missing spec
   end
 
   # Gets a list of pinned events in a room
@@ -915,7 +915,7 @@ module MatrixSdk::Protocols::CS
   # @see https://matrix.org/docs/spec/client_server/latest.html#m-room-pinned-events
   #      The Matrix Spec, for more information about the event and data
   def get_room_pinned_events(room_id, **params)
-    get_room_state(room_id, 'm.room.pinned_events', params)
+    get_room_state(room_id, 'm.room.pinned_events', **params)
   end
 
   # Sets the list of pinned events in a room
@@ -930,7 +930,7 @@ module MatrixSdk::Protocols::CS
     content = {
       pinned: events
     }
-    send_state_event(room_id, 'm.room.pinned_events', content, params)
+    send_state_event(room_id, 'm.room.pinned_events', content, **params)
   end
 
   # Gets the configured power levels for a room
@@ -942,7 +942,7 @@ module MatrixSdk::Protocols::CS
   # @see https://matrix.org/docs/spec/client_server/latest.html#m-room-power-levels
   #      The Matrix Spec, for more information about the event and data
   def get_room_power_levels(room_id, **params)
-    get_room_state(room_id, 'm.room.power_levels', params)
+    get_room_state(room_id, 'm.room.power_levels', **params)
   end
   alias get_power_levels get_room_power_levels
 
@@ -956,7 +956,7 @@ module MatrixSdk::Protocols::CS
   #      The Matrix Spec, for more information about the event and data
   def set_room_power_levels(room_id, content, **params)
     content[:events] = {} unless content.key? :events
-    send_state_event(room_id, 'm.room.power_levels', content, params)
+    send_state_event(room_id, 'm.room.power_levels', content, **params)
   end
   alias set_power_levels set_room_power_levels
 
@@ -969,7 +969,7 @@ module MatrixSdk::Protocols::CS
   # @see https://matrix.org/docs/spec/client_server/latest.html#m-room-join-rules
   #      The Matrix Spec, for more information about the event and data
   def get_room_join_rules(room_id, **params)
-    get_room_state(room_id, 'm.room.join_rules', params)
+    get_room_state(room_id, 'm.room.join_rules', **params)
   end
 
   # Sets the join rules for a room
@@ -985,7 +985,7 @@ module MatrixSdk::Protocols::CS
       join_rule: join_rule
     }
 
-    send_state_event(room_id, 'm.room.join_rules', content, params)
+    send_state_event(room_id, 'm.room.join_rules', content, **params)
   end
 
   # Gets the guest access settings for a room
@@ -997,7 +997,7 @@ module MatrixSdk::Protocols::CS
   # @see https://matrix.org/docs/spec/client_server/latest.html#m-room-guest-access
   #      The Matrix Spec, for more information about the event and data
   def get_room_guest_access(room_id, **params)
-    get_room_state(room_id, 'm.room.guest_access', params)
+    get_room_state(room_id, 'm.room.guest_access', **params)
   end
 
   # Sets the guest access settings for a room
@@ -1013,7 +1013,7 @@ module MatrixSdk::Protocols::CS
       guest_access: guest_access
     }
 
-    send_state_event(room_id, 'm.room.guest_access', content, params)
+    send_state_event(room_id, 'm.room.guest_access', content, **params)
   end
 
   # Gets the creation configuration object for a room
@@ -1025,7 +1025,7 @@ module MatrixSdk::Protocols::CS
   # @see https://matrix.org/docs/spec/client_server/latest.html#m-room-create
   #      The Matrix Spec, for more information about the event and data
   def get_room_creation_info(room_id, **params)
-    get_room_state(room_id, 'm.room.create', params)
+    get_room_state(room_id, 'm.room.create', **params)
   end
 
   # Gets the encryption configuration for a room
@@ -1037,7 +1037,7 @@ module MatrixSdk::Protocols::CS
   # @see https://matrix.org/docs/spec/client_server/latest.html#m-room-encryption
   #      The Matrix Spec, for more information about the event and data
   def get_room_encryption_settings(room_id, **params)
-    get_room_state(room_id, 'm.room.encryption', params)
+    get_room_state(room_id, 'm.room.encryption', **params)
   end
 
   # Sets the encryption configuration for a room
@@ -1056,7 +1056,7 @@ module MatrixSdk::Protocols::CS
       rotation_period_ms: rotation_period_ms,
       rotation_period_msgs: rotation_period_msgs
     }
-    send_state_event(room_id, 'm.room.encryption', content, params)
+    send_state_event(room_id, 'm.room.encryption', content, **params)
   end
 
   # Gets the history availabiilty for a room
@@ -1068,7 +1068,7 @@ module MatrixSdk::Protocols::CS
   # @see https://matrix.org/docs/spec/client_server/latest.html#m-room-history-visibility
   #      The Matrix Spec, for more information about the event and data
   def get_room_history_visibility(room_id, **params)
-    get_room_state(room_id, 'm.room.history_visibility', params)
+    get_room_state(room_id, 'm.room.history_visibility', **params)
   end
 
   # Sets the history availability for a room
@@ -1084,7 +1084,7 @@ module MatrixSdk::Protocols::CS
       history_visibility: visibility
     }
 
-    send_state_event(room_id, 'm.room.history_visibility', content, params)
+    send_state_event(room_id, 'm.room.history_visibility', content, **params)
   end
 
   # Gets the server ACLs for a room
@@ -1096,7 +1096,7 @@ module MatrixSdk::Protocols::CS
   # @see https://matrix.org/docs/spec/client_server/latest.html#m-room-server-acl
   #      The Matrix Spec, for more information about the event and data
   def get_room_server_acl(room_id, **params)
-    get_room_state(room_id, 'm.room.server_acl', params)
+    get_room_state(room_id, 'm.room.server_acl', **params)
   end
 
   # Sets the server ACL configuration for a room
@@ -1116,7 +1116,7 @@ module MatrixSdk::Protocols::CS
       deny: deny
     }
 
-    send_state_event(room_id, 'm.room.server_acl', content, params)
+    send_state_event(room_id, 'm.room.server_acl', content, **params)
   end
 
   def leave_room(room_id, **params)
