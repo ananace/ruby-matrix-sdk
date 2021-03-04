@@ -199,7 +199,7 @@ class ApiTest < Test::Unit::TestCase
   end
 
   def test_download_url
-    assert_equal 'https://example.com/_matrix/media/r0/download/example.com/media',  @api.get_download_url('mxc://example.com/media').to_s
-    assert_equal 'https://matrix.org/_matrix/media/r0/download/example.com/media',  @api.get_download_url('mxc://example.com/media', source: 'matrix.org').to_s
+    assert_equal 'https://example.com/_matrix/media/r0/download/example.com/media', @api.get_download_url('mxc://example.com/media').to_s
+    assert_equal 'https://matrix.org/_matrix/media/r0/download/example.com/media', @api.get_download_url('mxc://example.com/media', source: 'matrix.org').to_s
   end
 end
