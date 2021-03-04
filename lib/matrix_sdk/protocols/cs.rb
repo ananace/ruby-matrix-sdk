@@ -902,7 +902,7 @@ module MatrixSdk::Protocols::CS
   #      .compact
   #   # => ["#synapse:im.kabi.tk", "#synapse:matrix.org", "#synapse-community:matrix.org", "#synapse-ops:matrix.org", "#synops:matrix.org", ...
   def get_room_aliases(room_id, **params)
-    get_room_state(room_id, 'm.room.aliases', params) # :FIXME: missing spec
+    get_room_state(room_id, 'm.room.aliases', **params)
   end
 
   # Gets a list of pinned events in a room
