@@ -67,7 +67,7 @@ module MatrixSdk
           api.instance_variable_set("@#{k}", v) if api.instance_variable_defined? "@#{k}"
         end
       else
-        @api = Api.new hs_url, params
+        @api = Api.new hs_url, **params
       end
 
       @cache = client_cache
@@ -469,7 +469,7 @@ module MatrixSdk
 
         @should_listen = cancel_token
       else
-        thread = Thread.new { listen_forever(params) }
+        thread = Thread.new { listen_forever(**params) }
       end
       @sync_thread = thread
       thread.run
