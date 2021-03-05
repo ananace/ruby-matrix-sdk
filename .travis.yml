@@ -12,5 +12,5 @@ before_install:
   - gem install bundler rubocop
   - gem update --system
 script:
-  - rubocop
+  - rubocop lib/
   - bundle exec rake test
