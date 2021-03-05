@@ -90,10 +90,12 @@ class ApiCSVerificationTest < Test::Unit::TestCase
   end
 
   def call_api(method, args)
-    if args.size.positive? && args.last.is_a?(Hash)
-      @api.send(method, *args[0..-2], **args.last)
-    else
+    required_arguments_size = @api.method(method).parameters.select { |type, _| type == :req }.size
+
+    if args.size == required_arguments_size || !args.last.is_a?(Hash)
       @api.send(method, *args)
+    else
+      @api.send(method, *args[0..-2], **args.last)
     end
   end
 end
