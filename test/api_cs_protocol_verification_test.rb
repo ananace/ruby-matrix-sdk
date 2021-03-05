@@ -62,7 +62,7 @@ class ApiCSVerificationTest < Test::Unit::TestCase
             true
           end.returns(response)
 
-          assert @api.send(data['method'], *request['args'].deep_symbolize_keys)
+          assert(call_api(data['method'], request['args'].deep_symbolize_keys))
           @api.unstub(:request)
         end
       end
@@ -79,13 +79,21 @@ class ApiCSVerificationTest < Test::Unit::TestCase
                end
 
         if code.to_s[0] == '2'
-          assert !@api.send(data['method'], *args).nil?
+          assert(!call_api(data['method'], args).nil?)
         else
-          assert_raises(MatrixSdk::MatrixRequestError.class_by_code(code)) { @api.send(data['method'], *args) }
+          assert_raises(MatrixSdk::MatrixRequestError.class_by_code(code)) { call_api(data['method'], args) }
         end
 
         @http.unstub(:request)
       end
+    end
+  end
+
+  def call_api(method, args)
+    if args.size.positive? && args.last.is_a?(Hash)
+      @api.send(method, *args[0..-2], **args.last)
+    else
+      @api.send(method, *args)
     end
   end
 end
