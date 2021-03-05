@@ -9,8 +9,8 @@ rvm:
 cache:
   bundler: true
 before_install:
-  - gem install bundler
+  - gem install bundler rubocop
   - gem update --system
 script:
+  - rubocop
   - bundle exec rake test
-  - bundle exec rubocop
