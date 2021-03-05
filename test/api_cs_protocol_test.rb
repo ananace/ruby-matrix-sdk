@@ -165,7 +165,7 @@ class ApiTest < Test::Unit::TestCase
     @api.get_room_power_levels(id)
 
     expect_message(@api, :send_state_event, id, 'm.room.power_levels', { level: 1, events: {} })
-    @api.set_room_power_levels(id, level: 1)
+    @api.set_room_power_levels(id, { level: 1 })
 
     expect_message(@api, :get_room_state, id, 'm.room.join_rules')
     @api.get_room_join_rules(id)
