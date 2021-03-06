@@ -1,37 +1,22 @@
 # frozen_string_literal: true
 
-require 'matrix_sdk/extensions'
-require 'matrix_sdk/version'
-
 require 'json'
+require 'logging'
+require 'zeitwerk'
 
-autoload :Logging, 'logging'
+loader = Zeitwerk::Loader.for_gem
+loader.inflector.inflect(
+  'as' => 'AS',
+  'cs' => 'CS',
+  'is' => 'IS',
+  'msc' => 'MSC',
+  'mxid' => 'MXID',
+  'ss' => 'SS'
+)
+loader.collapse("#{__dir__}/matrix_sdk/errors")
+loader.setup
 
 module MatrixSdk
-  autoload :Api, 'matrix_sdk/api'
-  autoload :ApplicationService, 'matrix_sdk/application_service'
-  autoload :Client, 'matrix_sdk/client'
-  autoload :MXID, 'matrix_sdk/mxid'
-  autoload :Response, 'matrix_sdk/response'
-  autoload :Room, 'matrix_sdk/room'
-  autoload :User, 'matrix_sdk/user'
-
-  autoload :MatrixConnectionError, 'matrix_sdk/errors'
-  autoload :MatrixError, 'matrix_sdk/errors'
-  autoload :MatrixRequestError, 'matrix_sdk/errors'
-  autoload :MatrixTimeoutError, 'matrix_sdk/errors'
-  autoload :MatrixUnexpectedResponseError, 'matrix_sdk/errors'
-
-  module Protocols
-    autoload :AS, 'matrix_sdk/protocols/as'
-    autoload :CS, 'matrix_sdk/protocols/cs'
-    autoload :IS, 'matrix_sdk/protocols/is'
-    autoload :SS, 'matrix_sdk/protocols/ss'
-
-    # Non-final protocol extensions
-    autoload :MSC, 'matrix_sdk/protocols/msc'
-  end
-
   def self.debug!
     logger.level = :debug
   end
