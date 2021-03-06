@@ -4,7 +4,7 @@ cache:
   paths:
     - vendor/ruby
 
-rubocop:
+lint:rubocop:
   image: "ruby:2.6"
   script:
     - gem install rubocop -N
@@ -25,17 +25,21 @@ rubocop:
     reports:
       junit: "reports/TEST-*.xml"
 
-test:2.4:
+test:ruby2.5:
   extends: .test
-  image: "ruby:2.4"
+  image: "ruby:2.5"
 
-test:2.6:
+test:ruby2.6:
   extends: .test
   image: "ruby:2.6"
 
-test:2.7:
+test:ruby2.7:
   extends: .test
   image: "ruby:2.7"
+
+test:ruby3.0:
+  extends: .test
+  image: "ruby:3.0"
 
 pages:
   image: ruby
