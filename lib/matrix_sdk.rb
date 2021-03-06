@@ -16,9 +16,9 @@ module MatrixSdk
   autoload :Room, 'matrix_sdk/room'
   autoload :User, 'matrix_sdk/user'
 
+  autoload :MatrixConnectionError, 'matrix_sdk/errors'
   autoload :MatrixError, 'matrix_sdk/errors'
   autoload :MatrixRequestError, 'matrix_sdk/errors'
-  autoload :MatrixConnectionError, 'matrix_sdk/errors'
   autoload :MatrixTimeoutError, 'matrix_sdk/errors'
   autoload :MatrixUnexpectedResponseError, 'matrix_sdk/errors'
 
