@@ -20,7 +20,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'rake'
   spec.add_development_dependency 'simplecov'
   spec.add_development_dependency 'test-unit'
-  spec.add_development_dependency 'zeitwerk'
 
   spec.add_dependency 'logging', '~> 2'
+  spec.add_dependency 'zeitwerk'
 end
