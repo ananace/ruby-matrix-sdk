@@ -1,7 +1,8 @@
 ## 2.3.0 - **Unreleased**
 
-- Fixes argument error in `#get_room_messages`
+- Adds support for Ruby 3.0 (#15)
 - Adds support for requests against the Synapse admin API
+- Fixes argument error in `#get_room_messages`
 
 ## 2.2.0 - 2020-11-20
 
