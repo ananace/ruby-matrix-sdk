@@ -118,28 +118,34 @@ class RoomTest < Test::Unit::TestCase
     assert_nil tags[:'test.tag']
     assert_not_nil tags[:'example.tag']
 
-    @api.expects(:send_state_event).with(@id, 'm.room.name', { name: 'name' }, {})
+    expect_message(@api, :send_state_event, @id, 'm.room.name', { name: 'name' })
     @room.name = 'name'
 
-    @api.expects(:send_state_event).with(@id, 'm.room.topic', { topic: 'topic' }, {})
+    expect_message(@api, :send_state_event, @id, 'm.room.topic', { topic: 'topic' })
     @room.topic = 'topic'
 
-    @api.expects(:request).with(:put, :client_r0, '/directory/room/%23room%3Aexample.com', body: { room_id: '!room:example.com' }, query: {})
+    @api.expects(:request).with(
+      :put,
+      :client_r0,
+      '/directory/room/%23room%3Aexample.com',
+      body: { room_id: '!room:example.com' },
+      query: {}
+    )
     @room.add_alias('#room:example.com')
 
-    @api.expects(:send_state_event).with(@id, 'm.room.join_rules', { join_rule: :invite }, {}).twice
+    expect_message(@api, :send_state_event, @id, 'm.room.join_rules', { join_rule: :invite }).twice
     @room.invite_only = true
     @room.join_rule = :invite
 
-    @api.expects(:send_state_event).with(@id, 'm.room.join_rules', { join_rule: :public }, {}).twice
+    expect_message(@api, :send_state_event, @id, 'm.room.join_rules', { join_rule: :public }).twice
     @room.invite_only = false
     @room.join_rule = :public
 
-    @api.expects(:send_state_event).with(@id, 'm.room.guest_access', { guest_access: :can_join }, {}).twice
+    expect_message(@api, :send_state_event, @id, 'm.room.guest_access', { guest_access: :can_join }).twice
     @room.allow_guests = true
     @room.guest_access = :can_join
 
-    @api.expects(:send_state_event).with(@id, 'm.room.guest_access', { guest_access: :forbidden }, {}).twice
+    expect_message(@api, :send_state_event, @id, 'm.room.guest_access', { guest_access: :forbidden }).twice
     @room.allow_guests = false
     @room.guest_access = :forbidden
   end

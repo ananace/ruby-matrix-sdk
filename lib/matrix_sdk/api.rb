@@ -163,11 +163,13 @@ module MatrixSdk
 
       params[:well_known] = well_known if keep_wellknown
 
-      new(uri,
-          params.merge(
-            address: target_uri.host,
-            port: target_uri.port
-          ))
+      new(
+        uri,
+        **params.merge(
+          address: target_uri.host,
+          port: target_uri.port
+        )
+      )
     end
 
     # Get a list of enabled protocols on the API client
