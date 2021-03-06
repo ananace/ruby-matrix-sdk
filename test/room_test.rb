@@ -148,6 +148,20 @@ class RoomTest < Test::Unit::TestCase
     expect_message(@api, :send_state_event, @id, 'm.room.guest_access', { guest_access: :forbidden }).twice
     @room.allow_guests = false
     @room.guest_access = :forbidden
+
+    @api.expects(:get_power_levels).with(@id).times(3).returns({ users: { '@alice:example.com': 100, '@bob:example.com': 50 }, users_default: 0 })
+    @room.power_levels
+
+    assert_true @room.admin? '@alice:example.com'
+    assert_true @room.moderator? '@alice:example.com'
+    assert_true @room.moderator? '@bob:example.com'
+    assert_false @room.moderator? '@charlie:example.com'
+
+    @api.expects(:set_power_levels).with(@id, { users: { '@alice:example.com': 100, '@bob:example.com': 50, '@charlie:example.com': 50 }, users_default: 0 })
+    @room.moderator! '@charlie:example.com'
+
+    @api.expects(:set_power_levels).with(@id, { users: { '@alice:example.com': 100, '@bob:example.com': 50, '@charlie:example.com': 100 }, users_default: 0 })
+    @room.admin! '@charlie:example.com'
   end
 
   def test_state_refresh
