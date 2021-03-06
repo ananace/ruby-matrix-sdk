@@ -41,9 +41,13 @@ module MatrixSdk
   end
 
   class MatrixNotAuthorizedError < MatrixRequestError; end
+
   class MatrixForbiddenError < MatrixRequestError; end
+
   class MatrixNotFoundError < MatrixRequestError; end
+
   class MatrixConflictError < MatrixRequestError; end
+
   class MatrixTooManyRequestsError < MatrixRequestError; end
 
   # An error raised when errors occur in the connection layer
