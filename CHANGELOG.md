@@ -3,6 +3,7 @@
 - Adds support for Ruby 3.0 (#15)
 - Adds support for requests against the Synapse admin API
 - Fixes argument error in `#get_room_messages`
+- Removes unfinished and broken AS abstraction
 
 ## 2.2.0 - 2020-11-20
 
