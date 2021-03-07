@@ -2,6 +2,7 @@
 
 - Adds support for Ruby 3.0 (#15)
 - Adds support for requests against the Synapse admin API
+- Adds helper methods for checking and changing user power levels
 - Fixes argument error in `#get_room_messages`
 - Removes unfinished and broken AS abstraction
 

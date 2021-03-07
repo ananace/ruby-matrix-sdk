@@ -100,6 +100,7 @@ module MatrixSdk
       @id = room_id.to_s
 
       @name_checked = Time.new(0)
+      @power_levels_checked = Time.new(0)
 
       logger.debug "Created room #{room_id}"
     end
@@ -644,6 +645,90 @@ module MatrixSdk
       @avatar_url = avatar_url
     end
 
+    # Get the power levels of the room
+    #
+    # @note The returned power levels are cached for a minute
+    # @return [Hash] The current power levels as set for the room
+    # @see Protocols::CS#get_power_levels
+    def power_levels
+      return @power_levels if Time.now - @power_levels_checked < 60
+
+      @power_levels_checked = Time.now
+      @power_levels = client.api.get_power_levels(id)
+    end
+
+    # Gets the power level of a user in the room
+    #
+    # @param user [User,MXID,String] The user to check the power level for
+    # @param use_default [Boolean] Should the user default level be checked if no user-specific one exists
+    # @return [Integer,nil] The current power level for the requested user, nil if there's no user specific level
+    #   and use_default is false
+    def user_powerlevel(user, use_default: true)
+      user = user.id if user.is_a? User
+      user = MXID.new(user.to_s) unless user.is_a? MXID
+      raise ArgumentError, 'Must provide a valid user or MXID' unless user.user?
+
+      level = power_levels[:users][user.to_s.to_sym]
+      level = power_levels[:users_default] || 0 if level.nil? && use_default
+      level
+    end
+
+    # Check if a user is an admin in the room
+    #
+    # @param user [User,MXID,String] The user to check for admin privileges
+    # @param target_level [Integer] The power level that's to be considered as admin privileges
+    # @return [Boolean] If the requested user has a power level highe enough to be an admin
+    # @see #user_powerlevel
+    def admin?(user, target_level: 100)
+      level = user_powerlevel(user, use_default: false)
+      return false unless level
+
+      level >= target_level
+    end
+
+    # Make a user an admin in the room
+    #
+    # @param user [User,MXID,String] The user to give admin privileges
+    # @param level [Integer] The power level to set the user to
+    # @see #modify_user_power_levels
+    def admin!(user, level: 100)
+      return true if admin?(user, target_level: level)
+
+      user = user.id if user.is_a? User
+      user = MXID.new(user.to_s) unless user.is_a? MXID
+      raise ArgumentError, 'Must provide a valid user or MXID' unless user.user?
+
+      modify_user_power_levels({ user.to_s.to_sym => level })
+    end
+
+    # Check if a user is a moderator in the room
+    #
+    # @param user [User,MXID,String] The user to check for admin privileges
+    # @param target_level [Integer] The power level that's to be considered as admin privileges
+    # @return [Boolean] If the requested user has a power level highe enough to be an admin
+    # @see #user_powerlevel
+    def moderator?(user, target_level: 50)
+      level = user_powerlevel(user, use_default: false)
+      return false unless level
+
+      level >= target_level
+    end
+
+    # Make a user a moderator in the room
+    #
+    # @param user [User,MXID,String] The user to give moderator privileges
+    # @param level [Integer] The power level to set the user to
+    # @see #modify_user_power_levels
+    def moderator!(user, level: 50)
+      return true if moderator?(user, target_level: level)
+
+      user = user.id if user.is_a? User
+      user = MXID.new(user.to_s) unless user.is_a? MXID
+      raise ArgumentError, 'Must provide a valid user or MXID' unless user.user?
+
+      modify_user_power_levels({ user.to_s.to_sym => level })
+    end
+
     # Modifies the power levels of the room
     #
     # @param users [Hash] the user-specific power levels to set or remove
@@ -652,7 +737,8 @@ module MatrixSdk
     def modify_user_power_levels(users = nil, users_default = nil)
       return false if users.nil? && users_default.nil?
 
-      data = client.api.get_power_levels(id)
+      @power_levels_checked = Time.now
+      data = @power_levels = client.api.get_power_levels(id)
       data[:users_default] = users_default unless users_default.nil?
 
       if users
@@ -673,7 +759,8 @@ module MatrixSdk
     def modify_required_power_levels(events = nil, params = {})
       return false if events.nil? && (params.nil? || params.empty?)
 
-      data = client.api.get_power_levels(id)
+      @power_levels_checked = Time.now
+      data = @power_levels = client.api.get_power_levels(id)
       data.merge!(params)
       data.delete_if { |_k, v| v.nil? }
 
