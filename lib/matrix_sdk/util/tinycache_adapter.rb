@@ -38,7 +38,7 @@ module MatrixSdk::Util
 
       return read(key) if exist?(key) && !cache[key].expired?
 
-      value = Proc.new.call
+      value = yield
       write(key, value, expires_in: expires_in, cache_level: cache_level)
     end
 
