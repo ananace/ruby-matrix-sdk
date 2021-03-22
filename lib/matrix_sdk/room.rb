@@ -206,10 +206,16 @@ module MatrixSdk
       nil
     end
 
+    # Gets the guest access rights for the room
+    #
+    # @return [:can_join,:forbidden] The current guest access right
     def guest_access
       @guest_access ||= client.api.get_room_guest_access(id).guest_access.to_sym
     end
 
+    # Gets the join rule for the room
+    #
+    # @return [:public,:knock,:invite,:private] The current join rule
     def join_rule
       @join_rule ||= client.api.get_room_join_rules(id).join_rule.to_sym
     end
