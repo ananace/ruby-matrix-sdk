@@ -392,7 +392,13 @@ module MatrixSdk
     # @param reverse [Boolean] whether to fill messages in reverse or not
     # @param limit [Integer] the maximum number of messages to backfill
     # @note This will trigger the `on_event` events as messages are added
-    def backfill_messages(reverse = false, limit = 10) # rubocop:disable Style/OptionalBooleanParameter
+    def backfill_messages(*args, reverse: false, limit: 10)
+      # To be backwards-compatible
+      if args.length == 2
+        reverse = args.first
+        limit = args.last
+      end
+
       data = client.api.get_room_messages(id, @prev_batch, direction: :b, limit: limit)
 
       events = data[:chunk]
