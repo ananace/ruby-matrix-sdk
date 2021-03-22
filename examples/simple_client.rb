@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: true
 
 require 'io/console'
 require 'matrix_sdk'
@@ -93,6 +94,7 @@ end
 
 if $PROGRAM_NAME == __FILE__
   raise "Usage: #{$PROGRAM_NAME} [-d] homeserver_url room_id_or_alias" unless ARGV.length >= 2
+
   begin
     if ARGV.first == '-d'
       Thread.abort_on_exception = true
@@ -143,6 +145,6 @@ if $PROGRAM_NAME == __FILE__
   rescue Interrupt
     puts 'Interrupted, exiting...'
   ensure
-    client.logout if client && client.logged_in?
+    client.logout if client&.logged_in?
   end
 end
