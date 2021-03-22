@@ -54,3 +54,6 @@ Style/FormatStringToken:
 
 Naming/AccessorMethodName:
   Enabled: false
+
+Layout/RescueEnsureAlignment:
+  Enabled: false
