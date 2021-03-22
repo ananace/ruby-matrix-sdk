@@ -108,7 +108,7 @@ module MatrixSdk::Util
     def build_method_names(method)
       # Clean up method name (split any suffix)
       method_name = method.to_s.sub(/([?!=])$/, '')
-      punctuation = $LAST_PAREN_MATCH
+      punctuation = Regexp.last_match(-1)
 
       {
         cache_key: "#{method_name}_cache_key#{punctuation}",
