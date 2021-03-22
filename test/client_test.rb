@@ -1,6 +1,10 @@
 require 'test_helper'
 
 class ClientTest < Test::Unit::TestCase
+  def setup
+    ::Net::HTTP.any_instance.expects(:request).never
+  end
+
   def test_creation
     client = MatrixSdk::Client.new 'https://example.com'
 
@@ -126,10 +130,13 @@ class ClientTest < Test::Unit::TestCase
 
   def test_state_handling
     cl = MatrixSdk::Client.new 'https://example.com'
+    assert_equal cl.cache, :all
+
     room = '!roomid:example.com'
     cl.send :ensure_room, room
 
     cl.api.expects(:get_room_joined_members).returns(joined: [])
+    cl.api.expects(:get_room_state).with(room, 'm.room.canonical_alias').raises MatrixSdk::MatrixNotFoundError.new({ errcode: 404, error: '' }, 404)
     cl.api.expects(:get_room_name).raises MatrixSdk::MatrixNotFoundError.new({ errcode: 404, error: '' }, 404)
 
     assert_equal 'Empty Room', cl.rooms.first.display_name
@@ -149,11 +156,14 @@ class ClientTest < Test::Unit::TestCase
     assert_equal 'Test room', cl.rooms.first.display_name
     cl.send(:handle_state, room, type: 'm.room.topic', content: { topic: 'Test room' })
     assert_equal 'Test room', cl.rooms.first.topic
+
     cl.send(:handle_state, room, type: 'm.room.aliases', content: { aliases: ['#test:example1.com'] })
     assert cl.rooms.first.aliases.include? '#test:example1.com'
     assert cl.rooms.first.aliases.include? '#test:example.com'
+
     cl.send(:handle_state, room, type: 'm.room.join_rules', content: { join_rule: :invite })
     assert cl.rooms.first.invite_only?
+
     cl.send(:handle_state, room, type: 'm.room.guest_access', content: { guest_access: :can_join })
     assert cl.rooms.first.guest_access?
 

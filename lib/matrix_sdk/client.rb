@@ -588,33 +588,6 @@ module MatrixSdk
 
       room = ensure_room(room_id)
       room.send :put_state_event, state_event
-      content = state_event[:content]
-      case state_event[:type]
-      when 'm.room.name'
-        room.instance_variable_set '@name', content[:name]
-      when 'm.room.canonical_alias'
-        room.instance_variable_set '@canonical_alias', content[:alias]
-        # Also add as a regular alias
-        room.instance_variable_get('@aliases').concat [content[:alias]]
-      when 'm.room.topic'
-        room.instance_variable_set '@topic', content[:topic]
-      when 'm.room.aliases'
-        room.instance_variable_get('@aliases').concat content[:aliases]
-      when 'm.room.join_rules'
-        room.instance_variable_set '@join_rule', content[:join_rule].nil? ? nil : content[:join_rule].to_sym
-      when 'm.room.guest_access'
-        room.instance_variable_set '@guest_access', content[:guest_access].nil? ? nil : content[:guest_access].to_sym
-      when 'm.room.member'
-        return unless cache == :all
-
-        if content[:membership] == 'join'
-          room.send(:ensure_member, get_user(state_event[:state_key]).dup.tap do |u|
-            u.instance_variable_set :@display_name, content[:displayname]
-          end)
-        elsif %w[leave kick invite].include? content[:membership]
-          room.members.delete_if { |m| m.id == state_event[:state_key] }
-        end
-      end
     end
 
     def handle_sync_response(data)

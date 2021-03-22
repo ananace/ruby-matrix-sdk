@@ -22,8 +22,9 @@ class RoomTest < Test::Unit::TestCase
 
   def test_pre_joined_members
     users = [MatrixSdk::User.new(@client, '@alice:example.com', display_name: 'Alice')]
-    @room.instance_variable_set :@members, users
-    @room.instance_variable_set :@members_loaded, true
+    users.each do |u|
+      @room.send :ensure_member, u
+    end
 
     @api.expects(:get_room_members).never
     @api.expects(:get_room_joined_members).never
@@ -32,6 +33,8 @@ class RoomTest < Test::Unit::TestCase
   end
 
   def test_joined_members
+    assert_equal :all, @room.client.cache
+
     @api.expects(:get_room_joined_members).with('!room:example.com').returns(
       joined: {
         '@alice:example.com': {
@@ -181,11 +184,13 @@ class RoomTest < Test::Unit::TestCase
       event_id: '$155085254299qAaWf:example.com', origin_server_ts: 1_550_852_542_467, unsigned: { age: 8_826_327_193 }, user_id: '@admin:example.com', age: 8_826_327_193
     ]
     @room.reload_aliases!
+    assert @room.aliases.include? '#test:example.com'
 
-    @api.expects(:get_room_aliases).with(@id).returns(MatrixSdk::Response.new(@api, aliases: ['#test:example.com']))
+    @api.expects(:get_room_aliases).with(@id).returns(MatrixSdk::Response.new(@api, aliases: ['#test2:example.com']))
     @room.reload_aliases!
 
-    assert @room.aliases.include? '#test:example.com'
+    assert @room.aliases.include?('#test2:example.com')
+    assert !@room.aliases.include?('#test:example.com')
   end
 
   def test_modifies

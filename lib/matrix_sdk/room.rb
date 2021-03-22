@@ -6,49 +6,38 @@ module MatrixSdk
   # A class for tracking the information about a room on Matrix
   class Room
     extend MatrixSdk::Extensions
+    extend MatrixSdk::Util::Tinycache
     include MatrixSdk::Logging
 
-    # @!attribute [rw] canonical_alias
-    #   @return [String, nil] the canonical alias of the room
     # @!attribute [rw] event_history_limit
     #   @return [Fixnum] the limit of events to keep in the event log
-    attr_accessor :canonical_alias, :event_history_limit
+    attr_accessor :event_history_limit
     # @!attribute [r] id
     #   @return [String] the internal ID of the room
     # @!attribute [r] client
     #   @return [Client] the client for the room
-    # @!attribute [rw] name
-    #   @return [String, nil] the user-provided name of the room
-    #   @see reload_name!
-    # @!attribute [rw] topic
-    #   @return [String, nil] the user-provided topic of the room
-    #   @see reload_topic!
-    # @!attribute [r] aliases
-    #   @return [Array(String)] a list of user-set aliases for the room
-    #   @see add_alias
-    #   @see reload_alias!
-    # @!attribute [rw] join_rule
-    #   @return [:invite, :public] the join rule for the room -
-    #                    either +:invite+ or +:public+
-    # @!attribute [rw] guest_access
-    #   @return [:can_join, :forbidden] the guest access for the room -
-    #                    either +:can_join+ or +:forbidden+
-    # @!attribute [r] members
-    #   @return [Array(User)] the members of the room
-    #   @see reload_members!
     # @!attribute [r] events
     #   @return [Array(Object)] the last +event_history_limit+ events to arrive in the room
     #   @see https://matrix.org/docs/spec/client_server/r0.3.0.html#get-matrix-client-r0-sync
     #        The timeline events are what will end up in here
-    attr_reader :id, :client, :topic, :aliases, :members, :events
+    attr_reader :id, :client, :events
 
     # @!method inspect
     #   An inspect method that skips a handful of instance variables to avoid
     #   flooding the terminal with debug data.
     #   @return [String] a regular inspect string without the data for some variables
-    ignore_inspect :client, :members, :events, :prev_batch, :logger
+    ignore_inspect :client, :events, :prev_batch, :logger
+
+    # Requires heavy lookups, so they're cached for an hour
+    cached :joined_members, :aliases, cache_level: :all, expires_in: 60 * 60
+    # Only cache unfiltered requests for all members
+    cached :all_members, unless: proc { |args| args.any? }, cache_level: :all, expires_in: 3600
+
+    # Much simpler to look up, and lighter data-wise, so the cache is wider
+    cached :canonical_alias, :name, :avatar_url, :topic, :guest_access, :join_rule, :power_levels, cache_level: :some, expires_in: 15 * 60
 
     alias room_id id
+    alias members joined_members
 
     # Create a new room instance
     #
@@ -74,33 +63,26 @@ module MatrixSdk
     def initialize(client, room_id, data = {})
       raise ArgumentError, 'Must be given a Client instance' unless client.is_a? Client
 
+      @client = client
       room_id = MXID.new room_id unless room_id.is_a?(MXID)
       raise ArgumentError, 'room_id must be a valid Room ID' unless room_id.room_id?
 
-      @name = nil
-      @topic = nil
-      @canonical_alias = nil
-      @aliases = []
-      @join_rule = nil
-      @guest_access = nil
-      @world_readable = nil
-      @members = []
       @events = []
-      @members_loaded = false
       @event_history_limit = 10
-      @avatar_url = nil
 
       @prev_batch = nil
 
       data.each do |k, v|
-        instance_variable_set("@#{k}", v) if instance_variable_defined? "@#{k}"
+        next if %i[client].include? k
+
+        if respond_to?("#{k}_cached?".to_sym) && send("#{k}_cached?".to_sym)
+          tinycache_adapter.write(k, v)
+        elsif instance_variable_defined? "@#{k}"
+          instance_variable_set("@#{k}", v)
+        end
       end
 
-      @client = client
       @id = room_id.to_s
-
-      @name_checked = Time.new(0)
-      @power_levels_checked = Time.new(0)
 
       logger.debug "Created room #{room_id}"
     end
@@ -155,19 +137,22 @@ module MatrixSdk
       'Empty Room'
     end
 
+    # @return [String, nil] the canonical alias of the room
+    def canonical_alias
+      client.api.get_room_state(id, 'm.room.canonical_alias')[:alias]
+    rescue MatrixSdk::MatrixNotFoundError
+      nil
+    end
+
     # Populates and returns the #members array
     #
     # @return [Array(User)] The list of members in the room
     def joined_members
-      return members if @members_loaded && !members.empty?
-
-      client.api.get_room_joined_members(id)[:joined].each do |mxid, data|
-        ensure_member(User.new(client, mxid.to_s,
-                               display_name: data.fetch(:display_name, nil),
-                               avatar_url: data.fetch(:avatar_url, nil)))
+      client.api.get_room_joined_members(id)[:joined].map do |mxid, data|
+        User.new(client, mxid.to_s,
+                 display_name: data.fetch(:display_name, nil),
+                 avatar_url: data.fetch(:avatar_url, nil))
       end
-      @members_loaded = true
-      members
     end
 
     # Get all members (member events) in the room
@@ -187,10 +172,7 @@ module MatrixSdk
     #
     # @return [String,nil] The room name - if any
     def name
-      return @name if Time.now - @name_checked < 900
-
-      @name_checked = Time.now
-      @name ||= client.api.get_room_name(id)
+      client.api.get_room_name(id)[:name]
     rescue MatrixNotFoundError
       # No room name has been specified
       nil
@@ -200,9 +182,19 @@ module MatrixSdk
     #
     # @return [String,nil] The avatar URL - if any
     def avatar_url
-      @avatar_url ||= client.api.get_room_avatar(id).url
+      client.api.get_room_avatar(id)[:url]
     rescue MatrixNotFoundError
       # No avatar has been set
+      nil
+    end
+
+    # Gets the room topic - if any
+    #
+    # @return [String,nil] The topic of the room
+    def topic
+      client.api.get_room_topic(id)[:topic]
+    rescue MatrixNotFoundError
+      # No room name has been specified
       nil
     end
 
@@ -210,14 +202,14 @@ module MatrixSdk
     #
     # @return [:can_join,:forbidden] The current guest access right
     def guest_access
-      @guest_access ||= client.api.get_room_guest_access(id).guest_access.to_sym
+      client.api.get_room_guest_access(id)[:guest_access].to_sym
     end
 
     # Gets the join rule for the room
     #
     # @return [:public,:knock,:invite,:private] The current join rule
     def join_rule
-      @join_rule ||= client.api.get_room_join_rules(id).join_rule.to_sym
+      client.api.get_room_join_rules(id)[:join_rule].to_sym
     end
 
     # Checks if +guest_access+ is set to +:can_join+
@@ -228,6 +220,34 @@ module MatrixSdk
     # Checks if +join_rule+ is set to +:invite+
     def invite_only?
       join_rule == :invite
+    end
+
+    # Gets the history visibility of the room
+    #
+    # @return [:invited,:joined,:shared,:world_readable] The current history visibility for the room
+    def history_visibility
+      client.api.get_room_state(id, 'm.room.history_visibility')[:history_visibility].to_sym
+    end
+
+    # Checks if the room history is world readable
+    #
+    # @return [Boolean] If the history is world readable
+    def world_readable?
+      history_visibility == :world_readable
+    end
+    alias world_readable world_readable?
+
+    # Gets the room aliases
+    #
+    # @return [Array[String]] The assigned room aliases
+    def aliases
+      client.api.get_room_aliases(id).aliases
+    rescue MatrixNotFoundError
+      data = client.api.get_room_state_all(id)
+      data.select { |chunk| chunk[:type] == 'm.room.aliases' && chunk.key?(:content) && chunk[:content].key?(:aliases) }
+          .map { |chunk| chunk[:content][:aliases] }
+          .flatten
+          .compact
     end
 
     #
@@ -370,7 +390,7 @@ module MatrixSdk
     # @param reverse [Boolean] whether to fill messages in reverse or not
     # @param limit [Integer] the maximum number of messages to backfill
     # @note This will trigger the `on_event` events as messages are added
-    def backfill_messages(reverse = false, limit = 10) # rubocop:disable Style/OptionalBooleanParameter
+    def backfill_messages(reverse = false, limit = 10)
       data = client.api.get_room_messages(id, @prev_batch, direction: :b, limit: limit)
 
       events = data[:chunk]
@@ -533,22 +553,16 @@ module MatrixSdk
     #
     # @param name [String] The new name to set
     def name=(name)
+      tinycache_adapter.write(:name, name)
       client.api.set_room_name(id, name)
-      @name = name
+      name
     end
 
     # Reloads the name of the room
     #
     # @return [Boolean] if the name was changed or not
     def reload_name!
-      data = begin
-        client.api.get_room_name(id)
-      rescue MatrixNotFoundError
-        nil
-      end
-      changed = data[:name] != @name
-      @name = data[:name] if changed
-      changed
+      clear_name_cache
     end
     alias refresh_name! reload_name!
 
@@ -556,22 +570,16 @@ module MatrixSdk
     #
     # @param topic [String] The new topic to set
     def topic=(topic)
+      tinycache_adapter.write(:topic, topic)
       client.api.set_room_topic(id, topic)
-      @topic = topic
+      topic
     end
 
     # Reloads the topic of the room
     #
     # @return [Boolean] if the topic was changed or not
     def reload_topic!
-      data = begin
-        client.api.get_room_topic(id)
-      rescue MatrixNotFoundError
-        nil
-      end
-      changed = data[:topic] != @topic
-      @topic = data[:topic] if changed
-      changed
+      clear_topic_cache
     end
     alias refresh_topic! reload_topic!
 
@@ -580,7 +588,7 @@ module MatrixSdk
     # @return [Boolean] if the addition was successful or not
     def add_alias(room_alias)
       client.api.set_room_alias(id, room_alias)
-      @aliases << room_alias
+      tinycache_adapter.read(:aliases) << room_alias if tinycache_adapter.exist?(:aliases)
       true
     end
 
@@ -590,21 +598,7 @@ module MatrixSdk
     # @note The list of aliases is not sorted, ordering changes will result in
     #       alias list updates.
     def reload_aliases!
-      begin
-        new_aliases = client.api.get_room_aliases(id).aliases
-      rescue MatrixNotFoundError
-        data = client.api.get_room_state_all(id)
-        new_aliases = data.select { |chunk| chunk[:type] == 'm.room.aliases' && chunk.key?(:content) && chunk[:content].key?(:aliases) }
-                          .map { |chunk| chunk[:content][:aliases] }
-                          .flatten
-                          .compact
-      end
-
-      return false if new_aliases.nil?
-
-      changed = new_aliases != aliases
-      @aliases = new_aliases if changed
-      changed
+      clear_aliases_cache
     end
     alias refresh_aliases! reload_aliases!
 
@@ -613,7 +607,7 @@ module MatrixSdk
     # @param invite_only [Boolean] If it should be invite only or not
     def invite_only=(invite_only)
       self.join_rule = invite_only ? :invite : :public
-      @join_rule == :invite
+      invite_only
     end
 
     # Sets the join rule of the room
@@ -621,7 +615,8 @@ module MatrixSdk
     # @param join_rule [:invite,:public] The join rule of the room
     def join_rule=(join_rule)
       client.api.set_room_join_rules(id, join_rule)
-      @join_rule = join_rule
+      tinycache_adapter.write(:join_rule, join_rule)
+      join_rule
     end
 
     # Sets if guests are allowed in the room
@@ -629,7 +624,7 @@ module MatrixSdk
     # @param allow_guests [Boolean] If guests are allowed to join or not
     def allow_guests=(allow_guests)
       self.guest_access = (allow_guests ? :can_join : :forbidden)
-      @guest_access == :can_join
+      allow_guests
     end
 
     # Sets the guest access status for the room
@@ -637,7 +632,8 @@ module MatrixSdk
     # @param guest_access [:can_join,:forbidden] The new guest access status of the room
     def guest_access=(guest_access)
       client.api.set_room_guest_access(id, guest_access)
-      @guest_access = guest_access
+      tinycache_adapter.write(:guest_access, guest_access)
+      guest_access
     end
 
     # Sets a new avatar URL for the room
@@ -648,7 +644,8 @@ module MatrixSdk
       raise ArgumentError, 'Must be a valid MXC URL' unless avatar_url.is_a? URI::MATRIX
 
       client.api.set_room_avatar(id, avatar_url)
-      @avatar_url = avatar_url
+      tinycache_adapter.write(:avatar_url, avatar_url)
+      avatar_url
     end
 
     # Get the power levels of the room
@@ -657,10 +654,7 @@ module MatrixSdk
     # @return [Hash] The current power levels as set for the room
     # @see Protocols::CS#get_power_levels
     def power_levels
-      return @power_levels if Time.now - @power_levels_checked < 60
-
-      @power_levels_checked = Time.now
-      @power_levels = client.api.get_power_levels(id)
+      client.api.get_power_levels(id)
     end
 
     # Gets the power level of a user in the room
@@ -743,8 +737,8 @@ module MatrixSdk
     def modify_user_power_levels(users = nil, users_default = nil)
       return false if users.nil? && users_default.nil?
 
-      @power_levels_checked = Time.now
-      data = @power_levels = client.api.get_power_levels(id)
+      data = power_levels_without_cache
+      tinycache_adapter.write(:power_levels, data)
       data[:users_default] = users_default unless users_default.nil?
 
       if users
@@ -765,8 +759,8 @@ module MatrixSdk
     def modify_required_power_levels(events = nil, params = {})
       return false if events.nil? && (params.nil? || params.empty?)
 
-      @power_levels_checked = Time.now
-      data = @power_levels = client.api.get_power_levels(id)
+      data = power_levels_without_cache
+      tinycache_adapter.write(:power_levels, data)
       data.merge!(params)
       data.delete_if { |_k, v| v.nil? }
 
@@ -783,7 +777,60 @@ module MatrixSdk
     private
 
     def ensure_member(member)
+      tinycache_adapter.write(:joined_members, []) unless tinycache_adapter.exist? :joined_members
+
+      members = tinycache_adapter.read(:joined_members) || []
       members << member unless members.any? { |m| m.id == member.id }
+    end
+
+    def handle_power_levels(event)
+      tinycache_adapter.write(:power_levels, event[:content])
+    end
+
+    def handle_room_name(event)
+      tinycache_adapter.write(:name, event[:content][:name])
+    end
+
+    def handle_room_topic(event)
+      tinycache_adapter.write(:topic, event[:content][:topic])
+    end
+
+    def handle_room_guest_access(event)
+      tinycache_adapter.write(:guest_access, event[:content][:guest_access].to_sym)
+    end
+
+    def handle_room_join_rules(event)
+      tinycache_adapter.write(:join_rule, event[:content][:join_rule].to_sym)
+    end
+
+    def handle_room_member(event)
+      return unless client.cache == :all
+
+      if event[:content][:membership] == 'join'
+        ensure_member(client.get_user(event[:state_key]).dup.tap do |u|
+          u.instance_variable_set :@display_name, event[:content][:displayname]
+        end)
+      elsif tinycache_adapter.exist? :joined_members
+        members = tinycache_adapter.read(:joined_members)
+        members.delete_if { |m| m.id == event[:state_key] }
+      end
+    end
+
+    def handle_room_canonical_alias(event)
+      canonical_alias = tinycache_adapter.write :canonical_alias, event[:content][:alias]
+
+      data = tinycache_adapter.read(:aliases) || []
+      data << canonical_alias
+      tinycache_adapter.write(:aliases, data)
+    end
+
+    def handle_room_aliases(event)
+      tinycache_adapter.write(:aliases, []) unless tinycache_adapter.exist? :aliases
+
+      aliases = tinycache_adapter.read(:aliases) || []
+      aliases.concat event[:content][:aliases]
+
+      tinycache_adapter.write(:aliases, aliases)
     end
 
     def room_handlers?
@@ -798,6 +845,16 @@ module MatrixSdk
       }
     end
 
+    INTERNAL_HANDLERS = {
+      'm.room.aliases' => :handle_room_aliases,
+      'm.room.canonical_alias' => :handle_room_canonical_alias,
+      'm.room.guest_access' => :handle_room_guest_access,
+      'm.room.join_rules' => :handle_room_join_rules,
+      'm.room.member' => :handle_room_member,
+      'm.room.name' => :handle_room_name,
+      'm.room.power_levels' => :handle_power_levels,
+      'm.room.topic' => :handle_room_topic
+    }.freeze
     def put_event(event)
       ensure_room_handlers[:event].fire(MatrixEvent.new(self, event), event[:type]) if room_handlers?
 
@@ -812,6 +869,8 @@ module MatrixSdk
     end
 
     def put_state_event(event)
+      send(INTERNAL_HANDLERS[event[:type]], event) if INTERNAL_HANDLERS.key? event[:type]
+
       return unless room_handlers?
 
       ensure_room_handlers[:state_event].fire(MatrixEvent.new(self, event), event[:type])
