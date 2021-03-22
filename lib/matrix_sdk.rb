@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
-require 'matrix_sdk/extensions'
-require 'matrix_sdk/util/tinycache'
+require 'matrix_sdk/util/extensions'
 require 'matrix_sdk/version'
 
 require 'json'
@@ -22,6 +21,11 @@ module MatrixSdk
   autoload :MatrixConnectionError, 'matrix_sdk/errors'
   autoload :MatrixTimeoutError, 'matrix_sdk/errors'
   autoload :MatrixUnexpectedResponseError, 'matrix_sdk/errors'
+
+  module Util
+    autoload :Tinycache, 'matrix_sdk/util/tinycache'
+    autoload :TinycacheAdapter, 'matrix_sdk/util/tinycache_adapter'
+  end
 
   module Protocols
     autoload :AS, 'matrix_sdk/protocols/as'

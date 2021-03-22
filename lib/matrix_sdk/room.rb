@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require 'matrix_sdk'
+require 'matrix_sdk/util/events'
+require 'matrix_sdk/util/tinycache'
 
 module MatrixSdk
   # A class for tracking the information about a room on Matrix
