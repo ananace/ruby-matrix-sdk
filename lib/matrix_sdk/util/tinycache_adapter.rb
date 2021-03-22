@@ -36,7 +36,7 @@ module MatrixSdk::Util
       cache_level ||= :all
       cache_level = Tinycache::CACHE_LEVELS[cache_level]
 
-      return read(key) if exist?(key) && (cache[key].expires_at.nil? || cache[key].expires_at > Time.now)
+      return read(key) if exist?(key) && !cache[key].expired?
 
       value = Proc.new.call
       write(key, value, expires_in: expires_in, cache_level: cache_level)
@@ -53,9 +53,19 @@ module MatrixSdk::Util
       @cache = {}
     end
 
+    def cleanup
+      @cache.delete_if { |_, v| v.expired? }
+    end
+
     private
 
-    Value = Struct.new(:value, :timestamp, :expires_at)
+    Value = Struct.new(:value, :timestamp, :expires_at) do
+      def expired?
+        return false if expires_at.nil?
+
+        Time.now > expires_at
+      end
+    end
 
     attr_reader :cache
   end
