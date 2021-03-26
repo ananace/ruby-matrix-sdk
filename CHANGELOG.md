@@ -1,4 +1,4 @@
-## 2.3.0 - **Unreleased**
+## 2.3.0 - 2021-03-26
 
 - Adds support for Ruby 3.0 (#15)
 - Adds support for requests against the Synapse admin API
