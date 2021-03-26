@@ -361,7 +361,7 @@ module MatrixSdk
     # @return [Room] The resulting room
     # @see Protocols::CS#create_room
     def create_room(room_alias = nil, **params)
-      data = api.create_room(params.merge(room_alias: room_alias))
+      data = api.create_room(**params.merge(room_alias: room_alias))
       ensure_room(data.room_id)
     end
 
@@ -553,7 +553,7 @@ module MatrixSdk
       orig_bad_sync_timeout = bad_sync_timeout + 0
       while @should_listen
         begin
-          sync(params.merge(timeout: timeout))
+          sync(**params.merge(timeout: timeout))
 
           bad_sync_timeout = orig_bad_sync_timeout
           sleep(sync_interval) if sync_interval.positive?
