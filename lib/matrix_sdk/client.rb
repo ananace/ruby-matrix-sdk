@@ -635,10 +635,14 @@ module MatrixSdk
 
           fire_ephemeral_event(MatrixEvent.new(self, event), event[:type])
         end
+      end
 
-        # Clean up old cache data after every sync
-        # TODO Run this in a thread?
-        room.tinycache_adapter.cleanup
+      unless cache == :none
+        @rooms.each do |_id, room|
+          # Clean up old cache data after every sync
+          # TODO Run this in a thread?
+          room.tinycache_adapter.cleanup
+        end
       end
 
       nil
