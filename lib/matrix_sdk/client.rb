@@ -102,9 +102,7 @@ module MatrixSdk
     #
     # @return [MXID] The MXID of the current user
     def mxid
-      @mxid ||= begin
-        MXID.new api.whoami?[:user_id] if api&.access_token
-      end
+      @mxid ||= MXID.new api.whoami?[:user_id] if api&.access_token
     end
 
     alias user_id mxid
@@ -519,7 +517,7 @@ module MatrixSdk
       attempts = 0
       data = loop do
         begin
-          break api.sync **extra_params
+          break api.sync(**extra_params)
         rescue MatrixSdk::MatrixTimeoutError => e
           raise e if (attempts += 1) >= params.fetch(:allow_sync_retry, 0)
         end
