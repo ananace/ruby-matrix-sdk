@@ -73,6 +73,7 @@ module MatrixSdk
 
       @cache = client_cache
       @identity_server = nil
+      @mxid = nil
 
       @sync_token = nil
       @sync_thread = nil
@@ -103,6 +104,7 @@ module MatrixSdk
     # @return [MXID] The MXID of the current user
     def mxid
       @mxid ||= MXID.new api.whoami?[:user_id] if api&.access_token
+      @mxid
     end
 
     alias user_id mxid
