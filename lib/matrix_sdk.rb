@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'matrix_sdk/util/extensions'
+require 'matrix_sdk/util/uri'
 require 'matrix_sdk/version'
 
 require 'json'

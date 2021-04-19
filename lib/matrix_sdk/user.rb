@@ -59,7 +59,7 @@ module MatrixSdk
     # Only works for the current user object, as requested by
     #     client.get_user(:self)
     #
-    # @param url [String,URI::MATRIX] the new avatar URL
+    # @param url [String,URI::MXC] the new avatar URL
     # @note Requires a mxc:// URL, check example on
     #   {MatrixSdk::Protocols::CS#set_avatar_url} for how this can be done
     # @see MatrixSdk::Protocols::CS#set_avatar_url

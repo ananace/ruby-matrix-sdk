@@ -646,10 +646,10 @@ module MatrixSdk
 
     # Sets a new avatar URL for the room
     #
-    # @param avatar_url [URI::MATRIX] The mxc:// URL for the new room avatar
+    # @param avatar_url [URI::MXC] The mxc:// URL for the new room avatar
     def avatar_url=(avatar_url)
       avatar_url = URI(avatar_url) unless avatar_url.is_a? URI
-      raise ArgumentError, 'Must be a valid MXC URL' unless avatar_url.is_a? URI::MATRIX
+      raise ArgumentError, 'Must be a valid MXC URL' unless avatar_url.is_a? URI::MXC
 
       client.api.set_room_avatar(id, avatar_url)
       tinycache_adapter.write(:avatar_url, avatar_url)

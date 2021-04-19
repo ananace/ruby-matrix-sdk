@@ -1435,7 +1435,7 @@ module MatrixSdk::Protocols::CS
   #   api.set_avatar_url(api.whoami?[:user_id], mxc)
   #
   # @param [String,MXID] user_id The ID of the user to set the avatar for
-  # @param [String,URI::MATRIX] url The new avatar URL, should be a mxc:// URL
+  # @param [String,URI::MXC] url The new avatar URL, should be a mxc:// URL
   # @return [Response] An empty response hash if the change was successful
   # @see https://matrix.org/docs/spec/client_server/latest#put-matrix-client-r0-profile-userid-avatar-url
   #      The Matrix Spec, for more information about the event and data
@@ -1545,7 +1545,7 @@ module MatrixSdk::Protocols::CS
   #   # => #<URI::HTTPS https://matrix.org/_matrix/media/r0/download/example.com/media_hash>
   def get_download_url(mxcurl, source: nil, **_params)
     mxcurl = URI.parse(mxcurl.to_s) unless mxcurl.is_a? URI
-    raise 'Not a mxc:// URL' unless mxcurl.is_a? URI::MATRIX
+    raise 'Not a mxc:// URL' unless mxcurl.is_a? URI::MXC
 
     if source
       source = "https://#{source}" unless source.include? '://'

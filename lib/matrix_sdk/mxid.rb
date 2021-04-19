@@ -100,5 +100,45 @@ module MatrixSdk
     def room_alias?
       type == :room_alias
     end
+
+    # Converts the MXID to a matrix: URI according to MSC2312
+    # @param event_id [String,MXID] An event ID to append to the URI (only valid for rooms)
+    # @param action [String,Symbol] The action that should be requested
+    # @param via [Array[String]] The list of servers to use for a join
+    # @see https://github.com/matrix-org/matrix-doc/blob/master/proposals/2312-matrix-uri.md
+    def to_uri(event_id: nil, action: nil, via: nil)
+      uri = ''
+
+      case sigil
+      when '@'
+        raise ArgumentError, "can't provide via for user URIs" if via
+        raise ArgumentError, "can't provide event_id for user URIs" if event_id
+
+        uri += 'u'
+      when '#'
+        uri += 'r'
+      when '!'
+        uri += 'roomid'
+      else
+        raise ArgumentError, "this MXID can't be converted to a URI"
+      end
+
+      uri = "matrix:#{uri}/#{localpart}#{homeserver_suffix}"
+
+      uri += "/e/#{event_id.to_s.delete_prefix('$')}" if event_id
+      query = []
+      query << "action=#{action}" if action
+      [via].flatten.compact.each { |v| query << "via=#{v}" }
+
+      uri += "?#{query.join('&')}" unless query.empty?
+
+      URI(uri)
+    end
+
+    # Check if two MXIDs are equal
+    # @return [Boolean]
+    def ==(other)
+      self.to_s == other.to_s
+    end
   end
 end

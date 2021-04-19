@@ -1,20 +1,5 @@
 # frozen_string_literal: true
 
-require 'uri'
-
-module URI
-  # A mxc:// Matrix content URL
-  class MATRIX < Generic
-    def full_path
-      select(:host, :port, :path, :query, :fragment)
-        .reject(&:nil?)
-        .join
-    end
-  end
-
-  @@schemes['MXC'] = MATRIX
-end
-
 unless Object.respond_to? :yield_self
   class Object
     def yield_self

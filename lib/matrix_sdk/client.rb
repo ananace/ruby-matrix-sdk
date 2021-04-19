@@ -429,13 +429,13 @@ module MatrixSdk
 
     # Upload a piece of data to the media repo
     #
-    # @return [URI::MATRIX] A Matrix content (mxc://) URL pointing to the uploaded data
+    # @return [URI::MXC] A Matrix content (mxc://) URL pointing to the uploaded data
     # @param content [String] The data to upload
     # @param content_type [String] The MIME type of the data
     # @see Protocols::CS#media_upload
     def upload(content, content_type)
       data = api.media_upload(content, content_type)
-      return data[:content_uri] if data.key? :content_uri
+      return URI(data[:content_uri]) if data.key? :content_uri
 
       raise MatrixUnexpectedResponseError, 'Upload succeeded, but no media URI returned'
     end

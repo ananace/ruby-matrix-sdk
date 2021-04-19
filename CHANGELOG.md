@@ -1,3 +1,7 @@
+## 2.4.0 - **Unreleased**
+
+- Adds support for matrix: URI's according to MSC2312
+
 ## 2.3.0 - 2021-03-26
 
 - Adds support for Ruby 3.0 (#15)
