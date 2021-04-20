@@ -161,9 +161,7 @@ module MatrixSdk
     #
     # @return [Hash[String,Array[String]]] A mapping of MXIDs to a list of direct rooms with that user
     def direct_rooms
-      Hash[api.get_account_data(mxid, 'm.direct').map do |mxid, rooms|
-        [mxid.to_s, rooms]
-      end]
+      api.get_account_data(mxid, 'm.direct').transform_keys(&:to_s)
     end
 
     # Gets a direct message room for the given user if one exists
@@ -518,11 +516,9 @@ module MatrixSdk
 
       attempts = 0
       data = loop do
-        begin
-          break api.sync(**extra_params)
-        rescue MatrixSdk::MatrixTimeoutError => e
-          raise e if (attempts += 1) >= params.fetch(:allow_sync_retry, 0)
-        end
+        break api.sync(**extra_params)
+      rescue MatrixSdk::MatrixTimeoutError => e
+        raise e if (attempts += 1) >= params.fetch(:allow_sync_retry, 0)
       end
 
       @next_batch = data[:next_batch] unless skip_store_batch

@@ -22,13 +22,11 @@ module MatrixSdk
 
     def fire(event, filter = nil)
       reverse_each do |_k, h|
-        begin
-          h[:block].call(event) if !h[:filter] || event.matches?(h[:filter], filter)
-        rescue StandardError => e
-          logger.error "#{e.class.name} occurred when firing event (#{event})\n#{e}"
+        h[:block].call(event) if !h[:filter] || event.matches?(h[:filter], filter)
+      rescue StandardError => e
+        logger.error "#{e.class.name} occurred when firing event (#{event})\n#{e}"
 
-          raise e if @reraise_exceptions
-        end
+        raise e if @reraise_exceptions
       end
     end
   end

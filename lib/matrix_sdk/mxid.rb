@@ -12,7 +12,7 @@ module MatrixSdk
 
       # TODO: Community-as-a-Room / Profile-as-a-Room, in case they're going for room aliases
       @sigil = identifier[0]
-      @localpart, @domain, @port = identifier[1..-1].split(':')
+      @localpart, @domain, @port = identifier[1..].split(':')
       @port = @port.to_i if @port
 
       raise ArgumentError, 'Identifier is not a valid MXID' unless valid?
@@ -138,7 +138,7 @@ module MatrixSdk
     # Check if two MXIDs are equal
     # @return [Boolean]
     def ==(other)
-      self.to_s == other.to_s
+      to_s == other.to_s
     end
   end
 end

@@ -14,7 +14,7 @@ module URI
 
   @@schemes['MXC'] = MXC
 
-  if !@@schemes.key? 'MATRIX'
+  unless @@schemes.key? 'MATRIX'
     # A matrix: URI according to MSC2312
     class MATRIX < Generic
       attr_reader :authority, :action, :mxid, :mxid2, :via
@@ -28,11 +28,8 @@ module URI
         @mxid2 = nil
         @via = nil
 
-        if !@opaque && !@path
-          raise InvalidComponentError,
-            'missing opaque part for matrix URL'
-        end
- 
+        raise InvalidComponentError, 'missing opaque part for matrix URL' if !@opaque && !@path
+
         if @path
           @authority = @host
           @authority += ":#{@port}" if @port
@@ -45,10 +42,7 @@ module URI
         end
 
         components = @path.delete_prefix('/').split('/', -1)
-        if components.size != 2 && components.size != 4
-          raise InvalidComponentError,
-            'component count must be 2 or 4'
-        end
+        raise InvalidComponentError, 'component count must be 2 or 4' if components.size != 2 && components.size != 4
 
         sigil = case components.shift
                 when 'u', 'user'
@@ -58,15 +52,11 @@ module URI
                 when 'roomid'
                   '!'
                 else
-                  raise InvalidComponentError,
-                    'invalid component in path'
+                  raise InvalidComponentError, 'invalid component in path'
                 end
 
         component = components.shift
-        if component.nil? || component.empty?
-          raise InvalidComponentError,
-            "component can't be empty"
-        end
+        raise InvalidComponentError, "component can't be empty" if component.nil? || component.empty?
 
         @mxid = MatrixSdk::MXID.new("#{sigil}#{component}")
 
@@ -75,14 +65,10 @@ module URI
                    when 'e', 'event'
                      '$'
                    else
-                     raise InvalidComponentError,
-                       'invalid component in path'
+                     raise InvalidComponentError, 'invalid component in path'
                    end
           component = components.shift
-          if component.nil? || component.empty?
-            raise InvalidComponentError,
-              "component can't be empty"
-          end
+          raise InvalidComponentError, "component can't be empty" if component.nil? || component.empty?
 
           @mxid2 = MatrixSdk::MXID.new("#{sigil2}#{component}")
         end
@@ -101,4 +87,3 @@ module URI
     @@schemes['MATRIX'] = MATRIX
   end
 end
-

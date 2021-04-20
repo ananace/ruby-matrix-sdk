@@ -1,8 +1,10 @@
 AllCops:
-  TargetRubyVersion: 2.4
+  TargetRubyVersion: 2.6
   Exclude:
     - '*.spec'
     - 'Rakefile'
+  NewCops: enable
+  SuggestExtensions: false
 
 # Broken in CI
 Lint/Void:
@@ -13,6 +15,9 @@ Style/ClassAndModuleChildren:
 
 # Don't enforce documentation
 Style/Documentation:
+  Enabled: false
+
+Style/DocumentDynamicEvalDefinition:
   Enabled: false
 
 Metrics/ClassLength:
@@ -28,7 +33,7 @@ Metrics/MethodLength:
 Metrics/ModuleLength:
   Max: 500
 
-Metrics/LineLength:
+Layout/LineLength:
   Max: 190
 
 Style/RescueModifier:
