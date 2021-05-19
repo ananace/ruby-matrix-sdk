@@ -25,10 +25,6 @@ lint:rubocop:
     reports:
       junit: "reports/TEST-*.xml"
 
-test:ruby2.5:
-  extends: .test
-  image: "ruby:2.5"
-
 test:ruby2.6:
   extends: .test
   image: "ruby:2.6"
