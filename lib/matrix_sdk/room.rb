@@ -499,6 +499,42 @@ module MatrixSdk
       true
     end
 
+    # Gets the room creation information
+    #
+    # @return [Response] The content of the m.room.create event
+    def creation_info
+      # Not caching here, easier to cache the important values separately instead
+      client.api.get_room_creation_info(id)
+    end
+
+    # Retrieves the type of the room
+    #
+    # @return ['m.space',String,nil] The type of the room
+    def room_type
+      # Can't change, so a permanent cache is ok
+      return @room_type if @room_type_retrieved
+
+      @room_type_retrieved = true
+      @room_type ||= creation_info[:type]
+    end
+
+    # Retrieves the room version
+    #
+    # @return [String] The version of the room
+    def room_version
+      @room_version ||= creation_info[:room_version]
+    end
+
+    # Checks if the room is a Matrix Space
+    #
+    # @return [Boolean,nil] True if the room is a space
+    def space?
+      room_type == 'm.space'
+    rescue MatrixSdk::MatrixForbiddenError
+    rescue MatrixSdk::MatrixNotFoundError
+      nil
+    end
+
     # Returns a list of the room tags
     #
     # @return [Response] A list of the tags and their data, with add and remove methods implemented

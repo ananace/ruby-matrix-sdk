@@ -192,6 +192,19 @@ module MatrixSdk
       @rooms.values
     end
 
+    # Get a list of all joined Matrix Spaces
+    #
+    # @return [Array[Room]] All the currently joined Spaces
+    def spaces
+      rooms = if cache == :none
+                api.get_joined_rooms.joined_rooms.map { |id| Room.new(self, id) }
+              else
+                self.rooms
+              end
+
+      rooms.select(&:space?)
+    end
+
     # Refresh the list of currently handled rooms, replacing it with the user's
     # currently joined rooms.
     #
@@ -209,6 +222,7 @@ module MatrixSdk
       true
     end
     alias refresh_rooms! reload_rooms!
+    alias reload_spaces! reload_rooms!
 
     # Register - and log in - on the connected HS as a guest
     #
