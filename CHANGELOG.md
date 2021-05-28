@@ -1,6 +1,7 @@
 ## 2.4.0 - **Unreleased**
 
 - Adds support for matrix: URI's according to MSC2312
+- Adds some basic support for detecting Spaces (MSC1772)
 
 ## 2.3.0 - 2021-03-26
 
