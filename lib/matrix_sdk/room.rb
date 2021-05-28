@@ -530,8 +530,7 @@ module MatrixSdk
     # @return [Boolean,nil] True if the room is a space
     def space?
       room_type == 'm.space'
-    rescue MatrixSdk::MatrixForbiddenError
-    rescue MatrixSdk::MatrixNotFoundError
+    rescue MatrixSdk::MatrixForbiddenError, MatrixSdk::MatrixNotFoundError
       nil
     end
 
