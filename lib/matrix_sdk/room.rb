@@ -63,6 +63,13 @@ module MatrixSdk
     # @option data [String,URI] :avatar_url The avatar URL for the room
     # @option data [String] :prev_batch The previous batch token for backfill
     def initialize(client, room_id, data = {})
+      if client.is_a? Room
+        copy = client
+        client = copy.client
+        room_id = copy.id
+        # data = copy.attributes
+      end
+
       raise ArgumentError, 'Must be given a Client instance' unless client.is_a? Client
 
       @client = client
@@ -87,6 +94,16 @@ module MatrixSdk
       @id = room_id.to_s
 
       logger.debug "Created room #{room_id}"
+    end
+
+    #
+    # Casting operators
+    #
+
+    def as_space
+      return nil unless space?
+
+      Rooms::Space.new self, nil
     end
 
     #

@@ -23,6 +23,10 @@ module MatrixSdk
   autoload :MatrixTimeoutError, 'matrix_sdk/errors'
   autoload :MatrixUnexpectedResponseError, 'matrix_sdk/errors'
 
+  module Rooms
+    autoload :Space, 'matrix_sdk/rooms/space'
+  end
+
   module Util
     autoload :Tinycache, 'matrix_sdk/util/tinycache'
     autoload :TinycacheAdapter, 'matrix_sdk/util/tinycache_adapter'
