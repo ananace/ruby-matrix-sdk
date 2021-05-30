@@ -78,6 +78,7 @@ module MatrixSdk
 
       @events = []
       @event_history_limit = 10
+      @room_type = nil
 
       @prev_batch = nil
 
@@ -100,7 +101,7 @@ module MatrixSdk
     # Casting operators
     #
 
-    def as_space
+    def to_space
       return nil unless space?
 
       Rooms::Space.new self, nil
@@ -537,7 +538,7 @@ module MatrixSdk
     # @return ['m.space',String,nil] The type of the room
     def room_type
       # Can't change, so a permanent cache is ok
-      return @room_type if @room_type_retrieved
+      return @room_type if @room_type_retrieved || @room_type
 
       @room_type_retrieved = true
       @room_type ||= creation_info[:type]
