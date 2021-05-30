@@ -28,7 +28,7 @@ module MatrixSdk
     #   An inspect method that skips a handful of instance variables to avoid
     #   flooding the terminal with debug data.
     #   @return [String] a regular inspect string without the data for some variables
-    ignore_inspect :client, :events, :prev_batch, :logger
+    ignore_inspect :client, :events, :prev_batch, :logger, :tinycache_adapter
 
     # Requires heavy lookups, so they're cached for an hour
     cached :joined_members, :aliases, cache_level: :all, expires_in: 60 * 60
@@ -104,6 +104,14 @@ module MatrixSdk
       return nil unless space?
 
       Rooms::Space.new self, nil
+    end
+
+    def to_s
+      prefix = canonical_alias if canonical_alias_has_value?
+      prefix ||= id
+      return "#{prefix} | #{name}" if name_has_value?
+
+      prefix
     end
 
     #
