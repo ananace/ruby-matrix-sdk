@@ -10,7 +10,7 @@ module MatrixSdk::Rooms
         max_rooms_per_space: max_rooms
       }.compact
 
-      rooms = data.rooms.map { |r|
+      rooms = data.rooms.map do |r|
         next if r[:room_id] == id
 
         room = client.ensure_room(r[:room_id])
@@ -26,9 +26,10 @@ module MatrixSdk::Rooms
           end
         end
         room
-      }.compact
+      end
+      rooms.compact!
 
-      grouping = { }
+      grouping = {}
       data.events.each do |ev|
         next unless ev[:type] == 'm.space.child'
         next unless ev[:content].key? :via
