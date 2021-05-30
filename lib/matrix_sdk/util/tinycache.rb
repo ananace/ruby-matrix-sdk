@@ -20,7 +20,7 @@ module MatrixSdk::Util
 
     def self.extended(base)
       helper_name = base.send(:cache_helper_module_name)
-      base.remove_const(helper_name) if base.const_defined?(helper_name)
+      base.send :remove_const, helper_name if base.const_defined?(helper_name)
       base.prepend base.const_set(helper_name, Module.new)
 
       base.include InstanceMethods
@@ -65,7 +65,10 @@ module MatrixSdk::Util
         expires: expires_in || 1 * 365 * 24 * 60 * 60 # 1 year
       }
 
-      const_get(cache_helper_module_name).class_eval do
+      helper = const_get(cache_helper_module_name)
+      return if method_names.any? { |k, _| helper.respond_to? k }
+
+      helper.class_eval do
         define_method(method_names[:cache_key]) do |*args|
           cache_key.call(method_name, args)
         end
@@ -87,6 +90,10 @@ module MatrixSdk::Util
 
         define_method(method_names[:cached]) do
           true
+        end
+
+        define_method(method_names[:has_value]) do |*args|
+          tinycache_adapter.valid?(__send__(method_names[:cache_key], *args))
         end
 
         define_method(method_name) do |*args|
@@ -115,7 +122,8 @@ module MatrixSdk::Util
         with_cache: "#{method_name}_with_cache#{punctuation}",
         without_cache: "#{method_name}_without_cache#{punctuation}",
         clear_cache: "clear_#{method_name}_cache#{punctuation}",
-        cached: "#{method}_cached?"
+        cached: "#{method}_cached?",
+        has_value: "#{method}_has_value?"
       }
     end
   end

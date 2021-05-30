@@ -16,6 +16,7 @@ module MatrixSdk::Util
 
     def write(key, value, expires_in: nil, cache_level: nil)
       expires_in ||= config.dig(key, :expires)
+      expires_in ||= 24 * 60 * 60
       cache_level ||= client&.cache
       cache_level ||= :all
       cache_level = Tinycache::CACHE_LEVELS[cache_level] unless cache_level.is_a? Integer
@@ -28,6 +29,10 @@ module MatrixSdk::Util
 
     def exist?(key)
       cache.key?(key)
+    end
+
+    def valid?(key)
+      exist?(key) && !cache[key].expired?
     end
 
     def fetch(key, expires_in: nil, cache_level: nil, **_opts)
