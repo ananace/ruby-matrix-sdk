@@ -552,11 +552,14 @@ module MatrixSdk
       raise ArgumentError, 'Must be a room ID' unless room_id.room_id?
 
       room_id = room_id.to_s
-      @rooms.fetch(room_id) do
+      ret = @rooms.fetch(room_id) do
         room = Room.new(self, room_id)
         @rooms[room_id] = room unless cache == :none
         room
       end
+      # Need to figure out a way to handle multiple types
+      ret = @rooms[room_id] = ret.to_space if ret.instance_variable_get :@room_type
+      ret
     end
 
     def listen_forever(timeout: 30, bad_sync_timeout: 5, sync_interval: 0, **params)
