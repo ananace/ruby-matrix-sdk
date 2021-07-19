@@ -5,10 +5,17 @@ module MatrixSdk::Rooms
     TYPE = 'm.space'
 
     def tree(suggested_only: nil, max_rooms: nil)
-      data = client.api.request :get, :client_unstable, "/org.matrix.msc2946/rooms/#{id}/spaces", query: {
-        suggested_only: suggested_only,
-        max_rooms_per_space: max_rooms
-      }.compact
+      begin
+        data = client.api.request :get, :client_unstable, "/org.matrix.msc2946/rooms/#{id}/spaces", query: {
+          suggested_only: suggested_only,
+          max_rooms_per_space: max_rooms
+        }.compact
+      rescue
+        data = client.api.request :get, :client_r0, "/rooms/#{id}/spaces", query: {
+          suggested_only: suggested_only,
+          max_rooms_per_space: max_rooms
+        }.compact
+      end
 
       rooms = data.rooms.map do |r|
         next if r[:room_id] == id
