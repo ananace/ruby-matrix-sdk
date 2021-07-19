@@ -602,35 +602,35 @@ module MatrixSdk
     end
 
     def handle_sync_response(data)
-      data[:presence][:events].each do |presence_update|
+      data.dig(:presence, :events)&.each do |presence_update|
         fire_presence_event(MatrixEvent.new(self, presence_update))
       end
 
-      data[:rooms][:invite].each do |room_id, invite|
+      data.dig(:rooms, :invite)&.each do |room_id, invite|
         invite[:room_id] = room_id.to_s
         fire_invite_event(MatrixEvent.new(self, invite), room_id.to_s)
       end
 
-      data[:rooms][:leave].each do |room_id, left|
+      data.dig(:rooms, :leave)&.each do |room_id, left|
         left[:room_id] = room_id.to_s
         fire_leave_event(MatrixEvent.new(self, left), room_id.to_s)
       end
 
-      data[:rooms][:join].each do |room_id, join|
+      data.dig(:rooms, :join)&.each do |room_id, join|
         room = ensure_room(room_id)
-        room.instance_variable_set '@prev_batch', join[:timeline][:prev_batch]
+        room.instance_variable_set '@prev_batch', join.dig(:timeline, :prev_batch)
         room.instance_variable_set :@members_loaded, true unless sync_filter.fetch(:room, {}).fetch(:state, {}).fetch(:lazy_load_members, false)
 
-        join[:state][:events].each do |event|
+        join.dig(:state, :events)&.each do |event|
           event[:room_id] = room_id.to_s
           handle_state(room_id, event)
         end
 
-        join[:timeline][:events].each do |event|
+        join.dig(:timeline, :events)&.each do |event|
           event[:room_id] = room_id.to_s
           # Avoid sending two identical state events if it's both in state and timeline
           if event.key?(:state_key)
-            state_event = join.dig(:state, :events).find { |ev| ev[:event_id] == event[:event_id] }
+            state_event = join.dig(:state, :events)&.find { |ev| ev[:event_id] == event[:event_id] }
 
             handle_state(room_id, event) unless event == state_event
           end
@@ -639,7 +639,7 @@ module MatrixSdk
           fire_event(MatrixEvent.new(self, event), event[:type])
         end
 
-        join[:ephemeral][:events].each do |event|
+        join.dig(:ephemeral, :events)&.each do |event|
           event[:room_id] = room_id.to_s
           room.send :put_ephemeral_event, event
 
