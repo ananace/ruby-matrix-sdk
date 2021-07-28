@@ -10,7 +10,7 @@ module MatrixSdk::Rooms
           suggested_only: suggested_only,
           max_rooms_per_space: max_rooms
         }.compact
-      rescue
+      rescue MatrixRequestError
         data = client.api.request :get, :client_r0, "/rooms/#{id}/spaces", query: {
           suggested_only: suggested_only,
           max_rooms_per_space: max_rooms
