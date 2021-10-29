@@ -1,7 +1,8 @@
-## 2.4.0 - **Unreleased**
+## 2.4.0 - 2021-07-19
 
 - Adds support for matrix: URI's according to MSC2312
 - Adds some basic support for detecting Spaces (MSC1772)
+- Fixes sync against Synapse 1.38.0 missing empty fields
 
 ## 2.3.0 - 2021-03-26
 
