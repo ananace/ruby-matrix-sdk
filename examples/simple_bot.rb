@@ -40,11 +40,10 @@ class MatrixBot
     client.on_event.add_handler('m.room.message') { |ev| on_message(ev) }
 
     loop do
-      begin
-        client.sync filter: BOT_FILTER
-      rescue MatrixSdk::MatrixError => e
-        puts e
-      end
+      client.sync filter: BOT_FILTER
+    rescue StandardError => e
+      puts "Failed to sync - #{e.class}: #{e}"
+      sleep 5
     end
   end
 
