@@ -453,6 +453,28 @@ module MatrixSdk::Protocols::CS
     request(:post, client_api_latest, '/createRoom', body: content, query: query)
   end
 
+  # Knock on a room
+  #
+  # @param id_or_alias [MXID,String] The room ID or Alias to knock
+  # @param reason [String] A reason for the knock, will be attached to the membership data
+  # @param server_name [String[]] A list of servers to perform the join through
+  # @param params [Hash] Extra room knock options
+  # @return [Response] A response hash with at least the parameter :room_id
+  # @see https://spec.matrix.org/v1.1/client-server-api/#knocking-on-rooms
+  #      The Matrix Spec, for more information about the call and response
+  def knock_room(id_or_alias, reason: nil, server_name: nil, **params)
+    query = {}
+    query[:server_name] = server_name if server_name
+    query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
+
+    content = {}
+    content[:reason] = reason if reason
+
+    id_or_alias = ERB::Util.url_encode id_or_alias.to_s
+
+    request(:post, client_api_latest, "/knock/#{id_or_alias}", body: content, query: query)
+  end
+
   # Joins a room
   # @param id_or_alias [MXID,String] The room ID or Alias to join
   # @param params [Hash] Extra room join options
@@ -461,17 +483,17 @@ module MatrixSdk::Protocols::CS
   # @see https://matrix.org/docs/spec/client_server/latest.html#post-matrix-client-r0-join-roomidoralias
   #      The Matrix Spec, for more information about the call and response
   # @todo Add support for 3rd-party signed objects
-  def join_room(id_or_alias, **params)
+  def join_room(id_or_alias, reason: nil, **params)
     query = {}
     query[:server_name] = params[:server_name] if params[:server_name]
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
 
-    # id_or_alias = MXID.new id_or_alias.to_s unless id_or_alias.is_a? MXID
-    # raise ArgumentError, 'Not a room ID or alias' unless id_or_alias.room?
+    content = {}
+    content[:reason] = reason if reason
 
     id_or_alias = ERB::Util.url_encode id_or_alias.to_s
 
-    request(:post, client_api_latest, "/join/#{id_or_alias}", query: query)
+    request(:post, client_api_latest, "/join/#{id_or_alias}", body: content, query: query)
   end
 
   # Sends a state event to a room

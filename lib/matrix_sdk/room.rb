@@ -53,7 +53,7 @@ module MatrixSdk
     # @option data [String] :topic The current topic of the room
     # @option data [String,MXID] :canonical_alias The canonical alias of the room
     # @option data [Array(String,MXID)] :aliases All non-canonical aliases of the room
-    # @option data [:invite,:public] :join_rule The join rule for the room
+    # @option data [:invite,:public,:knock] :join_rule The join rule for the room
     # @option data [:can_join,:forbidden] :guest_access The guest access setting for the room
     # @option data [Boolean] :world_readable If the room is readable by the entire world
     # @option data [Array(User)] :members The list of joined members
@@ -248,6 +248,11 @@ module MatrixSdk
     # Checks if +join_rule+ is set to +:invite+
     def invite_only?
       join_rule == :invite
+    end
+
+    # Checks if +join_rule+ is set to +:knock+
+    def knock_only?
+      join_rule == :knock
     end
 
     # Gets the history visibility of the room
