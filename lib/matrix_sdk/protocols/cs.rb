@@ -39,10 +39,20 @@ module MatrixSdk::Protocols::CS
     end
   end
 
+  # Gets the latest version of the client API
+  # @return [Symbol] :client_r0 / :client_v3 / etc
+  def client_api_latest
+    @client_api_latest ||= :client_v3 if client_api_versions.any? { |v| v.start_with? 'v1.1' }
+    @client_api_latest ||= :client_r0
+  rescue StandardError => e
+    logger.warn "Failed to look up supported client API, defaulting to r0. The error was #{e.class}: #{e}"
+    @client_api_latest ||= :client_r0
+  end
+
   # Gets the list of available methods for logging in
   # @return [Response]
   def allowed_login_methods
-    request(:get, :client_r0, '/login')
+    request(:get, client_api_latest, '/login')
   end
 
   # Runs the client API /sync method
@@ -64,7 +74,7 @@ module MatrixSdk::Protocols::CS
     query[:timeout] = params.delete(:timeout_ms).to_i if params.key? :timeout_ms
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
 
-    request(:get, :client_r0, '/sync', query: query)
+    request(:get, client_api_latest, '/sync', query: query)
   end
 
   # Registers a user using the client API /register endpoint
@@ -90,7 +100,7 @@ module MatrixSdk::Protocols::CS
     store_token = params.delete(:store_token) { !protocol?(:AS) }
     store_device_id = params.delete(:store_device_id) { store_token }
 
-    request(:post, :client_r0, '/register', body: params, query: query).tap do |resp|
+    request(:post, client_api_latest, '/register', body: params, query: query).tap do |resp|
       @access_token = resp.token if resp.key?(:token) && store_token
       @device_id = resp.device_id if resp.key?(:device_id) && store_device_id
     end
@@ -113,7 +123,7 @@ module MatrixSdk::Protocols::CS
       next_link: next_link
     }.compact
 
-    request(:post, :client_r0, '/register/email/requestToken', body: body)
+    request(:post, client_api_latest, '/register/email/requestToken', body: body)
   end
 
   # Requests to register a phone number to the current account
@@ -135,7 +145,7 @@ module MatrixSdk::Protocols::CS
       next_link: next_link
     }.compact
 
-    request(:post, :client_r0, '/register/msisdn/requestToken', body: body)
+    request(:post, client_api_latest, '/register/msisdn/requestToken', body: body)
   end
 
   # Checks if a given username is available and valid for registering
@@ -148,7 +158,7 @@ module MatrixSdk::Protocols::CS
   # @return [Response]
   # @see https://matrix.org/docs/spec/client_server/latest.html#get-matrix-client-r0-register-available
   def username_available?(username)
-    request(:get, :client_r0, '/register/available', query: { username: username })
+    request(:get, client_api_latest, '/register/available', query: { username: username })
   end
 
   # Logs in using the client API /login endpoint, and optionally stores the resulting access for API usage
@@ -190,7 +200,7 @@ module MatrixSdk::Protocols::CS
     }.merge params
     data[:device_id] = device_id if device_id
 
-    request(:post, :client_r0, '/login', body: data, query: query).tap do |resp|
+    request(:post, client_api_latest, '/login', body: data, query: query).tap do |resp|
       @access_token = resp.token if resp.key?(:token) && options[:store_token]
       @device_id = resp.device_id if resp.key?(:device_id) && options[:store_device_id]
     end
@@ -204,7 +214,7 @@ module MatrixSdk::Protocols::CS
     query = {}
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
 
-    request(:post, :client_r0, '/logout', query: query)
+    request(:post, client_api_latest, '/logout', query: query)
   end
 
   # Logs out the currently logged in user
@@ -215,7 +225,7 @@ module MatrixSdk::Protocols::CS
     query = {}
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
 
-    request(:post, :client_r0, '/logout/all', query: query)
+    request(:post, client_api_latest, '/logout/all', query: query)
   end
 
   # Changes the users password
@@ -235,7 +245,7 @@ module MatrixSdk::Protocols::CS
       auth: auth
     }
 
-    request(:post, :client_r0, '/account/password', body: body, query: query)
+    request(:post, client_api_latest, '/account/password', body: body, query: query)
   end
 
   # Requests an authentication token based on an email address
@@ -255,7 +265,7 @@ module MatrixSdk::Protocols::CS
       next_link: next_link
     }.compact
 
-    request(:post, :client_r0, '/account/password/email/requestToken', body: body)
+    request(:post, client_api_latest, '/account/password/email/requestToken', body: body)
   end
 
   # Requests an authentication token based on a phone number
@@ -277,7 +287,7 @@ module MatrixSdk::Protocols::CS
       next_link: next_link
     }.compact
 
-    request(:post, :client_r0, '/account/password/msisdn/requestToken', body: body)
+    request(:post, client_api_latest, '/account/password/msisdn/requestToken', body: body)
   end
 
   # Deactivates the current account, logging out all connected devices and preventing future logins
@@ -293,14 +303,14 @@ module MatrixSdk::Protocols::CS
       id_server: id_server
     }.compact
 
-    request(:post, :client_r0, '/account/deactivate', body: body)
+    request(:post, client_api_latest, '/account/deactivate', body: body)
   end
 
   def get_3pids(**params)
     query = {}
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
 
-    request(:get, :client_r0, '/account/3pid', query: query)
+    request(:get, client_api_latest, '/account/3pid', query: query)
   end
 
   # Finishes a 3PID addition to the current user
@@ -318,7 +328,7 @@ module MatrixSdk::Protocols::CS
       auth: auth_data
     }.compact
 
-    request(:post, :client_r0, '/account/3pid/add', body: body)
+    request(:post, client_api_latest, '/account/3pid/add', body: body)
   end
 
   # Finishes binding a 3PID to the current user
@@ -338,7 +348,7 @@ module MatrixSdk::Protocols::CS
       sid: session
     }
 
-    request(:post, :client_r0, '/account/3pid/bind', body: body)
+    request(:post, client_api_latest, '/account/3pid/bind', body: body)
   end
 
   # Deletes a 3PID from the current user, this method might not unbind it from the identity server
@@ -356,7 +366,7 @@ module MatrixSdk::Protocols::CS
       medium: medium
     }
 
-    request(:post, :client_r0, '/account/3pid/delete', body: body)
+    request(:post, client_api_latest, '/account/3pid/delete', body: body)
   end
 
   # Unbinds a 3PID from the current user
@@ -374,7 +384,7 @@ module MatrixSdk::Protocols::CS
       medium: medium
     }
 
-    request(:post, :client_r0, '/account/3pid/unbind', body: body)
+    request(:post, client_api_latest, '/account/3pid/unbind', body: body)
   end
 
   # Gets the list of rooms joined by the current user
@@ -385,7 +395,7 @@ module MatrixSdk::Protocols::CS
     query = {}
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
 
-    request(:get, :client_r0, '/joined_rooms', query: query)
+    request(:get, client_api_latest, '/joined_rooms', query: query)
   end
 
   # Gets the list of public rooms on a Matrix server
@@ -418,7 +428,7 @@ module MatrixSdk::Protocols::CS
       query = query.merge(params).compact
     end
 
-    request(method, :client_r0, '/publicRooms', query: query, body: body)
+    request(method, client_api_latest, '/publicRooms', query: query, body: body)
   end
 
   # Creates a new room
@@ -440,7 +450,7 @@ module MatrixSdk::Protocols::CS
     content[:invite] = [params.delete(:invite)].flatten if params[:invite]
     content.merge! params
 
-    request(:post, :client_r0, '/createRoom', body: content, query: query)
+    request(:post, client_api_latest, '/createRoom', body: content, query: query)
   end
 
   # Joins a room
@@ -461,7 +471,7 @@ module MatrixSdk::Protocols::CS
 
     id_or_alias = ERB::Util.url_encode id_or_alias.to_s
 
-    request(:post, :client_r0, "/join/#{id_or_alias}", query: query)
+    request(:post, client_api_latest, "/join/#{id_or_alias}", query: query)
   end
 
   # Sends a state event to a room
@@ -482,7 +492,7 @@ module MatrixSdk::Protocols::CS
     event_type = ERB::Util.url_encode event_type.to_s
     state_key = ERB::Util.url_encode params[:state_key].to_s if params.key? :state_key
 
-    request(:put, :client_r0, "/rooms/#{room_id}/state/#{event_type}#{"/#{state_key}" unless state_key.nil?}", body: content, query: query)
+    request(:put, client_api_latest, "/rooms/#{room_id}/state/#{event_type}#{"/#{state_key}" unless state_key.nil?}", body: content, query: query)
   end
 
   # Sends a message event to a room
@@ -505,7 +515,7 @@ module MatrixSdk::Protocols::CS
     event_type = ERB::Util.url_encode event_type.to_s
     txn_id = ERB::Util.url_encode txn_id.to_s
 
-    request(:put, :client_r0, "/rooms/#{room_id}/send/#{event_type}/#{txn_id}", body: content, query: query)
+    request(:put, client_api_latest, "/rooms/#{room_id}/send/#{event_type}/#{txn_id}", body: content, query: query)
   end
 
   # Redact an event in a room
@@ -531,7 +541,7 @@ module MatrixSdk::Protocols::CS
     event_id = ERB::Util.url_encode event_id.to_s
     txn_id = ERB::Util.url_encode txn_id.to_s
 
-    request(:put, :client_r0, "/rooms/#{room_id}/redact/#{event_id}/#{txn_id}", body: content, query: query)
+    request(:put, client_api_latest, "/rooms/#{room_id}/redact/#{event_id}/#{txn_id}", body: content, query: query)
   end
 
   # Send a content message to a room
@@ -687,7 +697,7 @@ module MatrixSdk::Protocols::CS
     room_id = ERB::Util.url_encode room_id.to_s
     event_id = ERB::Util.url_encode event_id.to_s
 
-    request(:post, :client_r0, "/rooms/#{room_id}/report/#{event_id}", body: body, query: query)
+    request(:post, client_api_latest, "/rooms/#{room_id}/report/#{event_id}", body: body, query: query)
   end
 
   # Retrieve additional messages in a room
@@ -714,7 +724,7 @@ module MatrixSdk::Protocols::CS
 
     room_id = ERB::Util.url_encode room_id.to_s
 
-    request(:get, :client_r0, "/rooms/#{room_id}/messages", query: query)
+    request(:get, client_api_latest, "/rooms/#{room_id}/messages", query: query)
   end
 
   # Gets a specific event from a room
@@ -731,7 +741,7 @@ module MatrixSdk::Protocols::CS
     room_id = ERB::Util.url_encode room_id.to_s
     event_id = ERB::Util.url_encode event_id.to_s
 
-    request(:get, :client_r0, "/rooms/#{room_id}/event/#{event_id}", query: query)
+    request(:get, client_api_latest, "/rooms/#{room_id}/event/#{event_id}", query: query)
   end
 
   # Reads the latest instance of a room state event
@@ -749,7 +759,7 @@ module MatrixSdk::Protocols::CS
     state_type = ERB::Util.url_encode state_type.to_s
     key = ERB::Util.url_encode key.to_s
 
-    request(:get, :client_r0, "/rooms/#{room_id}/state/#{state_type}#{key.empty? ? nil : "/#{key}"}", query: query)
+    request(:get, client_api_latest, "/rooms/#{room_id}/state/#{state_type}#{key.empty? ? nil : "/#{key}"}", query: query)
   end
 
   # Retrieves all current state objects from a room
@@ -764,7 +774,7 @@ module MatrixSdk::Protocols::CS
 
     room_id = ERB::Util.url_encode room_id.to_s
 
-    request(:get, :client_r0, "/rooms/#{room_id}/state", query: query)
+    request(:get, client_api_latest, "/rooms/#{room_id}/state", query: query)
   end
 
   # Retrieves number of events that happened just before and after the specified event
@@ -788,7 +798,7 @@ module MatrixSdk::Protocols::CS
     room_id = ERB::Util.url_encode room_id.to_s
     event_id = ERB::Util.url_encode event_id.to_s
 
-    request(:get, :client_r0, "/rooms/#{room_id}/context/#{event_id}", query: query)
+    request(:get, client_api_latest, "/rooms/#{room_id}/context/#{event_id}", query: query)
   end
 
   ## Specialized getters for specced state
@@ -1125,7 +1135,7 @@ module MatrixSdk::Protocols::CS
 
     room_id = ERB::Util.url_encode room_id.to_s
 
-    request(:post, :client_r0, "/rooms/#{room_id}/leave", query: query)
+    request(:post, client_api_latest, "/rooms/#{room_id}/leave", query: query)
   end
 
   def forget_room(room_id, **params)
@@ -1134,7 +1144,7 @@ module MatrixSdk::Protocols::CS
 
     room_id = ERB::Util.url_encode room_id.to_s
 
-    request(:post, :client_r0, "/rooms/#{room_id}/forget", query: query)
+    request(:post, client_api_latest, "/rooms/#{room_id}/forget", query: query)
   end
 
   # Directly joins a room by ID
@@ -1154,7 +1164,7 @@ module MatrixSdk::Protocols::CS
 
     room_id = ERB::Util.url_encode room_id.to_s
 
-    request(:post, :client_r0, "/rooms/#{room_id}/join", body: body, query: query)
+    request(:post, client_api_latest, "/rooms/#{room_id}/join", body: body, query: query)
   end
 
   def invite_user(room_id, user_id, **params)
@@ -1167,7 +1177,7 @@ module MatrixSdk::Protocols::CS
 
     room_id = ERB::Util.url_encode room_id.to_s
 
-    request(:post, :client_r0, "/rooms/#{room_id}/invite", body: content, query: query)
+    request(:post, client_api_latest, "/rooms/#{room_id}/invite", body: content, query: query)
   end
 
   def kick_user(room_id, user_id, reason: '', **params)
@@ -1180,7 +1190,7 @@ module MatrixSdk::Protocols::CS
     }
     room_id = ERB::Util.url_encode room_id.to_s
 
-    request(:post, :client_r0, "/rooms/#{room_id}/kick", body: content, query: query)
+    request(:post, client_api_latest, "/rooms/#{room_id}/kick", body: content, query: query)
   end
 
   def get_membership(room_id, user_id, **params)
@@ -1190,7 +1200,7 @@ module MatrixSdk::Protocols::CS
     room_id = ERB::Util.url_encode room_id.to_s
     user_id = ERB::Util.url_encode user_id.to_s
 
-    request(:get, :client_r0, "/rooms/#{room_id}/state/m.room.member/#{user_id}", query: query)
+    request(:get, client_api_latest, "/rooms/#{room_id}/state/m.room.member/#{user_id}", query: query)
   end
 
   def set_membership(room_id, user_id, membership, reason: '', **params)
@@ -1214,7 +1224,7 @@ module MatrixSdk::Protocols::CS
     }
     room_id = ERB::Util.url_encode room_id.to_s
 
-    request(:post, :client_r0, "/rooms/#{room_id}/ban", body: content, query: query)
+    request(:post, client_api_latest, "/rooms/#{room_id}/ban", body: content, query: query)
   end
 
   def unban_user(room_id, user_id, **params)
@@ -1226,7 +1236,7 @@ module MatrixSdk::Protocols::CS
     }
     room_id = ERB::Util.url_encode room_id.to_s
 
-    request(:post, :client_r0, "/rooms/#{room_id}/unban", body: content, query: query)
+    request(:post, client_api_latest, "/rooms/#{room_id}/unban", body: content, query: query)
   end
 
   # Gets the room directory visibility status for a room
@@ -1241,7 +1251,7 @@ module MatrixSdk::Protocols::CS
 
     room_id = ERB::Util.url_encode room_id.to_s
 
-    request(:get, :client_r0, "/directory/list/room/#{room_id}", query: query)
+    request(:get, client_api_latest, "/directory/list/room/#{room_id}", query: query)
   end
 
   # Sets the room directory visibility status for a room
@@ -1261,7 +1271,7 @@ module MatrixSdk::Protocols::CS
 
     room_id = ERB::Util.url_encode room_id.to_s
 
-    request(:put, :client_r0, "/directory/list/room/#{room_id}", body: body, query: query)
+    request(:put, client_api_latest, "/directory/list/room/#{room_id}", body: body, query: query)
   end
 
   def get_user_tags(user_id, room_id, **params)
@@ -1271,7 +1281,7 @@ module MatrixSdk::Protocols::CS
     room_id = ERB::Util.url_encode room_id.to_s
     user_id = ERB::Util.url_encode user_id.to_s
 
-    request(:get, :client_r0, "/user/#{user_id}/rooms/#{room_id}/tags", query: query)
+    request(:get, client_api_latest, "/user/#{user_id}/rooms/#{room_id}/tags", query: query)
   end
 
   def remove_user_tag(user_id, room_id, tag, **params)
@@ -1282,7 +1292,7 @@ module MatrixSdk::Protocols::CS
     user_id = ERB::Util.url_encode user_id.to_s
     tag = ERB::Util.url_encode tag.to_s
 
-    request(:delete, :client_r0, "/user/#{user_id}/rooms/#{room_id}/tags/#{tag}", query: query)
+    request(:delete, client_api_latest, "/user/#{user_id}/rooms/#{room_id}/tags/#{tag}", query: query)
   end
 
   def add_user_tag(user_id, room_id, tag, **params)
@@ -1300,7 +1310,7 @@ module MatrixSdk::Protocols::CS
     user_id = ERB::Util.url_encode user_id.to_s
     tag = ERB::Util.url_encode tag.to_s
 
-    request(:put, :client_r0, "/user/#{user_id}/rooms/#{room_id}/tags/#{tag}", body: content, query: query)
+    request(:put, client_api_latest, "/user/#{user_id}/rooms/#{room_id}/tags/#{tag}", body: content, query: query)
   end
 
   def get_account_data(user_id, type_key, **params)
@@ -1310,7 +1320,7 @@ module MatrixSdk::Protocols::CS
     user_id = ERB::Util.url_encode user_id.to_s
     type_key = ERB::Util.url_encode type_key.to_s
 
-    request(:get, :client_r0, "/user/#{user_id}/account_data/#{type_key}", query: query)
+    request(:get, client_api_latest, "/user/#{user_id}/account_data/#{type_key}", query: query)
   end
 
   def set_account_data(user_id, type_key, account_data, **params)
@@ -1320,7 +1330,7 @@ module MatrixSdk::Protocols::CS
     user_id = ERB::Util.url_encode user_id.to_s
     type_key = ERB::Util.url_encode type_key.to_s
 
-    request(:put, :client_r0, "/user/#{user_id}/account_data/#{type_key}", body: account_data, query: query)
+    request(:put, client_api_latest, "/user/#{user_id}/account_data/#{type_key}", body: account_data, query: query)
   end
 
   def get_room_account_data(user_id, room_id, type_key, **params)
@@ -1331,7 +1341,7 @@ module MatrixSdk::Protocols::CS
     room_id = ERB::Util.url_encode room_id.to_s
     type_key = ERB::Util.url_encode type_key.to_s
 
-    request(:get, :client_r0, "/user/#{user_id}/rooms/#{room_id}/account_data/#{type_key}", query: query)
+    request(:get, client_api_latest, "/user/#{user_id}/rooms/#{room_id}/account_data/#{type_key}", query: query)
   end
 
   def set_room_account_data(user_id, room_id, type_key, account_data, **params)
@@ -1342,7 +1352,7 @@ module MatrixSdk::Protocols::CS
     room_id = ERB::Util.url_encode room_id.to_s
     type_key = ERB::Util.url_encode type_key.to_s
 
-    request(:put, :client_r0, "/user/#{user_id}/rooms/#{room_id}/account_data/#{type_key}", body: account_data, query: query)
+    request(:put, client_api_latest, "/user/#{user_id}/rooms/#{room_id}/account_data/#{type_key}", body: account_data, query: query)
   end
 
   # Retrieve user information
@@ -1354,7 +1364,7 @@ module MatrixSdk::Protocols::CS
   def whois(user_id)
     user_id = ERB::Util.url_encode user_id.to_s
 
-    request(:get, :client_r0, "/admin/whois/#{user_id}")
+    request(:get, client_api_latest, "/admin/whois/#{user_id}")
   end
 
   def get_filter(user_id, filter_id, **params)
@@ -1364,7 +1374,7 @@ module MatrixSdk::Protocols::CS
     user_id = ERB::Util.url_encode user_id.to_s
     filter_id = ERB::Util.url_encode filter_id.to_s
 
-    request(:get, :client_r0, "/user/#{user_id}/filter/#{filter_id}", query: query)
+    request(:get, client_api_latest, "/user/#{user_id}/filter/#{filter_id}", query: query)
   end
 
   # Creates a filter for future use
@@ -1377,7 +1387,7 @@ module MatrixSdk::Protocols::CS
 
     user_id = ERB::Util.url_encode user_id.to_s
 
-    request(:post, :client_r0, "/user/#{user_id}/filter", body: filter_params, query: query)
+    request(:post, client_api_latest, "/user/#{user_id}/filter", body: filter_params, query: query)
   end
 
   def media_upload(content, content_type, **params)
@@ -1393,7 +1403,7 @@ module MatrixSdk::Protocols::CS
 
     user_id = ERB::Util.url_encode user_id.to_s
 
-    request(:get, :client_r0, "/profile/#{user_id}/displayname", query: query)
+    request(:get, client_api_latest, "/profile/#{user_id}/displayname", query: query)
   end
 
   def set_display_name(user_id, display_name, **params)
@@ -1406,7 +1416,7 @@ module MatrixSdk::Protocols::CS
 
     user_id = ERB::Util.url_encode user_id.to_s
 
-    request(:put, :client_r0, "/profile/#{user_id}/displayname", body: content, query: query)
+    request(:put, client_api_latest, "/profile/#{user_id}/displayname", body: content, query: query)
   end
 
   def get_avatar_url(user_id, **params)
@@ -1415,7 +1425,7 @@ module MatrixSdk::Protocols::CS
 
     user_id = ERB::Util.url_encode user_id.to_s
 
-    request(:get, :client_r0, "/profile/#{user_id}/avatar_url", query: query)
+    request(:get, client_api_latest, "/profile/#{user_id}/avatar_url", query: query)
   end
 
   # Sets the avatar URL for a user
@@ -1449,7 +1459,7 @@ module MatrixSdk::Protocols::CS
 
     user_id = ERB::Util.url_encode user_id.to_s
 
-    request(:put, :client_r0, "/profile/#{user_id}/avatar_url", body: content, query: query)
+    request(:put, client_api_latest, "/profile/#{user_id}/avatar_url", body: content, query: query)
   end
 
   # Gets the combined profile object of a user.
@@ -1466,7 +1476,7 @@ module MatrixSdk::Protocols::CS
 
     user_id = ERB::Util.url_encode user_id.to_s
 
-    request(:get, :client_r0, "/profile/#{user_id}", query: query)
+    request(:get, client_api_latest, "/profile/#{user_id}", query: query)
   end
 
   # Gets TURN server connection information and credentials
@@ -1475,7 +1485,7 @@ module MatrixSdk::Protocols::CS
   # @see https://matrix.org/docs/spec/client_server/latest#get-matrix-client-r0-voip-turnserver
   #      The Matrix Spec, for more information about the event and data
   def get_turn_server
-    request(:get, :client_r0, '/voip/turnServer')
+    request(:get, client_api_latest, '/voip/turnServer')
   end
 
   # Sets the typing status for a user
@@ -1496,7 +1506,7 @@ module MatrixSdk::Protocols::CS
       timeout: timeout ? timeout * 1000 : nil
     }.compact
 
-    request(:put, :client_r0, "/rooms/#{room_id}/typing/#{user_id}", body: body)
+    request(:put, client_api_latest, "/rooms/#{room_id}/typing/#{user_id}", body: body)
   end
 
   # Gets the presence status of a user
@@ -1508,7 +1518,7 @@ module MatrixSdk::Protocols::CS
   def get_presence_status(user_id)
     user_id = ERB::Util.url_encode user_id.to_s
 
-    request(:get, :client_r0, "/presence/#{user_id}/status")
+    request(:get, client_api_latest, "/presence/#{user_id}/status")
   end
 
   # Sets the presence status of a user
@@ -1528,7 +1538,7 @@ module MatrixSdk::Protocols::CS
       status_msg: message
     }.compact
 
-    request(:put, :client_r0, "/presence/#{user_id}/status", body: body)
+    request(:put, client_api_latest, "/presence/#{user_id}/status", body: body)
   end
 
   # Converts a Matrix content URL (mxc://) to a media download URL
@@ -1605,7 +1615,7 @@ module MatrixSdk::Protocols::CS
       messages: messages
     }.compact
 
-    request(:put, :client_r0, "/sendToDevice/#{event_type}/#{txn_id}", body: body)
+    request(:put, client_api_latest, "/sendToDevice/#{event_type}/#{txn_id}", body: body)
   end
 
   # Gets the room ID for an alias
@@ -1618,7 +1628,7 @@ module MatrixSdk::Protocols::CS
 
     room_alias = ERB::Util.url_encode room_alias.to_s
 
-    request(:get, :client_r0, "/directory/room/#{room_alias}", query: query)
+    request(:get, client_api_latest, "/directory/room/#{room_alias}", query: query)
   end
 
   # Sets the room ID for an alias
@@ -1635,7 +1645,7 @@ module MatrixSdk::Protocols::CS
     }
     room_alias = ERB::Util.url_encode room_alias.to_s
 
-    request(:put, :client_r0, "/directory/room/#{room_alias}", body: content, query: query)
+    request(:put, client_api_latest, "/directory/room/#{room_alias}", body: content, query: query)
   end
 
   # Remove an alias from its room
@@ -1647,7 +1657,7 @@ module MatrixSdk::Protocols::CS
 
     room_alias = ERB::Util.url_encode room_alias.to_s
 
-    request(:delete, :client_r0, "/directory/room/#{room_alias}", query: query)
+    request(:delete, client_api_latest, "/directory/room/#{room_alias}", query: query)
   end
 
   # Gets a list of all the members in a room
@@ -1661,7 +1671,7 @@ module MatrixSdk::Protocols::CS
 
     room_id = ERB::Util.url_encode room_id.to_s
 
-    request(:get, :client_r0, "/rooms/#{room_id}/members", query: query.merge(params))
+    request(:get, client_api_latest, "/rooms/#{room_id}/members", query: query.merge(params))
   end
 
   # Gets a list of the joined members in a room
@@ -1676,7 +1686,7 @@ module MatrixSdk::Protocols::CS
 
     room_id = ERB::Util.url_encode room_id.to_s
 
-    request(:get, :client_r0, "/rooms/#{room_id}/joined_members", query: query)
+    request(:get, client_api_latest, "/rooms/#{room_id}/joined_members", query: query)
   end
 
   # Gets a list of the current users registered devices
@@ -1684,7 +1694,7 @@ module MatrixSdk::Protocols::CS
   # @see https://matrix.org/docs/spec/client_server/latest#get-matrix-client-r0-devices
   #      The Matrix Spec, for more information about the data
   def get_devices
-    request(:get, :client_r0, '/devices')
+    request(:get, client_api_latest, '/devices')
   end
 
   # Gets the information about a certain client device
@@ -1695,7 +1705,7 @@ module MatrixSdk::Protocols::CS
   def get_device(device_id)
     device_id = ERB::Util.url_encode device_id.to_s
 
-    request(:get, :client_r0, "/devices/#{device_id}")
+    request(:get, client_api_latest, "/devices/#{device_id}")
   end
 
   # Sets the metadata for a device
@@ -1706,7 +1716,7 @@ module MatrixSdk::Protocols::CS
   def set_device(device_id, display_name:)
     device_id = ERB::Util.url_encode device_id.to_s
 
-    request(:put, :client_r0, "/devices/#{device_id}", body: { display_name: display_name })
+    request(:put, client_api_latest, "/devices/#{device_id}", body: { display_name: display_name })
   end
 
   # Removes a device from the current user
@@ -1719,7 +1729,7 @@ module MatrixSdk::Protocols::CS
   def delete_device(device_id, auth:)
     device_id = ERB::Util.url_encode device_id.to_s
 
-    request(:delete, :client_r0, "/devices/#{device_id}", body: { auth: auth })
+    request(:delete, client_api_latest, "/devices/#{device_id}", body: { auth: auth })
   end
 
   # Run a query for device keys
@@ -1744,7 +1754,7 @@ module MatrixSdk::Protocols::CS
     body[:timeout] = params[:timeout_ms] if params.key? :timeout_ms
     body[:token] = token if token
 
-    request(:post, :client_r0, '/keys/query', body: body)
+    request(:post, client_api_latest, '/keys/query', body: body)
   end
 
   # Claim one-time keys for pre-key messaging
@@ -1759,7 +1769,7 @@ module MatrixSdk::Protocols::CS
       one_time_keys: one_time_keys,
       timeout: timeout * 1000
     }
-    request(:post, :client_r0, '/keys/claim', body: body)
+    request(:post, client_api_latest, '/keys/claim', body: body)
   end
 
   # Retrieve device key changes between two sync requests
@@ -1775,7 +1785,7 @@ module MatrixSdk::Protocols::CS
       to: to
     }
 
-    request(:get, :client_r0, '/keys/changes', query: query)
+    request(:get, client_api_latest, '/keys/changes', query: query)
   end
 
   # Gets the list of registered pushers for the current user
@@ -1784,7 +1794,7 @@ module MatrixSdk::Protocols::CS
   # @see https://matrix.org/docs/spec/client_server/latest#get-matrix-client-r0-pushers
   #      The Matrix Spec, for more information about the parameters and data
   def get_pushers
-    request(:get, :client_r0, '/pushers')
+    request(:get, client_api_latest, '/pushers')
   end
 
   # rubocop:disable Metrics/ParameterLists
@@ -1817,7 +1827,7 @@ module MatrixSdk::Protocols::CS
       append: params[:append]
     }.compact
 
-    request(:post, :client_r0, '/pushers/set', body: body)
+    request(:post, client_api_latest, '/pushers/set', body: body)
   end
   # rubocop:enable Metrics/ParameterLists
 
@@ -1838,7 +1848,7 @@ module MatrixSdk::Protocols::CS
       only: only
     }.compact
 
-    request(:get, :client_r0, '/notifications', query: query)
+    request(:get, client_api_latest, '/notifications', query: query)
   end
 
   # Retrieves the full list of registered push rules for the current user
@@ -1847,7 +1857,7 @@ module MatrixSdk::Protocols::CS
   # @see https://matrix.org/docs/spec/client_server/latest#get-matrix-client-r0-pushrules
   #      The Matrix Spec, for more information about the parameters and data
   def get_pushrules
-    request(:get, :client_r0, '/pushrules/')
+    request(:get, client_api_latest, '/pushrules/')
   end
 
   # Retrieves a single registered push rule for the current user
@@ -1863,7 +1873,7 @@ module MatrixSdk::Protocols::CS
     kind = ERB::Util.url_encode kind.to_s
     id = ERB::Util.url_encode id.to_s
 
-    request(:get, :client_r0, "/pushrules/#{scope}/#{kind}/#{id}")
+    request(:get, client_api_latest, "/pushrules/#{scope}/#{kind}/#{id}")
   end
 
   # Checks if a push rule for the current user is enabled
@@ -1879,7 +1889,7 @@ module MatrixSdk::Protocols::CS
     kind = ERB::Util.url_encode kind.to_s
     id = ERB::Util.url_encode id.to_s
 
-    request(:get, :client_r0, "/pushrules/#{scope}/#{kind}/#{id}/enabled")
+    request(:get, client_api_latest, "/pushrules/#{scope}/#{kind}/#{id}/enabled")
   end
 
   # Enabled/Disables a specific push rule for the current user
@@ -1900,7 +1910,7 @@ module MatrixSdk::Protocols::CS
       enabled: enabled
     }
 
-    request(:put, :client_r0, "/pushrules/#{scope}/#{kind}/#{id}/enabled", body: body)
+    request(:put, client_api_latest, "/pushrules/#{scope}/#{kind}/#{id}/enabled", body: body)
   end
 
   # Gets the current list of actions for a specific push rule for the current user
@@ -1916,7 +1926,7 @@ module MatrixSdk::Protocols::CS
     kind = ERB::Util.url_encode kind.to_s
     id = ERB::Util.url_encode id.to_s
 
-    request(:get, :client_r0, "/pushrules/#{scope}/#{kind}/#{id}/actions")
+    request(:get, client_api_latest, "/pushrules/#{scope}/#{kind}/#{id}/actions")
   end
 
   # Replaces the list of actions for a push rule for the current user
@@ -1939,7 +1949,7 @@ module MatrixSdk::Protocols::CS
       actions: actions
     }
 
-    request(:put, :client_r0, "/pushrules/#{scope}/#{kind}/#{id}/actions", body: body)
+    request(:put, client_api_latest, "/pushrules/#{scope}/#{kind}/#{id}/actions", body: body)
   end
 
   # Gets the MXID of the currently logged-in user
@@ -1948,7 +1958,7 @@ module MatrixSdk::Protocols::CS
     query = {}
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
 
-    request(:get, :client_r0, '/account/whoami', query: query)
+    request(:get, client_api_latest, '/account/whoami', query: query)
   end
 end
 # rubocop:enable Metrics/ModuleLength

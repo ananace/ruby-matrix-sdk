@@ -1,3 +1,7 @@
+## Unreleased
+
+- Adds preliminary support for the Matrix v1.1 client/v3 API
+
 ## 2.4.0 - 2021-07-19
 
 - Adds support for matrix: URI's according to MSC2312
