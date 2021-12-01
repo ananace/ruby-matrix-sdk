@@ -2,6 +2,7 @@
 
 - Adds preliminary support for the Matrix v1.1 client/v3 API
 - Adds some support for knocking rooms
+- Adds locks on API requests to avoid threading issues
 
 ## 2.4.0 - 2021-07-19
 

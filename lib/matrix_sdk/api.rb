@@ -64,6 +64,7 @@ module MatrixSdk
       @global_headers.merge!(params.fetch(:global_headers)) if params.key? :global_headers
       @synapse = params.fetch(:synapse, true)
       @http = nil
+      @http_lock = Mutex.new
 
       ([params.fetch(:protocols, [:CS])].flatten - protocols).each do |proto|
         self.class.include MatrixSdk::Protocols.const_get(proto)
@@ -281,7 +282,9 @@ module MatrixSdk
 
         req_obj = construct_request(url: url, method: method, **options)
         print_http(req_obj, id: req_id)
-        begin
+        response = nil
+        duration = nil
+        @http_lock.synchronize do
           dur_start = Time.now
           response = http.request req_obj
           dur_end = Time.now
