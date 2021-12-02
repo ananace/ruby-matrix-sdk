@@ -57,8 +57,8 @@ module MatrixSdk
       @validate_certificate = params.fetch(:validate_certificate, false)
       @transaction_id = params.fetch(:transaction_id, 0)
       @backoff_time = params.fetch(:backoff_time, 5000)
-      @open_timeout = params.fetch(:open_timeout, 60)
-      @read_timeout = params.fetch(:read_timeout, 240)
+      @open_timeout = params.fetch(:open_timeout) if params.key? :open_timeout
+      @read_timeout = params.fetch(:read_timeout) if params.key? :read_timeout
       @well_known = params.fetch(:well_known, {})
       @global_headers = DEFAULT_HEADERS.dup
       @global_headers.merge!(params.fetch(:global_headers)) if params.key? :global_headers
@@ -401,8 +401,8 @@ module MatrixSdk
                   Net::HTTP.new(host, port)
                 end
 
-      @http.open_timeout = open_timeout
-      @http.read_timeout = read_timeout
+      @http.open_timeout = open_timeout if open_timeout
+      @http.read_timeout = read_timeout if read_timeout
       @http.use_ssl = homeserver.scheme == 'https'
       @http.verify_mode = validate_certificate ? ::OpenSSL::SSL::VERIFY_PEER : ::OpenSSL::SSL::VERIFY_NONE
       @http.start
