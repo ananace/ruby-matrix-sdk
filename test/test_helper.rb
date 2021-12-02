@@ -17,3 +17,12 @@ def expect_message(object, message, *args)
   args = args << {} if OLDER_RUBY
   object.expects(message).with(*args)
 end
+
+class Test::Unit::TestCase
+  def matrixsdk_add_api_stub
+    MatrixSdk::Api
+      .any_instance
+      .stubs(:client_api_latest)
+      .returns(:client_r0)
+  end
+end

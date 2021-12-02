@@ -887,11 +887,11 @@ POST|/_matrix/client/r0/join/{roomIdOrAlias}:
       path: '/join/%23monkeys%3Amatrix.org'
       query:
         :server_name: ['matrix.org', 'elsewhere.ca']
-      body: null
+      body: {}
     - args: ['!d41d8cd:matrix.org']
       path: '/join/%21d41d8cd%3Amatrix.org'
       query: {}
-      body: null
+      body: {}
   results:
     200: |
       {

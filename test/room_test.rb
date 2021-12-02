@@ -18,6 +18,8 @@ class RoomTest < Test::Unit::TestCase
     @id = '!room:example.com'
     @client.send :ensure_room, @id
     @room = @client.rooms.first
+
+    matrixsdk_add_api_stub
   end
 
   def test_pre_joined_members

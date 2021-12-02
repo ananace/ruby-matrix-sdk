@@ -8,6 +8,8 @@ class ApiTest < Test::Unit::TestCase
     @api = MatrixSdk::Api.new 'https://example.com', protocols: :CS
     @api.instance_variable_set :@http, @http
     @api.stubs(:print_http)
+
+    matrixsdk_add_api_stub
   end
 
   def mock_success(body)
