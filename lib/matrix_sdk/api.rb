@@ -282,8 +282,8 @@ module MatrixSdk
 
         req_obj = construct_request(url: url, method: method, **options)
         print_http(req_obj, id: req_id)
-        response = nil
-        duration = nil
+        response = duration = nil
+
         @http_lock.synchronize do
           dur_start = Time.now
           response = http.request req_obj
