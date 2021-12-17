@@ -57,8 +57,8 @@ module MatrixSdk
       @validate_certificate = params.fetch(:validate_certificate, false)
       @transaction_id = params.fetch(:transaction_id, 0)
       @backoff_time = params.fetch(:backoff_time, 5000)
-      @open_timeout = params.fetch(:open_timeout) if params.key? :open_timeout
-      @read_timeout = params.fetch(:read_timeout) if params.key? :read_timeout
+      @open_timeout = params.fetch(:open_timeout, nil)
+      @read_timeout = params.fetch(:read_timeout, nil)
       @well_known = params.fetch(:well_known, {})
       @global_headers = DEFAULT_HEADERS.dup
       @global_headers.merge!(params.fetch(:global_headers)) if params.key? :global_headers
