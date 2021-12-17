@@ -99,8 +99,12 @@ module MatrixSdk::Util
         define_method(method_name) do |*args|
           unless_proc = opts[:unless].is_a?(Symbol) ? opts[:unless].to_proc : opts[:unless]
 
+          raise ArgumentError, 'Invalid proc provided (must have arity between 1..3)' if unless_proc && !(1..3).include?(unless_proc.arity)
+
           skip_cache = false
-          skip_cache ||= unless_proc&.call(self, method_name, args)
+          skip_cache ||= unless_proc.call(self, method_name, args) if unless_proc&.arity == 3
+          skip_cache ||= unless_proc.call(method_name, args) if unless_proc&.arity == 2
+          skip_cache ||= unless_proc.call(args) if unless_proc&.arity == 1
           skip_cache ||= CACHE_LEVELS[client&.cache || :all] < CACHE_LEVELS[cache_level]
 
           if skip_cache
