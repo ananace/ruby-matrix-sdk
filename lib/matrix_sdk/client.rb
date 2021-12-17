@@ -588,7 +588,7 @@ module MatrixSdk
     private
 
     def post_authentication(data)
-      @mxid = data[:user_id]
+      @mxid = MXID.new data[:user_id]
       @api.access_token = data[:access_token]
       @api.device_id = data[:device_id]
       @api.homeserver = data[:home_server]
