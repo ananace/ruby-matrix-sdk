@@ -53,6 +53,46 @@ class RoomTest < Test::Unit::TestCase
     assert_equal '@charlie:example.com', @room.joined_members.last.id
   end
 
+  def test_all_members
+    assert_equal :all, @room.client.cache
+
+    @client.expects(:get_user).twice.with('@alice:example.com').returns(MatrixSdk::User.new(@client, '@alice:example.com'))
+    @client.expects(:get_user).once.with('@charlie:example.com').returns(MatrixSdk::User.new(@client, '@charlie:example.com'))
+
+    @api.expects(:get_room_members).once.with('!room:example.com', {}).returns(
+      chunk: [
+        {
+          state_key: '@alice:example.com'
+        }
+      ]
+    )
+
+    # Two calls, cache should be kept
+    assert_equal 1, @room.all_members.count
+    assert_equal '@alice:example.com', @room.all_members.first.id
+
+    @api.expects(:get_room_members).once.with('!room:example.com', filter: 'something').returns(
+      chunk: [
+        {
+          state_key: '@alice:example.com'
+        },
+        {
+          state_key: '@charlie:example.com'
+        }
+      ]
+    )
+
+    # Filter, should skip cache and return another value
+    members = @room.all_members(filter: 'something')
+    assert_equal 2, members.count
+    assert_equal '@alice:example.com', members.first.id
+    assert_equal '@charlie:example.com', members.last.id
+
+    # No filter, should return to cached data
+    assert_equal 1, @room.all_members.count
+    assert_equal '@alice:example.com', @room.all_members.first.id
+  end
+
   def test_wrapped_methods
     text = '<b>test</b>'
     @api.expects(:send_message).with(@id, text)
