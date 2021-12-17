@@ -1,8 +1,10 @@
 ## Unreleased
 
-- Adds preliminary support for the Matrix v1.1 client/v3 API
+- Adds preliminary support for the Matrix v1.1 `client/v3` API
 - Adds some support for knocking rooms
-- Adds locks on API requests to avoid threading issues
+- Adds mutex synchronization on API requests to avoid some threading issues
+- Fixes error on attempting to skip cache for certain requests (#19)
+- Fixes inconsistency in MXID typing for the Client abstraction (#18)
 
 ## 2.4.0 - 2021-07-19
 
