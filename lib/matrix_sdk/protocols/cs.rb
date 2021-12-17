@@ -13,8 +13,10 @@ module MatrixSdk::Protocols::CS
   def client_api_versions
     (@client_api_versions ||= request(:get, :client, '/versions')).versions.tap do |vers|
       vers.instance_eval <<-'CODE', __FILE__, __LINE__ + 1
-        def latest
-          last
+        if !respond_to? :latest
+          def latest
+            last
+          end
         end
       CODE
     end
