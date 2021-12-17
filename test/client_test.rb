@@ -182,13 +182,13 @@ class ClientTest < Test::Unit::TestCase
     cl.login('alice', 'password')
 
     assert cl.logged_in?
-    assert_equal '@alice:example.com', cl.mxid
+    assert_equal '@alice:example.com', cl.mxid.to_s
 
     cl.api.expects(:logout)
     cl.logout
 
     assert !cl.logged_in?
-    assert_not_equal '@alice:example.com', cl.mxid
+    assert_not_equal '@alice:example.com', cl.mxid.to_s
   end
 
   def test_token_login
@@ -199,7 +199,7 @@ class ClientTest < Test::Unit::TestCase
     cl.login_with_token('alice', 'token')
 
     assert cl.logged_in?
-    assert_equal '@alice:example.com', cl.mxid
+    assert_equal '@alice:example.com', cl.mxid.to_s
   end
 
   def test_register
@@ -210,7 +210,7 @@ class ClientTest < Test::Unit::TestCase
     cl.register_with_password('alice', 'password')
 
     assert cl.logged_in?
-    assert_equal '@alice:example.com', cl.mxid
+    assert_equal '@alice:example.com', cl.mxid.to_s
   end
 
   def test_get_user
