@@ -817,8 +817,17 @@ module MatrixSdk
 
       if users
         data[:users] = {} unless data.key? :users
-        data[:users].merge!(users)
-        data[:users].delete_if { |_k, v| v.nil? }
+        users.each do |user, level|
+          user = user.id if user.is_a? User
+          user = MXID.new(user.to_s) unless user.is_a? MXID
+          raise ArgumentError, 'Must provide a valid user or MXID' unless user.user?
+
+          if level.nil?
+            data[:users].delete(user.to_s.to_sym)
+          else
+            data[:users][user.to_s.sym] = level
+          end
+        end
       end
 
       client.api.set_power_levels(id, data)
