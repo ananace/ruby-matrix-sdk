@@ -825,7 +825,7 @@ module MatrixSdk
           if level.nil?
             data[:users].delete(user.to_s.to_sym)
           else
-            data[:users][user.to_s.sym] = level
+            data[:users][user.to_s.to_sym] = level
           end
         end
       end
