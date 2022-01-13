@@ -230,14 +230,14 @@ module MatrixSdk
     #
     # @return [:can_join,:forbidden] The current guest access right
     def guest_access
-      client.api.get_room_guest_access(id)[:guest_access].to_sym
+      client.api.get_room_guest_access(id)[:guest_access]&.to_sym
     end
 
     # Gets the join rule for the room
     #
     # @return [:public,:knock,:invite,:private] The current join rule
     def join_rule
-      client.api.get_room_join_rules(id)[:join_rule].to_sym
+      client.api.get_room_join_rules(id)[:join_rule]&.to_sym
     end
 
     # Checks if +guest_access+ is set to +:can_join+
@@ -259,7 +259,7 @@ module MatrixSdk
     #
     # @return [:invited,:joined,:shared,:world_readable] The current history visibility for the room
     def history_visibility
-      client.api.get_room_state(id, 'm.room.history_visibility')[:history_visibility].to_sym
+      client.api.get_room_state(id, 'm.room.history_visibility')[:history_visibility]&.to_sym
     end
 
     # Checks if the room history is world readable
@@ -277,8 +277,8 @@ module MatrixSdk
       client.api.get_room_aliases(id).aliases
     rescue MatrixNotFoundError
       data = client.api.get_room_state_all(id)
-      data.select { |chunk| chunk[:type] == 'm.room.aliases' && chunk.key?(:content) && chunk[:content].key?(:aliases) }
-          .map { |chunk| chunk[:content][:aliases] }
+      data.select { |chunk| chunk[:type] == 'm.room.aliases' && !chunk.dig(*%i[content aliases]).nil? }
+          .map { |chunk| chunk.dig(*%i[content aliases]) }
           .flatten
           .compact
     end
@@ -742,7 +742,7 @@ module MatrixSdk
       user = MXID.new(user.to_s) unless user.is_a? MXID
       raise ArgumentError, 'Must provide a valid user or MXID' unless user.user?
 
-      level = power_levels[:users][user.to_s.to_sym]
+      level = power_levels.dig(:users, user.to_s.to_sym)
       level = power_levels[:users_default] || 0 if level.nil? && use_default
       level
     end
@@ -871,27 +871,27 @@ module MatrixSdk
     end
 
     def handle_room_name(event)
-      tinycache_adapter.write(:name, event[:content][:name])
+      tinycache_adapter.write(:name, event.dig(*%i[content name]))
     end
 
     def handle_room_topic(event)
-      tinycache_adapter.write(:topic, event[:content][:topic])
+      tinycache_adapter.write(:topic, event.dig(*%i[content topic]))
     end
 
     def handle_room_guest_access(event)
-      tinycache_adapter.write(:guest_access, event[:content][:guest_access].to_sym)
+      tinycache_adapter.write(:guest_access, event.dig(*%i[content guest_access])&.to_sym)
     end
 
     def handle_room_join_rules(event)
-      tinycache_adapter.write(:join_rule, event[:content][:join_rule].to_sym)
+      tinycache_adapter.write(:join_rule, event.dig(*%i[content join_rule])&.to_sym)
     end
 
     def handle_room_member(event)
       return unless client.cache == :all
 
-      if event[:content][:membership] == 'join'
+      if event.dig(*%i[content membership]) == 'join'
         ensure_member(client.get_user(event[:state_key]).dup.tap do |u|
-          u.instance_variable_set :@display_name, event[:content][:displayname]
+          u.instance_variable_set(:@display_name, event.dig(*%i[content displayname]))
         end)
       elsif tinycache_adapter.exist? :joined_members
         members = tinycache_adapter.read(:joined_members)
@@ -900,7 +900,7 @@ module MatrixSdk
     end
 
     def handle_room_canonical_alias(event)
-      canonical_alias = tinycache_adapter.write :canonical_alias, event[:content][:alias]
+      canonical_alias = tinycache_adapter.write(:canonical_alias, event.dig(*%i[content alias]))
 
       data = tinycache_adapter.read(:aliases) || []
       data << canonical_alias
@@ -911,7 +911,7 @@ module MatrixSdk
       tinycache_adapter.write(:aliases, []) unless tinycache_adapter.exist? :aliases
 
       aliases = tinycache_adapter.read(:aliases) || []
-      aliases.concat event[:content][:aliases]
+      aliases.concat(event.dig(*%i[content aliases]))
 
       tinycache_adapter.write(:aliases, aliases)
     end

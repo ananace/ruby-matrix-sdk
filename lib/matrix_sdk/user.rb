@@ -74,7 +74,7 @@ module MatrixSdk
     # @see MatrixSdk::Protocols::CS#get_presence_status
     # @note This information is not cached in the abstraction layer
     def presence
-      raw_presence[:presence].to_sym
+      raw_presence[:presence]&.to_sym
     end
 
     # Sets the user's current presence status
@@ -133,7 +133,7 @@ module MatrixSdk
     # Returns all the current device keys for the user, retrieving them if necessary
     def device_keys
       @device_keys ||= client.api.keys_query(device_keys: { id => [] }).yield_self do |resp|
-        resp[:device_keys][id.to_sym]
+        resp.dig(:device_keys, id.to_sym)
       end
     end
 
