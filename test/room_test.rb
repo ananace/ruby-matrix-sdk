@@ -59,13 +59,11 @@ class RoomTest < Test::Unit::TestCase
     @client.expects(:get_user).twice.with('@alice:example.com').returns(MatrixSdk::User.new(@client, '@alice:example.com'))
     @client.expects(:get_user).once.with('@charlie:example.com').returns(MatrixSdk::User.new(@client, '@charlie:example.com'))
 
-    @api.expects(:get_room_members).once.with('!room:example.com', {}).returns(
-      chunk: [
-        {
-          state_key: '@alice:example.com'
-        }
-      ]
-    )
+    if Gem::Version.new(RUBY_VERSION) >= Gem::Version.new('2.7.0')
+      @api.expects(:get_room_members).once.with('!room:example.com').returns(chunk: [{ state_key: '@alice:example.com'}])
+    else
+      @api.expects(:get_room_members).once.with('!room:example.com', {}).returns(chunk: [{ state_key: '@alice:example.com'}])
+    end
 
     # Two calls, cache should be kept
     assert_equal 1, @room.all_members.count

@@ -62,7 +62,7 @@ module MatrixSdk::Util
       method_names = build_method_names(method_name)
       tinycache_adapter_config[method_name] = {
         level: cache_level,
-        expires: expires_in || 1 * 365 * 24 * 60 * 60 # 1 year
+        expires: expires_in || (1 * 365 * 24 * 60 * 60) # 1 year
       }
 
       helper = const_get(cache_helper_module_name)
