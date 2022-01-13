@@ -4,7 +4,9 @@
 - Adds some support for knocking rooms
 - Adds mutex synchronization on API requests to avoid some threading issues
 - Fixes error on attempting to skip cache for certain requests (#19)
-- Fixes inconsistency in MXID typing for the Client abstraction (#18)
+- Fixes inconsistency in MXID typing for the Client abstraction (#18 #20)
+- Fixes missed autoloader entries for errors (#22)
+- Fixes some potential issues arising from broken user-provided state data
 
 ## 2.4.0 - 2021-07-19
 
