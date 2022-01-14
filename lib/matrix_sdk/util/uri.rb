@@ -7,7 +7,7 @@ module URI
   class MXC < Generic
     def full_path
       select(:host, :port, :path, :query, :fragment)
-        .reject(&:nil?)
+        .compact
         .join
     end
   end
