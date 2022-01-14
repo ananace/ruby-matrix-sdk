@@ -67,11 +67,7 @@ module MatrixSdk
       @synapse = params.fetch(:synapse, true)
       @http = nil
 
-      if RUBY_ENGINE == 'jruby'
-        self.threadsafe = params.fetch(:threadsafe, :multithread)
-      else
-        self.threadsafe = params.fetch(:threadsafe, true)
-      end
+      self.threadsafe = params.fetch(:threadsafe, (RUBY_ENGINE == 'jruby') ? :multithread : true)
 
       ([params.fetch(:protocols, [:CS])].flatten - protocols).each do |proto|
         self.class.include MatrixSdk::Protocols.const_get(proto)
