@@ -1,3 +1,7 @@
+## **Unreleased**
+
+- Adds some multi-thread usage support to the API (create your API/client with `threadsafe: :multithread`)
+
 ## 2.5.0 - 2022-01-14
 
 - Adds preliminary support for the Matrix v1.1 `client/v3` API
