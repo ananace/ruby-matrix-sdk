@@ -1,4 +1,4 @@
-## Unreleased
+## 2.5.0 - 2022-01-14
 
 - Adds preliminary support for the Matrix v1.1 `client/v3` API
 - Adds some support for knocking rooms
