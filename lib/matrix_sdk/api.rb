@@ -39,8 +39,9 @@ module MatrixSdk
     # @option params [Hash] :global_headers Additional headers to set for all requests
     # @option params [Boolean] :skip_login Should the API skip logging in if the HS URL contains user information
     # @option params [Boolean] :synapse (true) Is the API connecting to a Synapse instance
-    # @option params [Hash] :well_known The .well-known object that the server was discovered through, should not be set manually
-    # @option params [Boolean,:multithread] :threadsafe (true) The level of thread-safety the API should use
+    # @option params [Boolean,:multithread] :threadsafe (true/:multithread) Should the connection be threadsafe - or
+    #   even safe for simultaneous multi-thread usage. Will default to +:multithread+ for JRuby, +true+ otherwise.
+    # @note Setting threadsafe to +:multithread+ currently doesn't support connection re-use
     def initialize(homeserver, **params)
       @homeserver = homeserver
       raise ArgumentError, 'Homeserver URL must be String or URI' unless @homeserver.is_a?(String) || @homeserver.is_a?(URI)
@@ -65,7 +66,12 @@ module MatrixSdk
       @global_headers.merge!(params.fetch(:global_headers)) if params.key? :global_headers
       @synapse = params.fetch(:synapse, true)
       @http = nil
-      self.threadsafe = params.fetch(:threadsafe, true)
+
+      if RUBY_ENGINE == 'jruby'
+        self.threadsafe = params.fetch(:threadsafe, :multithread)
+      else
+        self.threadsafe = params.fetch(:threadsafe, true)
+      end
 
       ([params.fetch(:protocols, [:CS])].flatten - protocols).each do |proto|
         self.class.include MatrixSdk::Protocols.const_get(proto)
@@ -245,11 +251,14 @@ module MatrixSdk
       @proxy_uri = proxy_uri
     end
 
+    # @param [Boolean,:multithread] threadsafe What level of thread-safety the API should use
+    # @return [Boolean,:multithread]
     def threadsafe=(threadsafe)
       raise ArgumentError, 'Threadsafe must be either a boolean or :multithread' unless [true, false, :multithread].include? threadsafe
 
       @threadsafe = threadsafe
       @http_lock = nil unless threadsafe == true
+      @threadsafe
     end
 
     # Perform a raw Matrix API request
@@ -430,7 +439,7 @@ module MatrixSdk
     end
 
     def http_lock
-      @http_lock ||= Mutex.new
+      @http_lock ||= Mutex.new if @threadsafe == true
     end
   end
 end

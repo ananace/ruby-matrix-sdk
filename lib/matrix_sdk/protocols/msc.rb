@@ -60,9 +60,9 @@ module MatrixSdk::Protocols::MSC
     # rubocop:disable Metrics/BlockLength
     thread = Thread.new(cancellation_token) do |ctx|
       print_http(req)
-      @http_lock.lock
+      @http_lock&.lock
       http.request req do |response|
-        @http_lock.unlock
+        @http_lock&.unlock
         break unless ctx[:run]
 
         print_http(response, body: false)
