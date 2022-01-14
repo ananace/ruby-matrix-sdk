@@ -19,7 +19,7 @@ module MatrixSdk
     }.freeze
 
     attr_accessor :access_token, :connection_address, :connection_port, :device_id, :autoretry, :global_headers
-    attr_reader :homeserver, :validate_certificate, :open_timeout, :read_timeout, :well_known, :proxy_uri
+    attr_reader :homeserver, :validate_certificate, :open_timeout, :read_timeout, :well_known, :proxy_uri, :threadsafe
 
     ignore_inspect :access_token, :logger
 
@@ -40,6 +40,7 @@ module MatrixSdk
     # @option params [Boolean] :skip_login Should the API skip logging in if the HS URL contains user information
     # @option params [Boolean] :synapse (true) Is the API connecting to a Synapse instance
     # @option params [Hash] :well_known The .well-known object that the server was discovered through, should not be set manually
+    # @option params [Boolean,:multithread] :threadsafe (true) The level of thread-safety the API should use
     def initialize(homeserver, **params)
       @homeserver = homeserver
       raise ArgumentError, 'Homeserver URL must be String or URI' unless @homeserver.is_a?(String) || @homeserver.is_a?(URI)
@@ -64,7 +65,7 @@ module MatrixSdk
       @global_headers.merge!(params.fetch(:global_headers)) if params.key? :global_headers
       @synapse = params.fetch(:synapse, true)
       @http = nil
-      @http_lock = Mutex.new
+      self.threadsafe = params.fetch(:threadsafe, true)
 
       ([params.fetch(:protocols, [:CS])].flatten - protocols).each do |proto|
         self.class.include MatrixSdk::Protocols.const_get(proto)
@@ -244,6 +245,13 @@ module MatrixSdk
       @proxy_uri = proxy_uri
     end
 
+    def threadsafe=(threadsafe)
+      raise ArgumentError, 'Threadsafe must be either a boolean or :multithread' unless [true, false, :multithread].include? threadsafe
+
+      @threadsafe = threadsafe
+      @http_lock = nil unless threadsafe == true
+    end
+
     # Perform a raw Matrix API request
     #
     # @example Simple API query
@@ -284,14 +292,22 @@ module MatrixSdk
         print_http(req_obj, id: req_id)
         response = duration = nil
 
-        @http_lock.synchronize do
+        loc_http = http
+        perform_request = proc do
           dur_start = Time.now
-          response = http.request req_obj
+          response = loc_http.request req_obj
           dur_end = Time.now
           duration = dur_end - dur_start
         rescue EOFError
           logger.error 'Socket closed unexpectedly'
           raise
+        end
+
+        if @threadsafe == true
+          http_lock.synchronize { perform_request.call }
+        else
+          perform_request.call
+          loc_http.finish if @threadsafe == :multithread
         end
         print_http(response, duration: duration, id: req_id)
 
@@ -395,18 +411,26 @@ module MatrixSdk
 
       host = (@connection_address || homeserver.host)
       port = (@connection_port || homeserver.port)
-      @http ||= if proxy_uri
-                  Net::HTTP.new(host, port, proxy_uri.host, proxy_uri.port, proxy_uri.user, proxy_uri.password)
-                else
-                  Net::HTTP.new(host, port)
-                end
 
-      @http.open_timeout = open_timeout if open_timeout
-      @http.read_timeout = read_timeout if read_timeout
-      @http.use_ssl = homeserver.scheme == 'https'
-      @http.verify_mode = validate_certificate ? ::OpenSSL::SSL::VERIFY_PEER : ::OpenSSL::SSL::VERIFY_NONE
-      @http.start
-      @http
+      connection = @http unless @threadsafe == :multithread
+      connection ||= if proxy_uri
+                       Net::HTTP.new(host, port, proxy_uri.host, proxy_uri.port, proxy_uri.user, proxy_uri.password)
+                     else
+                       Net::HTTP.new(host, port)
+                     end
+
+      connection.open_timeout = open_timeout if open_timeout
+      connection.read_timeout = read_timeout if read_timeout
+      connection.use_ssl = homeserver.scheme == 'https'
+      connection.verify_mode = validate_certificate ? ::OpenSSL::SSL::VERIFY_PEER : ::OpenSSL::SSL::VERIFY_NONE
+      connection.start
+      @http = connection unless @threadsafe == :multithread
+
+      connection
+    end
+
+    def http_lock
+      @http_lock ||= Mutex.new
     end
   end
 end
