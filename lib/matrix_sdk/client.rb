@@ -395,15 +395,16 @@ module MatrixSdk
     # @param only_canonical [Boolean] Only match alias against the canonical alias
     # @return [Room] The found room
     # @return [nil] If no room was found
-    def find_room(room_id_or_alias, only_canonical: false)
+    def find_room(room_id_or_alias, only_canonical: true)
       room_id_or_alias = MXID.new(room_id_or_alias.to_s) unless room_id_or_alias.is_a? MXID
       raise ArgumentError, 'Must be a room id or alias' unless room_id_or_alias.room?
 
       return @rooms.fetch(room_id_or_alias.to_s, nil) if room_id_or_alias.room_id?
 
-      return @rooms.values.find { |r| r.canonical_alias == room_id_or_alias.to_s } if only_canonical
+      room = @rooms.values.find { |r| r.canonical_alias == room_id_or_alias.to_s }
+      return room if only_canonical
 
-      @rooms.values.find { |r| r.aliases.include? room_id_or_alias.to_s }
+      room || @rooms.values.find { |r| r.aliases.include? room_id_or_alias.to_s }
     end
 
     # Get a User instance from a MXID
