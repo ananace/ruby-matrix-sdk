@@ -1,6 +1,8 @@
 ## **Unreleased**
 
 - Adds some multi-thread usage support to the API (create your API/client with `threadsafe: :multithread`)
+- Changes room finding to ignore non-canonical aliases by default
+- Improves room alias handling
 
 ## 2.5.0 - 2022-01-14
 
