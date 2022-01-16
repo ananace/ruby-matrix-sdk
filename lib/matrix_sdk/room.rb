@@ -31,9 +31,11 @@ module MatrixSdk
     ignore_inspect :client, :events, :prev_batch, :logger, :tinycache_adapter
 
     # Requires heavy lookups, so they're cached for an hour
-    cached :joined_members, :aliases, cache_level: :all, expires_in: 60 * 60
-    # Only cache unfiltered requests for all members
-    cached :all_members, unless: proc { |args| args.any? }, cache_level: :all, expires_in: 3600
+    cached :joined_members, cache_level: :all, expires_in: 60 * 60
+
+    # Only cache unfiltered requests for aliases and members
+    cached :aliases, unless: proc { |args| args.any? }, cache_level: :all, expires_in: 60 * 60
+    cached :all_members, unless: proc { |args| args.any? }, cache_level: :all, expires_in: 60 * 60
 
     # Much simpler to look up, and lighter data-wise, so the cache is wider
     cached :canonical_alias, :name, :avatar_url, :topic, :guest_access, :join_rule, :power_levels, cache_level: :some, expires_in: 15 * 60
@@ -272,9 +274,14 @@ module MatrixSdk
 
     # Gets the room aliases
     #
+    # @param canonical_only [Boolean] Should the list of aliases only contain the canonical ones
     # @return [Array[String]] The assigned room aliases
-    def aliases
-      client.api.get_room_aliases(id).aliases
+    def aliases(canonical_only: true)
+      canonical = client.api.get_room_state(id, 'm.room.canonical_alias') rescue {}
+      aliases = ([canonical[:alias]].compact + (canonical[:alt_aliases] || [])).uniq.sort
+      return aliases if canonical_only
+
+      (aliases + client.api.get_room_aliases(id).aliases).uniq.sort
     end
 
     #
@@ -896,18 +903,12 @@ module MatrixSdk
     def handle_room_canonical_alias(event)
       canonical_alias = tinycache_adapter.write(:canonical_alias, event.dig(*%i[content alias]))
 
-      data = tinycache_adapter.read(:aliases) || []
+      data = tinycache_adapter.read(:aliases)
+      return unless data
+
       data << canonical_alias
-      tinycache_adapter.write(:aliases, data)
-    end
-
-    def handle_room_aliases(event)
-      tinycache_adapter.write(:aliases, []) unless tinycache_adapter.exist? :aliases
-
-      aliases = tinycache_adapter.read(:aliases) || []
-      aliases.concat(event.dig(*%i[content aliases]))
-
-      tinycache_adapter.write(:aliases, aliases)
+      data += tinycache_adapter.read(:alt_aliases) || []
+      tinycache_adapter.write(:aliases, data.uniq.sort)
     end
 
     def room_handlers?
@@ -923,7 +924,6 @@ module MatrixSdk
     end
 
     INTERNAL_HANDLERS = {
-      'm.room.aliases' => :handle_room_aliases,
       'm.room.canonical_alias' => :handle_room_canonical_alias,
       'm.room.guest_access' => :handle_room_guest_access,
       'm.room.join_rules' => :handle_room_join_rules,

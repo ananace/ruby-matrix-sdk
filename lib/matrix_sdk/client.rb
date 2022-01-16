@@ -401,10 +401,10 @@ module MatrixSdk
 
       return @rooms.fetch(room_id_or_alias.to_s, nil) if room_id_or_alias.room_id?
 
-      room = @rooms.values.find { |r| r.canonical_alias == room_id_or_alias.to_s }
+      room = @rooms.values.find { |r| r.aliases.include? room_id_or_alias.to_s }
       return room if only_canonical
 
-      room || @rooms.values.find { |r| r.aliases.include? room_id_or_alias.to_s }
+      room || @rooms.values.find { |r| r.aliases(canonical_only: false).include? room_id_or_alias.to_s }
     end
 
     # Get a User instance from a MXID
