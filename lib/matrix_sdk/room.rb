@@ -275,12 +275,6 @@ module MatrixSdk
     # @return [Array[String]] The assigned room aliases
     def aliases
       client.api.get_room_aliases(id).aliases
-    rescue MatrixNotFoundError
-      data = client.api.get_room_state_all(id)
-      data.select { |chunk| chunk[:type] == 'm.room.aliases' && !chunk.dig(*%i[content aliases]).nil? }
-          .map { |chunk| chunk.dig(*%i[content aliases]) }
-          .flatten
-          .compact
     end
 
     #

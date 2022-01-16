@@ -912,31 +912,23 @@ module MatrixSdk::Protocols::CS
     send_state_event(room_id, 'm.room.avatar', content, **params)
   end
 
-  # Gets a list of current aliases of a room
+  # Gets a list of currently known aliases of a room
   #
   # @param [MXID,String] room_id The room ID to look up
-  # @param [Hash] params Extra options to provide to the request, see #get_room_state
   # @return [Response] A response hash with the array :aliases
-  # @raise [MatrixNotFoundError] Raised if no aliases has been set on the room by the specified HS
-  # @see get_room_state
-  # @see https://matrix.org/docs/spec/client_server/latest.html#m-room-avatar
+  # @raise [MatrixForbiddenError] Raised if the user doesn't have the right to read aliases
+  # @see https://spec.matrix.org/v1.1/client-server-api/#get_matrixclientv3roomsroomidaliases
   #      The Matrix Spec, for more information about the event and data
   # @example Looking up aliases for a room
   #   api.get_room_aliases('!QtykxKocfZaZOUrTwp:matrix.org')
-  #   # MatrixSdk::MatrixNotFoundError: HTTP 404 (M_NOT_FOUND): Event not found.
-  #   api.get_room_aliases('!QtykxKocfZaZOUrTwp:matrix.org', key: 'matrix.org')
   #   # => {:aliases=>["#matrix:matrix.org"]}
-  #   api.get_room_aliases('!QtykxKocfZaZOUrTwp:matrix.org', key: 'kittenface.studio')
-  #   # => {:aliases=>["#worlddominationhq:kittenface.studio"]}
-  # @example A way to find all aliases for a room
-  #   api.get_room_state('!mjbDjyNsRXndKLkHIe:matrix.org')
-  #      .select { |ch| ch[:type] == 'm.room.aliases' }
-  #      .map { |ch| ch[:content][:aliases] }
-  #      .flatten
-  #      .compact
-  #   # => ["#synapse:im.kabi.tk", "#synapse:matrix.org", "#synapse-community:matrix.org", "#synapse-ops:matrix.org", "#synops:matrix.org", ...
   def get_room_aliases(room_id, **params)
-    get_room_state(room_id, 'm.room.aliases', **params)
+    query = {}
+    query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
+
+    room_id = ERB::Util.url_encode room_id.to_s
+
+    request(:get, client_api_latest, "/rooms/#{room_id}/aliases", query: query)
   end
 
   # Gets a list of pinned events in a room
