@@ -903,11 +903,9 @@ module MatrixSdk
     def handle_room_canonical_alias(event)
       canonical_alias = tinycache_adapter.write(:canonical_alias, event.dig(*%i[content alias]))
 
-      data = tinycache_adapter.read(:aliases)
-      return unless data
-
+      data = tinycache_adapter.read(:aliases) || []
       data << canonical_alias
-      data += tinycache_adapter.read(:alt_aliases) || []
+      data += event.dig(*%i[content alt_aliases]) || []
       tinycache_adapter.write(:aliases, data.uniq.sort)
     end
 

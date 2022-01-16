@@ -218,19 +218,37 @@ class RoomTest < Test::Unit::TestCase
 
     assert_equal 'New topic', @room.topic
 
-    @api.expects(:get_room_aliases).with(@id).raises MatrixSdk::MatrixNotFoundError.new({ errcode: 404, error: '' }, 404)
-    @api.expects(:get_room_state_all).with(@id).returns [
-      type: 'm.room.aliases', room_id: @id, sender: '@admin:example.com', content: { aliases: ['#test:example.com'] }, state_key: 'example.com',
-      event_id: '$155085254299qAaWf:example.com', origin_server_ts: 1_550_852_542_467, unsigned: { age: 8_826_327_193 }, user_id: '@admin:example.com', age: 8_826_327_193
-    ]
-    @room.reload_aliases!
+    @api.expects(:get_room_state).with(@id, 'm.room.canonical_alias').returns(MatrixSdk::Response.new(@api, alias: '#test:example.com'))
+    @api.expects(:get_room_aliases).with(@id).never
     assert @room.aliases.include? '#test:example.com'
 
-    @api.expects(:get_room_aliases).with(@id).returns(MatrixSdk::Response.new(@api, aliases: ['#test2:example.com']))
-    @room.reload_aliases!
+    @api.expects(:get_room_state).with(@id, 'm.room.canonical_alias').never
+    assert @room.aliases.include? '#test:example.com'
 
-    assert @room.aliases.include?('#test2:example.com')
-    assert !@room.aliases.include?('#test:example.com')
+    @api.expects(:get_room_state).with(@id, 'm.room.canonical_alias').returns(MatrixSdk::Response.new(@api, alias: '#test:example.com', alt_aliases: ['#test:example1.com']))
+    @room.reload_aliases!
+    assert @room.aliases.include? '#test:example.com'
+    assert @room.aliases.include? '#test:example1.com'
+
+    @api.expects(:get_room_state).with(@id, 'm.room.canonical_alias').returns(MatrixSdk::Response.new(@api, alias: '#test:example.com', alt_aliases: ['#test:example1.com']))
+    @api.expects(:get_room_aliases).with(@id).returns(MatrixSdk::Response.new(@api, aliases: ['#test:example2.com']))
+    aliases = @room.aliases(canonical_only: false)
+    assert aliases.include? '#test:example.com'
+    assert aliases.include? '#test:example1.com'
+    assert aliases.include? '#test:example2.com'
+
+    @api.expects(:get_room_state).with(@id, 'm.room.canonical_alias').raises(MatrixSdk::MatrixNotFoundError)
+    @api.expects(:get_room_aliases).with(@id).returns(MatrixSdk::Response.new(@api, aliases: ['#test:example.com']))
+    assert @room.aliases(canonical_only: false).include? '#test:example.com'
+
+    @api.expects(:get_room_state).with(@id, 'm.room.canonical_alias').raises(MatrixSdk::MatrixNotFoundError)
+    @api.expects(:get_room_aliases).with(@id).returns(MatrixSdk::Response.new(@api, aliases: ['#test2:example.com']))
+
+    assert @room.aliases(canonical_only: false).include?('#test2:example.com')
+
+    @api.expects(:get_room_state).with(@id, 'm.room.canonical_alias').raises(MatrixSdk::MatrixNotFoundError)
+    @api.expects(:get_room_aliases).with(@id).returns(MatrixSdk::Response.new(@api, aliases: ['#test2:example.com']))
+    assert !@room.aliases(canonical_only: false).include?('#test:example.com')
   end
 
   def test_modifies

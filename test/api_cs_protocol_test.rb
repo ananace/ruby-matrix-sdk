@@ -154,9 +154,6 @@ class ApiTest < Test::Unit::TestCase
     expect_message(@api, :send_state_event, id, 'm.room.avatar', { url: 'Room avatar' })
     @api.set_room_avatar(id, 'Room avatar')
 
-    expect_message(@api, :get_room_state, id, 'm.room.aliases')
-    @api.get_room_aliases(id)
-
     expect_message(@api, :get_room_state, id, 'm.room.pinned_events')
     @api.get_room_pinned_events(id)
 

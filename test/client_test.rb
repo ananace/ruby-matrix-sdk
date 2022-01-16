@@ -157,7 +157,7 @@ class ClientTest < Test::Unit::TestCase
     cl.send(:handle_state, room, type: 'm.room.topic', content: { topic: 'Test room' })
     assert_equal 'Test room', cl.rooms.first.topic
 
-    cl.send(:handle_state, room, type: 'm.room.aliases', content: { aliases: ['#test:example1.com'] })
+    cl.send(:handle_state, room, type: 'm.room.canonical_alias', content: { alias: '#test:example.com', alt_aliases: ['#test:example1.com'] })
     assert cl.rooms.first.aliases.include? '#test:example1.com'
     assert cl.rooms.first.aliases.include? '#test:example.com'
 
