@@ -12,9 +12,15 @@ module URI
     end
   end
 
-  @@schemes['MXC'] = MXC
+  # TODO: Use +register_scheme+ on Ruby >=3.1 and fall back to old behavior
+  # for older Rubies. May be removed at EOL of Ruby 3.0.
+  if respond_to? :register_scheme
+    register_scheme 'MXC', MXC
+  else
+    @@schemes['MXC'] = MXC
+  end
 
-  unless @@schemes.key? 'MATRIX'
+  unless scheme_list.has_key? 'MATRIX'
     # A matrix: URI according to MSC2312
     class MATRIX < Generic
       attr_reader :authority, :action, :mxid, :mxid2, :via
@@ -84,6 +90,12 @@ module URI
       end
     end
 
-    @@schemes['MATRIX'] = MATRIX
+    # TODO: Use +register_scheme+ on Ruby >=3.1 and fall back to old behavior
+    # for older Rubies. May be removed at EOL of Ruby 3.0.
+    if respond_to? :register_scheme
+      register_scheme 'MATRIX', MATRIX
+    else
+      @@schemes['MXC'] = MXC
+    end
   end
 end
