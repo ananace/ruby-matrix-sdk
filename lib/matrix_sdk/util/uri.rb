@@ -95,7 +95,7 @@ module URI
     if respond_to? :register_scheme
       register_scheme 'MATRIX', MATRIX
     else
-      @@schemes['MXC'] = MXC
+      @@schemes['MATRIX'] = MATRIX
     end
   end
 end
