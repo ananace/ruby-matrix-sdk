@@ -69,40 +69,43 @@ module MatrixSdk::Util
       return if method_names.any? { |k, _| helper.respond_to? k }
 
       helper.class_eval do
-        define_method(method_names[:cache_key]) do |*args, **named|
-          args << named unless named.empty?
+        define_method(method_names[:cache_key]) do |*args|
           cache_key.call(method_name, args)
         end
 
-        define_method(method_names[:with_cache]) do |*args, **named|
-          tinycache_adapter.fetch(__send__(method_names[:cache_key], *args, **named), expires_in: expires_in) do
-            if named.empty?
-              __send__(method_names[:without_cache], *args)
-            else
+        define_method(method_names[:with_cache]) do |*args|
+          tinycache_adapter.fetch(__send__(method_names[:cache_key], *args), expires_in: expires_in) do
+            named = args.delete_at(-1) if args.last.is_a? Hash
+
+            if named
               __send__(method_names[:without_cache], *args, **named)
+            else
+              __send__(method_names[:without_cache], *args)
             end
           end
         end
 
-        define_method(method_names[:without_cache]) do |*args, **named|
+        define_method(method_names[:without_cache]) do |*args|
           orig = method(method_name).super_method
-          if named.empty?
-            orig.call(*args)
-          else
+          named = args.delete_at(-1) if args.last.is_a? Hash
+
+          if named
             orig.call(*args, **named)
+          else
+            orig.call(*args)
           end
         end
 
-        define_method(method_names[:clear_cache]) do |*args, **named|
-          tinycache_adapter.delete(__send__(method_names[:cache_key], *args, **named))
+        define_method(method_names[:clear_cache]) do |*args|
+          tinycache_adapter.delete(__send__(method_names[:cache_key], *args))
         end
 
         define_method(method_names[:cached]) do
           true
         end
 
-        define_method(method_names[:has_value]) do |*args, **named|
-          tinycache_adapter.valid?(__send__(method_names[:cache_key], *args, **named))
+        define_method(method_names[:has_value]) do |*args|
+          tinycache_adapter.valid?(__send__(method_names[:cache_key], *args))
         end
 
         define_method(method_name) do |*args|

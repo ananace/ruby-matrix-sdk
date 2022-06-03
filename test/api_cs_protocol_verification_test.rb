@@ -9,7 +9,11 @@ class ApiCSVerificationTest < Test::Unit::TestCase
     @api.instance_variable_set :@http, @http
     @api.stubs(:print_http)
 
-    @fixture = Psych.load_file('test/fixtures/cs_api_methods.yaml')
+    begin
+      @fixture = Psych.load_file('test/fixtures/cs_api_methods.yaml', aliases: true)
+    rescue ArgumentError
+      @fixture = Psych.load_file('test/fixtures/cs_api_methods.yaml')
+    end
 
     Hash.class_eval do
       def deep_symbolize_keys
