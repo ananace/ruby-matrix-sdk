@@ -6,12 +6,12 @@ module MatrixSdk::Rooms
 
     def tree(suggested_only: nil, max_rooms: nil)
       begin
-        data = client.api.request :get, :client_unstable, "/org.matrix.msc2946/rooms/#{id}/spaces", query: {
+        data = client.api.request :get, :client_r0, "/rooms/#{id}/spaces", query: {
           suggested_only: suggested_only,
           max_rooms_per_space: max_rooms
         }.compact
       rescue MatrixRequestError
-        data = client.api.request :get, :client_r0, "/rooms/#{id}/spaces", query: {
+        data = client.api.request :get, :client_unstable, "/org.matrix.msc2946/rooms/#{id}/spaces", query: {
           suggested_only: suggested_only,
           max_rooms_per_space: max_rooms
         }.compact
