@@ -132,7 +132,7 @@ module MatrixSdk
 
     # Returns all the current device keys for the user, retrieving them if necessary
     def device_keys
-      @device_keys ||= client.api.keys_query(device_keys: { id => [] }).yield_self do |resp|
+      @device_keys ||= client.api.keys_query(device_keys: { id => [] }).yield_self do |resp| # rubocop:disable Style/ObjectThen # Keep Ruby 2.5 support a little longer
         resp.dig(:device_keys, id.to_sym)
       end
     end

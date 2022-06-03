@@ -4,6 +4,7 @@
     The API will currently default to running with multi-threaded requests. In case your application is single-threaded - or never performs requests from multiple threads - then you can set `threadsafe: true/false` to support connection reuse.
 - Changes room finding to ignore non-canonical aliases by default
 - Improves room alias handling
+- Improves Ruby 3.0+ support
 
 ## 2.5.0 - 2022-01-14
 

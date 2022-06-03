@@ -69,31 +69,40 @@ module MatrixSdk::Util
       return if method_names.any? { |k, _| helper.respond_to? k }
 
       helper.class_eval do
-        define_method(method_names[:cache_key]) do |*args|
+        define_method(method_names[:cache_key]) do |*args, **named|
+          args << named unless named.empty?
           cache_key.call(method_name, args)
         end
 
-        define_method(method_names[:with_cache]) do |*args|
-          tinycache_adapter.fetch(__send__(method_names[:cache_key], *args), expires_in: expires_in) do
-            __send__(method_names[:without_cache], *args)
+        define_method(method_names[:with_cache]) do |*args, **named|
+          tinycache_adapter.fetch(__send__(method_names[:cache_key], *args, **named), expires_in: expires_in) do
+            if named.empty?
+              __send__(method_names[:without_cache], *args)
+            else
+              __send__(method_names[:without_cache], *args, **named)
+            end
           end
         end
 
-        define_method(method_names[:without_cache]) do |*args|
+        define_method(method_names[:without_cache]) do |*args, **named|
           orig = method(method_name).super_method
-          orig.call(*args)
+          if named.empty?
+            orig.call(*args)
+          else
+            orig.call(*args, **named)
+          end
         end
 
-        define_method(method_names[:clear_cache]) do |*args|
-          tinycache_adapter.delete(__send__(method_names[:cache_key], *args))
+        define_method(method_names[:clear_cache]) do |*args, **named|
+          tinycache_adapter.delete(__send__(method_names[:cache_key], *args, **named))
         end
 
         define_method(method_names[:cached]) do
           true
         end
 
-        define_method(method_names[:has_value]) do |*args|
-          tinycache_adapter.valid?(__send__(method_names[:cache_key], *args))
+        define_method(method_names[:has_value]) do |*args, **named|
+          tinycache_adapter.valid?(__send__(method_names[:cache_key], *args, **named))
         end
 
         define_method(method_name) do |*args|
