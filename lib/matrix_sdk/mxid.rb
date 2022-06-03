@@ -12,7 +12,7 @@ module MatrixSdk
 
       # TODO: Community-as-a-Room / Profile-as-a-Room, in case they're going for room aliases
       @sigil = identifier[0]
-      @localpart, @domain, @port = identifier[1..].split(':')
+      @localpart, @domain, @port = identifier[1..-1].split(':') # rubocop:disable Style/SlicingWithRange # Keep support for slightly older Rubies
       @port = @port.to_i if @port
 
       raise ArgumentError, 'Identifier is not a valid MXID' unless valid?

@@ -20,7 +20,7 @@ module URI
     @@schemes['MXC'] = MXC
   end
 
-  unless scheme_list.has_key? 'MATRIX'
+  unless scheme_list.key? 'MATRIX'
     # A matrix: URI according to MSC2312
     class MATRIX < Generic
       attr_reader :authority, :action, :mxid, :mxid2, :via
