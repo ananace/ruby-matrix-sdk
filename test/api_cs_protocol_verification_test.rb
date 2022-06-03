@@ -5,7 +5,7 @@ class ApiCSVerificationTest < Test::Unit::TestCase
     @http = mock
     @http.stubs(:active?).returns(true)
 
-    @api = MatrixSdk::Api.new 'https://example.com', protocols: :CS, autoretry: false
+    @api = MatrixSdk::Api.new 'https://example.com', protocols: :CS, autoretry: false, threadsafe: false
     @api.instance_variable_set :@http, @http
     @api.stubs(:print_http)
 

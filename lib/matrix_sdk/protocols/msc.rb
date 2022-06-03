@@ -136,10 +136,11 @@ module MatrixSdk::Protocols::MSC
             break
           end
         end
+
         break unless ctx[:run]
       end
-    rescue StandardError
-      @http_lock.unlock if @http_lock.owned?
+    ensure
+      @http_lock.unlock if @http_lock&.owned?
     end
     # rubocop:enable Metrics/BlockLength
 

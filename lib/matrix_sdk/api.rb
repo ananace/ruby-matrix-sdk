@@ -39,9 +39,10 @@ module MatrixSdk
     # @option params [Hash] :global_headers Additional headers to set for all requests
     # @option params [Boolean] :skip_login Should the API skip logging in if the HS URL contains user information
     # @option params [Boolean] :synapse (true) Is the API connecting to a Synapse instance
-    # @option params [Boolean,:multithread] :threadsafe (true/:multithread) Should the connection be threadsafe - or
-    #   even safe for simultaneous multi-thread usage. Will default to +:multithread+ for JRuby, +true+ otherwise.
-    # @note Setting threadsafe to +:multithread+ currently doesn't support connection re-use
+    # @option params [Boolean,:multithread] :threadsafe (:multithread) Should the connection be threadsafe/mutexed - or
+    #   safe for simultaneous multi-thread usage. Will default to +:multithread+ - a.k.a. per-thread HTTP connections
+    #   and requests
+    # @note Using threadsafe +:multithread+ currently doesn't support connection re-use
     def initialize(homeserver, **params)
       @homeserver = homeserver
       raise ArgumentError, 'Homeserver URL must be String or URI' unless @homeserver.is_a?(String) || @homeserver.is_a?(URI)
@@ -67,7 +68,7 @@ module MatrixSdk
       @synapse = params.fetch(:synapse, true)
       @http = nil
 
-      self.threadsafe = params.fetch(:threadsafe, RUBY_ENGINE == 'jruby' ? :multithread : true)
+      self.threadsafe = params.fetch(:threadsafe, :multithread)
 
       ([params.fetch(:protocols, [:CS])].flatten - protocols).each do |proto|
         self.class.include MatrixSdk::Protocols.const_get(proto)
@@ -251,6 +252,7 @@ module MatrixSdk
     # @return [Boolean,:multithread]
     def threadsafe=(threadsafe)
       raise ArgumentError, 'Threadsafe must be either a boolean or :multithread' unless [true, false, :multithread].include? threadsafe
+      raise ArugmentError, 'JRuby only support :multithread/false for threadsafe' if RUBY_ENGINE == 'jruby' && threadsafe == true
 
       @threadsafe = threadsafe
       @http_lock = nil unless threadsafe == true

@@ -202,7 +202,7 @@ class ApiTest < Test::Unit::TestCase
     response = Net::HTTPSuccess.new(nil, 200, 'GET')
     response.stubs(:body).returns({ user_id: '@alice:example.com' }.to_json)
 
-    api = MatrixSdk::Api.new 'https://example.com'
+    api = MatrixSdk::Api.new 'https://example.com', threadsafe: false
     http = api.send(:http)
 
     http.expects(:request).returns(response)
@@ -236,7 +236,7 @@ class ApiTest < Test::Unit::TestCase
     assert_equal 5, http.read_timeout
     assert_equal OpenSSL::SSL::VERIFY_PEER, http.verify_mode
 
-    api = MatrixSdk::Api.new 'https://example.com'
+    api = MatrixSdk::Api.new 'https://example.com', threadsafe: false
 
     api.send(:http).expects(:finish).times(4)
 
