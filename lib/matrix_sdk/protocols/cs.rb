@@ -203,7 +203,7 @@ module MatrixSdk::Protocols::CS
     data[:device_id] = device_id if device_id
 
     request(:post, client_api_latest, '/login', body: data, query: query).tap do |resp|
-      @access_token = resp.token if resp.key?(:token) && options[:store_token]
+      @access_token = resp.access_token if resp.key?(:access_token) && options[:store_token]
       @device_id = resp.device_id if resp.key?(:device_id) && options[:store_device_id]
     end
   end
