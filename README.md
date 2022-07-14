@@ -8,6 +8,8 @@ Live YARD documentation can be found at; https://ruby-sdk.ananace.dev
 
 ## Example usage
 
+For more fully-featured examples, check the [examples](examples/) folder.
+
 ```ruby
 # Raw API usage
 require 'matrix_sdk'
