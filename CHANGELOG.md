@@ -5,6 +5,7 @@
 - Changes room finding to ignore non-canonical aliases by default
 - Improves room alias handling
 - Improves Ruby 3.0+ support
+- Improves debug output by supporting PP (Ruby pretty print) on all MatrixSdk objects
 
 ## 2.5.0 - 2022-01-14
 

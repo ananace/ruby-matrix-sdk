@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'pp'
+
 unless Object.respond_to? :yield_self
   class Object
     def yield_self
@@ -51,12 +53,19 @@ module MatrixSdk
 
     def ignore_inspect(*symbols)
       class_eval %*
-        def inspect
-          reentrant = caller_locations.any? { |l| l.absolute_path == __FILE__ && l.label == 'inspect' }
-          "\\\#<\#{self.class} \#{instance_variables
+        include PP::ObjectMixin
+
+        def pretty_print_instance_variables
+          instance_variables
             .reject { |f| %i[#{symbols.map { |s| "@#{s}" }.join ' '}].include? f }
-            .map { |f| "\#{f}=\#{reentrant ? instance_variable_get(f) : instance_variable_get(f).inspect}" }.join " " }}>"
+            .sort
         end
+
+        def pretty_print(pp)
+          pp.pp_object(self)
+        end
+
+        alias inspect pretty_print_inspect
       *, __FILE__, __LINE__ - 7
     end
   end
