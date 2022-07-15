@@ -1,4 +1,4 @@
-## **Unreleased**
+## 2.6.0 - 2022-07-15
 
 - Adds some multi-thread usage support to the API (create your API/client with `threadsafe: :multithread/true/false`)
     The API will currently default to running with multi-threaded requests. In case your application is single-threaded - or never performs requests from multiple threads - then you can set `threadsafe: true/false` to support connection reuse.
