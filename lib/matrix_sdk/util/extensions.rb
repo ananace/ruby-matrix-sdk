@@ -66,7 +66,7 @@ module MatrixSdk
         end
 
         alias inspect pretty_print_inspect
-      *, __FILE__, __LINE__ - 7
+      *, __FILE__, __LINE__ - 14
     end
   end
 
