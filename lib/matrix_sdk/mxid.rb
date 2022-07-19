@@ -45,7 +45,7 @@ module MatrixSdk
       "#{sigil}#{localpart}#{homeserver_suffix}"
     end
 
-    alias_method :to_str, :to_s
+    alias to_str to_s
 
     # Returns the type of the ID
     #
