@@ -1,0 +1,12 @@
+FROM ruby
+
+COPY Gemfile matrix-sdk.gemspec /app/
+COPY examples/ /app/bin/
+COPY lib/ /app/lib/
+WORKDIR /app
+
+RUN bundle install -j4 \
+ && echo "#!/bin/sh\ncd /app\nexec bundle exec bin/simple_bot.rb \"\$@\"" > /usr/local/bin/simple_bot \
+ && chmod +x /usr/local/bin/simple_bot
+
+ENTRYPOINT [ "/usr/local/bin/simple_bot" ]
