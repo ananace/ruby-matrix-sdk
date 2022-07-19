@@ -42,7 +42,6 @@ ROOM_STATE_FILTER = {
   }
 }.freeze
 
-
 class SimpleClient < MatrixSdk::Client
   def initialize(hs_url)
     super hs_url, sync_filter_limit: 10
@@ -106,9 +105,9 @@ if $PROGRAM_NAME == __FILE__
     ARGV.shift
 
     print 'Username: '
-    user = STDIN.gets.strip
+    user = $stdin.gets.strip
     puts 'Password: '
-    password = STDIN.noecho(&:gets).strip
+    password = $stdin.noecho(&:gets).strip
 
     puts 'Logging in...'
     client.login(user, password, no_sync: true)
@@ -133,7 +132,7 @@ if $PROGRAM_NAME == __FILE__
     puts 'Entering main loop'
     loop do
       print '> '
-      msg = STDIN.gets.strip
+      msg = $stdin.gets.strip
       break if msg.start_with? '/quit'
 
       if msg.start_with? '/me'
