@@ -34,6 +34,8 @@ class MXIDTest < Test::Unit::TestCase
       parsed = MatrixSdk::MXID.new mxid
 
       assert_equal mxid, parsed.to_s
+      assert mxid == parsed
+      assert parsed == mxid
     end
   end
 

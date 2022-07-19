@@ -1,3 +1,7 @@
+## **Unreleased**
+
+- Improves the handling of MXIDs as strings
+
 ## 2.6.0 - 2022-07-15
 
 - Adds some multi-thread usage support to the API (create your API/client with `threadsafe: :multithread/true/false`)
