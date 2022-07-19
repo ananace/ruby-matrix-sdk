@@ -45,6 +45,8 @@ module MatrixSdk
       "#{sigil}#{localpart}#{homeserver_suffix}"
     end
 
+    alias_method :to_str, :to_s
+
     # Returns the type of the ID
     #
     # @return [Symbol] The MXID type, one of (:user_id, :room_id, :event_id, :group_id, or :room_alias)
