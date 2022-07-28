@@ -73,7 +73,7 @@ module MatrixSdk::Bot
         (parent || {}).merge(@handlers).compact
       end
 
-      def set(option, value = (not_set = true), ignore_setter = false, &block)
+      def set(option, value = (not_set = true), ignore_setter = false, &block) # rubocop:disable Style/OptionalBooleanParameter
         raise ArgumentError if block && !not_set
 
         if block
@@ -171,7 +171,6 @@ module MatrixSdk::Bot
                               else
                                 { username: settings.username, password: settings.password }
                               end
-
 
         begin
           start_bot(bot_settings, &block)

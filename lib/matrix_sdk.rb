@@ -28,6 +28,11 @@ module MatrixSdk
   autoload :MatrixTimeoutError, 'matrix_sdk/errors'
   autoload :MatrixUnexpectedResponseError, 'matrix_sdk/errors'
 
+  module Bot
+    autoload :Base, 'matrix_sdk/bot/base'
+    autoload :Request, 'matrix_sdk/bot/request'
+  end
+
   module Rooms
     autoload :Space, 'matrix_sdk/rooms/space'
   end
