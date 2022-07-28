@@ -74,7 +74,7 @@ module MatrixSdk
     def logger
       return MatrixSdk.logger if MatrixSdk.global_logger?
 
-      @logger ||= ::Logging.logger[self]
+      @logger || ::Logging.logger[self]
     end
 
     def logger=(logger)

@@ -68,6 +68,22 @@ module MatrixSdk
       @avatar_url = url
     end
 
+    # Check if the user is an admin in a given room
+    #
+    # @param room [String,MXID] the room to check
+    # @return [Boolean] If the user is an admin (PL >= 100)
+    def admin?(room)
+      client.ensure_room(room).user_powerlevel(self) >= 100
+    end
+
+    # Check if the user is a moderator in a given room
+    #
+    # @param room [String,MXID] the room to check
+    # @return [Boolean] If the user is an admin (PL >= 50)
+    def moderator?(room)
+      client.ensure_room(room).user_powerlevel(self) >= 50
+    end
+
     # Get the user's current presence status
     #
     # @return [Symbol] One of :online, :offline, :unavailable

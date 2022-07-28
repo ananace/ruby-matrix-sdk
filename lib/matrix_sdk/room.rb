@@ -208,6 +208,28 @@ module MatrixSdk
       nil
     end
 
+    # Checks if the room is a direct / 1:1 room
+    #
+    # @return [Boolean]
+    def direct?
+      return true if client.direct_rooms.key? id.to_s
+
+      members.count <= 2
+    end
+
+    # 
+    def direct=(direct)
+      rooms = client.direct_rooms
+      list_for_room = (rooms[id.to_s] ||= [])
+      if direct
+        list_for_room << id.to_s
+      else
+        list_for_room.delete id.to_s
+        rooms.delete id.to_s if list_for_room.empty?
+      end
+      client.api.set_account_data(client.mxid, 'm.direct', rooms)
+    end
+
     # Gets the avatar url of the room - if any
     #
     # @return [String,nil] The avatar URL - if any
