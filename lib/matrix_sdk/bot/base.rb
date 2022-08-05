@@ -87,7 +87,6 @@ module MatrixSdk::Bot
       self.class.command?(command, **params)
     end
 
-
     # Access settings defined with Base.set
     def settings
       self.class.settings
@@ -109,10 +108,13 @@ module MatrixSdk::Bot
         /<internal:/                                        # internal in ruby >= 1.9.2
       ].freeze
 
+      # A filter that should only result in a valid sync token
       EMPTY_BOT_FILTER = {
-        presence: { types: [] },
         account_data: { types: [] },
+        event_fields: [],
+        presence: { types: [] },
         room: {
+          account_data: { types: [] },
           ephemeral: { types: [] },
           state: {
             types: [],
@@ -120,8 +122,7 @@ module MatrixSdk::Bot
           },
           timeline: {
             types: []
-          },
-          account_data: { types: [] }
+          }
         }
       }.freeze
 
