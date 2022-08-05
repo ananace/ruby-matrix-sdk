@@ -10,7 +10,7 @@ require 'matrix_sdk/bot'
 
 set :bot_name, 'pingbot'
 
-command :spam, dmonly: true, desc: 'Spams a bunch of nonsense' do
+command :spam, only: :dm, desc: 'Spams a bunch of nonsense' do
   spam = 5.times.map { (10..20).map { rand(65..91).chr }.join }
   spam.each do |msg|
     room.send_notice(msg)

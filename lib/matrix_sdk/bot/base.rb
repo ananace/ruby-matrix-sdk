@@ -27,14 +27,14 @@ module MatrixSdk::Bot
       @client.on_invite_event.add_handler { |ev| client.join_room(ev[:room_id]) if settings.accept_invites? }
     end
 
-    def logger
-      @logger || self.class.logger
-    end
-
     def expanded_prefix
       return "#{settings.command_prefix}#{settings.bot_name} " if settings.bot_name
 
       settings.command_prefix
+    end
+
+    def logger
+      @logger || self.class.logger
     end
 
     def self.logger
@@ -49,13 +49,13 @@ module MatrixSdk::Bot
     end
 
     # Access settings defined with Base.set
-    def self.settings
-      self
+    def settings
+      self.class.settings
     end
 
     # Access settings defined with Base.set
-    def settings
-      self.class.settings
+    def self.settings
+      self
     end
 
     class << self
@@ -157,9 +157,10 @@ module MatrixSdk::Bot
       #
       # @param command [String] The command to register, will be routed based on the prefix and bot NameError
       # @param desc [String] A human-readable description for the command
-      # @param dmonly [Boolean] Should this command only be handled in DMs (direct chats)
+      # @param only [Symbol,Proc,Array[Symbol,Proc]] What limitations does this command have?
+      #   Can use :DM, :Admin, :Mod
       # @option params
-      def command(command, desc: nil, notes: nil, dmonly: false, **params, &block)
+      def command(command, desc: nil, notes: nil, only: nil, **params, &block)
         args = params[:args] || convert_to_lambda(&block).parameters.map do |type, name|
           case type
           when :req
@@ -178,7 +179,7 @@ module MatrixSdk::Bot
           args: args,
           desc: desc,
           notes: notes,
-          dmonly: dmonly,
+          only: [only].flatten.compact,
           &block
         )
       end
@@ -187,6 +188,14 @@ module MatrixSdk::Bot
         return @handlers.key? command if ignore_inherited
 
         all_handlers.key? command
+      end
+
+      def get_command(command, ignore_inherited: false)
+        if ignore_inherited
+          @handlers[command]
+        else
+          self.class.all_handlers[command]
+        end
       end
 
       def client(&block)
@@ -334,10 +343,47 @@ module MatrixSdk::Bot
       end
     end
 
+    def get_command(command, **params)
+      self.class.get_command(command, **params)
+    end
+
+    def command?(command, **params)
+      self.class.command?(command, **params)
+    end
+
+    def command_allowed?(command, event)
+      return false unless command? command
+
+      handler = get_command(command)
+      return true if (handler.data[:only] || []).empty?
+
+      req = MatrixSdk::Bot::Request.new self, event
+      req.logger = Logging.logger[self]
+      return false if [handler.data[:only]].flatten.any? do |only|
+        if only.is_a? Proc
+          req.instance_exec(&only)
+        else
+          case only.to_s.downcase.to_sym
+          when :dm
+            !room.dm?(members_only: true)
+          when :admin
+            !sender.admin?(room)
+          when :mod
+            !sender.moderator?(room)
+          end
+        end
+      end
+
+      true
+    end
+
+    private
+
     #
     # Event handling
     #
 
+    # TODO: Add handling results - Ok, NoSuchCommand, NotAllowed, etc
     def _handle_event(event)
       return if settings.ignore_own? && client.mxid == event[:sender]
 
@@ -371,18 +417,18 @@ module MatrixSdk::Bot
       message.sub!(command, '')
       message.lstrip!
 
-      handler = self.class.all_handlers[command]
+      handler = get_command(command)
       return unless handler
+      return unless command_allowed?(command, event)
+
+      req = MatrixSdk::Bot::Request.new self, event
+      req.logger = Logging.logger[self]
+
+      logger.debug "Handling command #{handler.command}"
 
       arity = handler.proc.parameters.count { |t, _| %i[opt req].include? t }
       arity = -arity if handler.proc.parameters.any? { |t, _| t.to_s.include? 'rest' }
 
-      return if handler.data[:dmonly] && !room.dm?(members_only: true)
-
-      logger.debug "Handling command #{handler.command}"
-
-      req = MatrixSdk::Bot::Request.new self, event
-      req.logger = Logging.logger[self]
       case arity
       when 0
         req.instance_exec(&handler.proc)
@@ -482,7 +528,7 @@ module MatrixSdk::Bot
 
       commands = bot.class.all_handlers
       commands.select! { |c, _| c.include? command } if command
-      commands.reject! { |_, h| h.data[:dmonly] } unless room.dm?
+      commands.select! { |c, _| bot.command_allowed? c, event }
 
       commands = commands.map do |_cmd, handler|
         info = handler.data[:args]
