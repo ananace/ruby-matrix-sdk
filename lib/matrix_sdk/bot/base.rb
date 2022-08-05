@@ -21,6 +21,8 @@ module MatrixSdk::Bot
 
     def initialize(hs_url, **params)
       @client = case hs_url
+                when MatrixSdk::Api
+                  MatrixSdk::Client.new hs_url
                 when MatrixSdk::Client
                   hs_url
                 when %r{^https?://.*}
