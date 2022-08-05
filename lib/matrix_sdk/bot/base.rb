@@ -571,7 +571,7 @@ module MatrixSdk::Bot
       :help,
       desc: 'Shows this help text',
       notes: <<~NOTES
-        For commands that include multiple separate arguments, you will need to use quotes where they contain spaces
+        For commands that take multiple arguments, you will need to use quotes around spaces
         E.g. !login "my username" "this is not a real password"
       NOTES
     ) do |command = nil|

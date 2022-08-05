@@ -8,6 +8,9 @@
 
 require 'matrix_sdk/bot'
 
+# Util methods added at end of class, to keep command listing near the top
+module Utils; end
+
 set :bot_name, 'pingbot'
 
 command :spam, only: :dm, desc: 'Spams a bunch of nonsense' do |message_count = 5|
@@ -28,42 +31,6 @@ command :echo, desc: 'Echoes the given message back as an m.notice' do |message|
   room.send_notice(message)
 end
 
-MS_PER_DAY = 86_400_000.0
-MS_PER_HOUR = 3_600_000.0
-MS_PER_MINUTE = 60_000.0
-MS_PER_SECOND = 1_000.0
-
-def duration_format(duration_ms)
-  return "#{duration_ms} ms" if duration_ms <= 9000
-
-  timestr = []
-  if duration_ms > MS_PER_DAY * 1.1
-    duration_ms -= (days = (duration_ms / MS_PER_DAY).floor) * MS_PER_DAY
-    timestr << "#{days} days#{days > 1 ? 's' : ''}" if days.positive?
-  end
-
-  if duration_ms > MS_PER_HOUR * 1.1
-    duration_ms -= (hours = (duration_ms / MS_PER_HOUR).floor) * MS_PER_HOUR
-    timestr << "#{hours} hour#{hours > 1 ? 's' : ''}" if hours.positive?
-  end
-
-  if duration_ms > MS_PER_MINUTE * 1.1
-    duration_ms -= (minutes = (duration_ms / MS_PER_MINUTE).floor) * MS_PER_MINUTE
-    timestr << "#{minutes} minute#{minutes > 1 ? 's' : ''}" if minutes.positive?
-  end
-
-  seconds = (duration_ms / MS_PER_SECOND).round(timestr.empty? ? 1 : 0)
-  seconds = seconds.round if seconds.round == seconds
-  timestr << "#{seconds} second#{seconds > 1 ? 's' : ''}" if seconds.positive?
-
-  if timestr.count > 2
-    last = timestr.pop
-    [timestr.join(', '), last].join(' and ')
-  else
-    timestr.join ' and '
-  end
-end
-
 command :ping, desc: 'Runs a ping with a given ID and returns the request time' do |message = nil|
   origin_ts = Time.at(event[:origin_server_ts] / 1000.0)
   diff = Time.now - origin_ts
@@ -80,7 +47,7 @@ command :ping, desc: 'Runs a ping with a given ID and returns the request time' 
     sender: sender.id,
     room: room.id,
     event: event.event_id,
-    time: duration_format(milliseconds),
+    time: Utils.duration_format(milliseconds),
     msg: message
   }
 
@@ -103,4 +70,42 @@ command :ping, desc: 'Runs a ping with a given ID and returns the request time' 
   }
 
   room.send_custom_message(format(plaintext, formatdata), eventdata, msgtype: 'm.notice')
+end
+
+module Utils
+  MS_PER_DAY = 86_400_000.0
+  MS_PER_HOUR = 3_600_000.0
+  MS_PER_MINUTE = 60_000.0
+  MS_PER_SECOND = 1_000.0
+
+  def self.duration_format(duration_ms)
+    return "#{duration_ms} ms" if duration_ms <= 9000
+
+    timestr = []
+    if duration_ms > MS_PER_DAY * 1.1
+      duration_ms -= (days = (duration_ms / MS_PER_DAY).floor) * MS_PER_DAY
+      timestr << "#{days} days#{days > 1 ? 's' : ''}" if days.positive?
+    end
+
+    if duration_ms > MS_PER_HOUR * 1.1
+      duration_ms -= (hours = (duration_ms / MS_PER_HOUR).floor) * MS_PER_HOUR
+      timestr << "#{hours} hour#{hours > 1 ? 's' : ''}" if hours.positive?
+    end
+
+    if duration_ms > MS_PER_MINUTE * 1.1
+      duration_ms -= (minutes = (duration_ms / MS_PER_MINUTE).floor) * MS_PER_MINUTE
+      timestr << "#{minutes} minute#{minutes > 1 ? 's' : ''}" if minutes.positive?
+    end
+
+    seconds = (duration_ms / MS_PER_SECOND).round(timestr.empty? ? 1 : 0)
+    seconds = seconds.round if seconds.round == seconds
+    timestr << "#{seconds} second#{seconds > 1 ? 's' : ''}" if seconds.positive?
+
+    if timestr.count > 2
+      last = timestr.pop
+      [timestr.join(', '), last].join(' and ')
+    else
+      timestr.join ' and '
+    end
+  end
 end
