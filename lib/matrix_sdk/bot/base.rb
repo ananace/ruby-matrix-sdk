@@ -406,6 +406,9 @@ module MatrixSdk::Bot
       handler = get_command(command)
       return true if (handler.data[:only] || []).empty?
 
+      # Avoid modifying input data for a checking method
+      event = MatrixSdk::Response.new(client.api, event.dup)
+
       req = MatrixSdk::Bot::Request.new self, event
       req.logger = Logging.logger[self]
       return false if [handler.data[:only]].flatten.compact.any? do |only|
@@ -469,6 +472,8 @@ module MatrixSdk::Bot
       handler = get_command(command)
       return unless handler
       return unless command_allowed?(command, event)
+
+      event = MatrixSdk::Response.new(client.api, event)
 
       req = MatrixSdk::Bot::Request.new self, event
       req.logger = Logging.logger[self]

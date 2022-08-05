@@ -31,6 +31,8 @@ module MatrixSdk
         return data
       end
 
+      return data if data.instance_variables.include? :@api
+
       raise ArgumentError, 'Input data was not a hash' unless data.is_a? Hash
 
       data.extend(Extensions)

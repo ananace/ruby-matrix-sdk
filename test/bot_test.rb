@@ -17,6 +17,10 @@ class BotTest < Test::Unit::TestCase
     command :test_only, only: :dm do
       bot.send :test_only
     end
+
+    command :test_event do
+      bot.send :test_event, event.event_id
+    end
   end
 
   def setup
@@ -168,6 +172,21 @@ class BotTest < Test::Unit::TestCase
 
     assert @bot.command_allowed? 'test', ev
     @bot.send :_handle_event, ev
+
+    @bot.expects(:test_event).with('$someevent').once
+
+    ev = {
+      sender: '@bob:example.com',
+      room_id: @id,
+      event_id: '$someevent',
+      content: {
+        msgtype: 'm.text',
+        body: '!test_event'
+      }
+    }
+
+    assert @bot.command_allowed? 'test_event', ev
+    @bot.send :_handle_event, ev
   end
 
   def test_builtin_help
@@ -179,6 +198,7 @@ class BotTest < Test::Unit::TestCase
       !rake_test_loader help [COMMAND] - Shows this help text
       !rake_test_loader test ARG [ARG2]
       !rake_test_loader test_arr [ARGS...]
+      !rake_test_loader test_event
     MSG
 
     @bot.send :_handle_event, {
@@ -215,6 +235,7 @@ class BotTest < Test::Unit::TestCase
       !test ARG [ARG2]
       !test_arr [ARGS...]
       !test_only
+      !test_event
     MSG
 
     @bot.send :_handle_event, {
