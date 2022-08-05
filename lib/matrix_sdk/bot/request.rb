@@ -3,6 +3,7 @@
 module MatrixSdk::Bot
   class Request
     extend MatrixSdk::Extensions
+    include MatrixSdk::Logging
 
     attr_reader :bot, :event
     attr_writer :logger
@@ -12,10 +13,6 @@ module MatrixSdk::Bot
     def initialize(bot, event)
       @bot = bot
       @event = event
-    end
-
-    def logger
-      @logger || Logging.logger[self]
     end
 
     def client

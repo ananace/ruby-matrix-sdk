@@ -152,6 +152,9 @@ module MatrixSdk::Bot
       # @note Due to the way blocks are handled, required parameters won't block execution.
       #   If your command requires all parameters to be valid, you will need to check for nil yourself.
       #
+      # @note Execution will be performed with a MatrixSdk::Bot::Request object as self.
+      #   To access the bot instance, use MatrixSdk::Bot::Request#bot
+      #
       # @param command [String] The command to register, will be routed based on the prefix and bot NameError
       # @param desc [String] A human-readable description for the command
       # @param dmonly [Boolean] Should this command only be handled in DMs (direct chats)
