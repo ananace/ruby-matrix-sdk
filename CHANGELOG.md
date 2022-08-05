@@ -1,5 +1,7 @@
 ## **Unreleased**
 
+- Adds a bot subsystem + DSL 
+  - [An example](examples/bot_api.rb) can be found in the examples folder
 - Improves the handling of MXIDs as strings
 
 ## 2.6.0 - 2022-07-15
