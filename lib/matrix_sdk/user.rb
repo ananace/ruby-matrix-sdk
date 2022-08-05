@@ -28,6 +28,12 @@ module MatrixSdk
       end
     end
 
+    def to_s
+      "#{display_name} (#{id})" if @display_name
+
+      @id.to_s
+    end
+
     # @return [String] the display name
     # @see MatrixSdk::Protocols::CS#get_display_name
     def display_name

@@ -2,8 +2,12 @@
 
 module MatrixSdk::Bot
   class Request
+    extend MatrixSdk::Extensions
+
     attr_reader :bot, :event
     attr_writer :logger
+
+    ignore_inspect :bot
 
     def initialize(bot, event)
       @bot = bot
@@ -24,6 +28,15 @@ module MatrixSdk::Bot
 
     def sender
       client.get_user(event[:sender])
+    end
+
+    # Helpers for checking power levels
+    def sender_admin?
+      sender.admin? room
+    end
+
+    def sender_moderator?
+      sender.moderator? room
     end
   end
 end

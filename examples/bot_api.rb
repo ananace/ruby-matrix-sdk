@@ -1,11 +1,25 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-require 'matrix_sdk/bot/main'
+# An example of a lightweight bot using the bot DSL
+#
+# This bot will implement a subset of the maubot ping/echo module
+# It showcases required and optional parameters
+
+require 'matrix_sdk/bot'
 
 set :bot_name, 'pingbot'
 
+command :spam, dmonly: true, desc: 'Spams a bunch of nonsense' do
+  spam = 5.times.map { (10..20).map { rand(65..91).chr }.join }
+  spam.each do |msg|
+    room.send_notice(msg)
+  end
+end
+
 command :echo, desc: 'Echoes the given message back as an m.notice' do |message|
+  break if message.nil? # Don't echo empty requests
+
   logger.debug "Received !echo from #{sender}"
 
   room.send_notice(message)
@@ -19,45 +33,32 @@ MS_PER_SECOND = 1_000.0
 def duration_format(duration_ms)
   return "#{duration_ms} ms" if duration_ms <= 9000
 
-  timestr = ''
-
+  timestr = []
   if duration_ms > MS_PER_DAY * 1.1
-    days = (duration_ms / MS_PER_DAY).floor
-    duration_ms -= days * MS_PER_DAY
-    puts duration_ms
-    if days.positive?
-      timestr += "#{days} days#{days > 1 ? 's' : ''} "
-    end
+    duration_ms -= (days = (duration_ms / MS_PER_DAY).floor) * MS_PER_DAY
+    timestr << "#{days} days#{days > 1 ? 's' : ''}" if days.positive?
   end
 
   if duration_ms > MS_PER_HOUR * 1.1
-    hours = (duration_ms / MS_PER_HOUR).floor
-    duration_ms -= hours * MS_PER_HOUR
-    puts duration_ms
-    if hours.positive?
-      timestr += 'and ' unless timestr.empty?
-      timestr += "#{hours} hour#{hours > 1 ? 's' : ''} "
-    end
+    duration_ms -= (hours = (duration_ms / MS_PER_HOUR).floor) * MS_PER_HOUR
+    timestr << "#{hours} hour#{hours > 1 ? 's' : ''}" if hours.positive?
   end
 
   if duration_ms > MS_PER_MINUTE * 1.1
-    minutes = (duration_ms / MS_PER_MINUTE).floor
-    duration_ms -= minutes * MS_PER_MINUTE
-    puts duration_ms
-    if minutes.positive?
-      timestr += 'and ' unless timestr.empty?
-      timestr += "#{minutes} minute#{minutes > 1 ? 's' : ''} "
-    end
+    duration_ms -= (minutes = (duration_ms / MS_PER_MINUTE).floor) * MS_PER_MINUTE
+    timestr << "#{minutes} minute#{minutes > 1 ? 's' : ''}" if minutes.positive?
   end
 
   seconds = (duration_ms / MS_PER_SECOND).round(timestr.empty? ? 1 : 0)
   seconds = seconds.round if seconds.round == seconds
-  if seconds.positive?
-    timestr += 'and ' unless timestr.empty?
-    timestr += "#{seconds} second#{seconds > 1 ? 's' : ''} "
-  end
+  timestr << "#{seconds} second#{seconds > 1 ? 's' : ''}" if seconds.positive?
 
-  timestr.rstrip
+  if timestr.count > 2
+    last = timestr.pop
+    [timestr.join(', '), last].join(' and ')
+  else
+    timestr.join ' and '
+  end
 end
 
 command :ping, desc: 'Runs a ping with a given ID and returns the request time' do |message = nil|
@@ -83,10 +84,8 @@ command :ping, desc: 'Runs a ping with a given ID and returns the request time' 
   from_id = MatrixSdk::MXID.new(sender.id)
 
   eventdata = {
-    body: format(plaintext, formatdata),
     format: 'org.matrix.custom.html',
     formatted_body: format(html, formatdata),
-    msgtype: 'm.notice',
     'm.relates_to': {
       event_id: formatdata[:event],
       from: from_id.homeserver,
@@ -100,5 +99,5 @@ command :ping, desc: 'Runs a ping with a given ID and returns the request time' 
     }
   }
 
-  client.api.send_message_event(room.id, 'm.room.message', eventdata)
+  room.send_custom_message(format(plaintext, formatdata), eventdata, msgtype: 'm.notice')
 end

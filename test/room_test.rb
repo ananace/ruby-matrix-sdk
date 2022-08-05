@@ -51,6 +51,25 @@ class RoomTest < Test::Unit::TestCase
     assert_equal 2, @room.joined_members.count
     assert_equal '@alice:example.com', @room.joined_members.first.id
     assert_equal '@charlie:example.com', @room.joined_members.last.id
+    assert @room.dm?(members_only: true)
+  end
+
+  def test_dm
+    @api.expects(:get_room_joined_members).with('!room:example.com').returns(
+      joined: {
+        '@alice:example.com': {},
+        '@bob:example.com': {},
+        '@charlie:example.com': {}
+      }
+    )
+
+    refute @room.dm?(members_only: true)
+
+    @api.expects(:get_account_data).with('@alice:example.com', 'm.direct').returns(
+      '@bob:example.com' => [@id]
+    )
+
+    assert @room.dm?
   end
 
   def test_all_members
@@ -60,9 +79,9 @@ class RoomTest < Test::Unit::TestCase
     @client.expects(:get_user).once.with('@charlie:example.com').returns(MatrixSdk::User.new(@client, '@charlie:example.com'))
 
     if Gem::Version.new(RUBY_VERSION) >= Gem::Version.new('2.7.0')
-      @api.expects(:get_room_members).once.with('!room:example.com').returns(chunk: [{ state_key: '@alice:example.com'}])
+      @api.expects(:get_room_members).once.with('!room:example.com').returns(chunk: [{ state_key: '@alice:example.com' }])
     else
-      @api.expects(:get_room_members).once.with('!room:example.com', {}).returns(chunk: [{ state_key: '@alice:example.com'}])
+      @api.expects(:get_room_members).once.with('!room:example.com', {}).returns(chunk: [{ state_key: '@alice:example.com' }])
     end
 
     # Two calls, cache should be kept

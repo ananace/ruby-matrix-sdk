@@ -67,6 +67,7 @@ module MatrixSdk
       @global_headers.merge!(params.fetch(:global_headers)) if params.key? :global_headers
       @synapse = params.fetch(:synapse, true)
       @http = nil
+      @inflight = []
 
       self.threadsafe = params.fetch(:threadsafe, :multithread)
 
@@ -301,6 +302,7 @@ module MatrixSdk
 
         loc_http = http
         perform_request = proc do
+          @inflight << loc_http
           dur_start = Time.now
           response = loc_http.request req_obj
           dur_end = Time.now
@@ -308,6 +310,8 @@ module MatrixSdk
         rescue EOFError
           logger.error 'Socket closed unexpectedly'
           raise
+        ensure
+          @inflight.delete loc_http
         end
 
         if @threadsafe == true
@@ -354,6 +358,10 @@ module MatrixSdk
       ret = @transaction_id ||= 0
       @transaction_id = @transaction_id.succ
       ret
+    end
+
+    def stop_inflight
+      @inflight.each(&:finish)
     end
 
     private

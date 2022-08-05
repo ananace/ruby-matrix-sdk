@@ -1,13 +1,11 @@
 # frozen_string_literal: true
 
-require 'matrix_sdk'
 require 'matrix_sdk/bot/request'
 require 'shellwords'
 
 module MatrixSdk::Bot
   class Base
     extend MatrixSdk::Extensions
-    include MatrixSdk::Logging
 
     RequestHandler = Struct.new('RequestHandler', :command, :proc, :data)
 
@@ -16,22 +14,46 @@ module MatrixSdk::Bot
     ignore_inspect :client
 
     def initialize(hs_url, **params)
-      @client = if hs_url.is_a? MatrixSdk::Client
+      @client = case hs_url
+                when MatrixSdk::Client
                   hs_url
-                else
+                when %r{^https?://.*}
                   MatrixSdk::Client.new hs_url, **params
+                else
+                  MatrixSdk::Client.new_for_domain hs_url, **params
                 end
 
       @client.on_event.add_handler('m.room.message') { |ev| _handle_event(ev) }
       @client.on_invite_event.add_handler { |ev| client.join_room(ev[:room_id]) if settings.accept_invites? }
     end
 
-    # Access settings defined with Base.set.
+    def logger
+      @logger || self.class.logger
+    end
+
+    def expanded_prefix
+      return "#{settings.command_prefix}#{settings.bot_name} " if settings.bot_name
+
+      settings.command_prefix
+    end
+
+    def self.logger
+      Logging.logger[self].tap do |l|
+        begin
+          l.level = :debug if MatrixSdk::Bot::PARAMS_CONFIG[:logging]
+        rescue NameError
+          # Not running as instance
+        end
+        l.level = settings.log_level unless settings.logging?
+      end
+    end
+
+    # Access settings defined with Base.set
     def self.settings
       self
     end
 
-    # Access settings defined with Base.set.
+    # Access settings defined with Base.set
     def settings
       self.class.settings
     end
@@ -125,8 +147,17 @@ module MatrixSdk::Bot
         @handlers[command] = RequestHandler.new command.to_s.downcase, block, data.compact
       end
 
-      def command(command, **params, &block)
-        args = params[:args] || block.parameters.map do |type, name|
+      # Register a bot command
+      #
+      # @note Due to the way blocks are handled, required parameters won't block execution.
+      #   If your command requires all parameters to be valid, you will need to check for nil yourself.
+      #
+      # @param command [String] The command to register, will be routed based on the prefix and bot NameError
+      # @param desc [String] A human-readable description for the command
+      # @param dmonly [Boolean] Should this command only be handled in DMs (direct chats)
+      # @option params
+      def command(command, desc: nil, notes: nil, dmonly: false, **params, &block)
+        args = params[:args] || convert_to_lambda(&block).parameters.map do |type, name|
           case type
           when :req
             name.to_s.upcase
@@ -135,25 +166,58 @@ module MatrixSdk::Bot
           when :rest
             "[#{name.to_s.upcase}...]"
           end
-        end.join(' ')
-        desc = params[:desc]
+        end.compact.join(' ')
 
-        add_handler command.to_s.downcase, args: args, desc: desc, &block
+        logger.debug "Registering command #{command} with args #{args}"
+
+        add_handler(
+          command.to_s.downcase,
+          args: args,
+          desc: desc,
+          notes: notes,
+          dmonly: dmonly,
+          &block
+        )
+      end
+
+      def command?(command, ignore_inherited: false)
+        return @handlers.key? command if ignore_inherited
+
+        all_handlers.key? command
       end
 
       def client(&block)
         @client_handler = block
       end
 
+      # Stops any running instance of the bot
       def quit!
         return unless running?
 
+        active_bot.logger.info "Stopping #{settings.bot_name}..."
+
+        if settings.store_sync_token
+          begin
+            active_bot.client.api.set_account_data(
+              active_bot.client.mxid, "dev.ananace.ruby-sdk.#{settings.bot_name}",
+              { sync_token: active_bot.client.sync_token }
+            )
+          rescue StandardError => e
+            active_bot.logger.error "Failed to save sync token, #{e.class}: #{e}"
+          end
+        end
+
         active_bot.client.logout if login?
+
+        active_bot.client.api.stop_inflight
         active_bot.client.stop_listener_thread
 
         set :active_bot, nil
       end
 
+      # Starts the bot up
+      #
+      # @param options [Hash] Settings to apply using Base.set
       def run!(options = {}, &block)
         return if running?
 
@@ -195,8 +259,9 @@ module MatrixSdk::Bot
 
         auth = bot_settings.delete :auth
         bot = new cl, **bot_settings
+        bot.client.cache = settings.client_cache
         bot.logger.level = settings.log_level
-        bot.logger.info 'Starting new instance'
+        bot.logger.info "Starting #{settings.bot_name}..."
 
         if settings.login?
           bot.client.login auth[:username], auth[:password], no_sync: true
@@ -211,6 +276,15 @@ module MatrixSdk::Bot
 
         if settings.sync_token?
           bot.client.instance_variable_set(:@next_batch, settings.sync_token)
+        elsif settings.store_sync_token?
+          begin
+            data = bot.client.api.get_account_data(bot.client.mxid, "dev.ananace.ruby-sdk.#{bot_name}")
+            bot.client.sync_token = data[:sync_token]
+          rescue MatrixSdk::MatrixNotFoundError
+            # Valid
+          rescue StandardError => e
+            bot.logger.error "Failed to restore old sync token, #{e.class}: #{e}"
+          end
         else
           bot.client.sync(filter: EMPTY_BOT_FILTER)
         end
@@ -220,6 +294,9 @@ module MatrixSdk::Bot
         bot.client.instance_variable_get(:@sync_thread).join
       rescue Interrupt
         # Happens when killed
+      rescue StandardError => e
+        logger.fatal "Failed to start #{settings.bot_name} - #{e.class}: #{e}"
+        raise
       end
 
       def define_singleton(name, content = Proc.new)
@@ -227,6 +304,14 @@ module MatrixSdk::Bot
           undef_method(name) if method_defined? name
           content.is_a?(String) ? class_eval("def #{name}() #{content}; end", __FILE__, __LINE__) : define_method(name, &content)
         end
+      end
+
+      def convert_to_lambda(this: nil, &block)
+        return block if block.lambda?
+
+        this ||= Object.new
+        this.define_singleton_method(:_, &block)
+        this.method(:_).to_proc
       end
 
       def cleaned_caller(keep = 3)
@@ -251,7 +336,7 @@ module MatrixSdk::Bot
     #
 
     def _handle_event(event)
-      return if settings.ignore_own && client.mxid == event[:sender]
+      return if settings.ignore_own? && client.mxid == event[:sender]
 
       logger.debug "Received event #{event}"
 
@@ -260,21 +345,18 @@ module MatrixSdk::Bot
 
       message = event[:content][:body]
 
-      expanded_prefix = "#{settings.command_prefix}#{settings.bot_name} " if settings.bot_name
       room = client.ensure_room(event[:room_id])
-
-      if room.direct?
-        logger.debug 'Is direct room'
-        room.direct = true
+      if room.dm?(members_only: true)
         unless message.start_with? settings.command_prefix
           prefix = expanded_prefix || settings.command_prefix
           message.prepend prefix unless message.start_with? prefix
         end
       else
+        return if settings.require_fullname? && !message.start_with?(expanded_prefix)
         return unless message.start_with? settings.command_prefix
       end
 
-      if expanded_prefix && message.start_with?(expanded_prefix)
+      if message.start_with?(expanded_prefix)
         message.sub!(expanded_prefix, '')
       else
         message.sub!(settings.command_prefix, '')
@@ -292,7 +374,9 @@ module MatrixSdk::Bot
       arity = handler.proc.parameters.count { |t, _| %i[opt req].include? t }
       arity = -arity if handler.proc.parameters.any? { |t, _| t.to_s.include? 'rest' }
 
-      logger.debug "Command has handler #{handler}, with arity #{arity}"
+      return if handler.data[:dmonly] && !room.dm?(members_only: true)
+
+      logger.debug "Handling command #{handler.command}"
 
       req = MatrixSdk::Bot::Request.new self, event
       req.logger = Logging.logger[self]
@@ -309,6 +393,7 @@ module MatrixSdk::Bot
       end
     rescue StandardError => e
       logger.error "#{e.class} when handling #{settings.command_prefix}#{command}: #{e}\n#{e.backtrace[0, 10].join("\n")}"
+      room.send_notice("Failed to handle #{command} - #{e}.\nMore information is available in the bot logs")
     end
 
     #
@@ -317,19 +402,46 @@ module MatrixSdk::Bot
 
     reset!
 
-    set :app_file, nil
+    ## Bot configuration
+    # Should the bot automatically accept invites
+    set :accept_invites, true
+    # What character should commands be prefixed with
+    set :command_prefix, '!'
+    # What's the name of the bot - used for non 1:1 rooms and sync-token storage
+    set(:bot_name) { File.basename $PROGRAM_NAME, '.*' }
+    # Which msgtypes should the bot listen for when handling commands
+    set :allowed_types, %w[m.text]
+    # Should the bot ignore its own events
+    set :ignore_own, true
+    # Should the bot require full-name commands in non-DM rooms?
+    set :require_fullname, false
+
+    ## Sync token handling
+    # Token specified by the user
     set :sync_token, nil
+    # Token automatically stored in an account_data key
+    set :store_sync_token, false
 
+    # Homeserver, either domain or URL
     set :homeserver, 'matrix.org'
-    set :threadsafe, true
+    # Which level of thread safety should be used
+    set :threadsafe, :multithread
 
+    ## User authorization
+    # Existing access token
     set :access_token, nil
+    # Username for a per-instance login
     set :username, nil
+    # Password for a per-instance login
     set :password, nil
 
+    # Helper to check if a login is requested
     set(:login) { username? && password? }
 
+    ## Client abstraction configuration
+    # What level of caching is wanted - most bots won't need full client-level caches
     set :client_cache, :some
+    # The default sync filter, should be modified to limit to what the bot uses
     set :sync_filter, {
       room: {
         timeline: {
@@ -341,76 +453,55 @@ module MatrixSdk::Bot
       }
     }
 
+    ## Logging configuration
+    # Should logging be enabled? (Will always log fatal errors)
     set :logging, false
+    # What level of logging should the bot use
     set :log_level, :info
 
-    set :accept_invites, true
-    set :command_prefix, '!'
-    set :bot_name, nil
-    set :allowed_types, %w[m.text]
-    set :ignore_own, true
-
-    command(:help, desc: 'Shows this help text') do |command = nil|
-      logger.info "Received request for help on #{command.inspect}"
-
-      commands = bot.class.all_handlers
-      commands.select! { |c| c.include? command } if command
-
-      commands = commands.map do |_cmd, handler|
-        ["#{bot.settings.command_prefix}#{handler.command}", handler.data[:args]].compact.join(' ') + " - #{handler.data[:desc]}"
-      end
-
-      if command
-        if commands.empty?
-          room.send_notice("No information available on #{command.inspect}")
-        else
-          room.send_notice("Help for #{command.inspect};\n#{commands.join("\n")}")
-        end
-      else
-        room.send_notice("Usage:\n\n#{commands.join("\n")}")
-      end
-    end
-  end
-
-  class Instance < Base
-    set :logging, true
-    set :log_level, :info
-
-    set :method_override, true
-    set :run, true
+    ## Internal configuration values
     set :app_file, nil
 
-    set :active_bot, nil
+    #
+    # Default commands
+    #
 
-    def self.register(*extensions, &block) #:nodoc:
-      added_methods = extensions.flat_map(&:public_instance_methods)
-      Delegator.delegate(*added_methods)
-      super(*extensions, &block)
-    end
-  end
+    command(
+      :help,
+      desc: 'Shows this help text',
+      notes: <<~NOTES
+        For commands that include multiple separate arguments, you will need to use quotes where they contain spaces
+        E.g. !login "my username" "this is not a real password"
+      NOTES
+    ) do |command = nil|
+      logger.info "Handling request for built-in help for #{sender}" if command.nil?
+      logger.info "Handling request for built-in help for #{sender} on #{command.inspect}" unless command.nil?
 
-  module Delegator #:nodoc:
-    def self.delegate(*methods)
-      methods.each do |method_name|
-        define_method(method_name) do |*args, &block|
-          return super(*args, &block) if respond_to? method_name
+      commands = bot.class.all_handlers
+      commands.select! { |c, _| c.include? command } if command
+      commands.reject! { |_, h| h.data[:dmonly] } unless room.dm?
 
-          Delegator.target.send(method_name, *args, &block)
+      commands = commands.map do |_cmd, handler|
+        info = handler.data[:args]
+        info += " - #{handler.data[:desc]}" if handler.data[:desc]
+        info += "\n  #{handler.data[:notes].split("\n").join("\n  ")}" if !command.nil? && handler.data[:notes]
+
+        [
+          room.dm? ? "#{bot.settings.command_prefix}#{handler.command}" : "#{bot.expanded_prefix}#{handler.command}",
+          info
+        ].compact
+      end
+
+      commands = commands.map { |*args| args.join(' ') }.join("\n")
+      if command
+        if commands.empty?
+          room.send_notice("No information available on #{command}")
+        else
+          room.send_notice("Help for #{command};\n#{commands}")
         end
-        # ensure keyword argument passing is compatible with ruby >= 2.7
-        ruby2_keywords(method_name) if respond_to?(:ruby2_keywords, true)
-        private method_name
+      else
+        room.send_notice("Usage:\n\n#{commands}")
       end
     end
-
-    delegate :command,
-             :client, :settings,
-             :set, :enable, :disable
-
-    class << self
-      attr_accessor :target
-    end
-
-    self.target = Instance
   end
 end

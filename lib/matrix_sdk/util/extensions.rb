@@ -62,7 +62,7 @@ module MatrixSdk
         end
 
         def pretty_print(pp)
-          pp.pp_object(self)
+          pp.pp(self)
         end
 
         alias inspect pretty_print_inspect

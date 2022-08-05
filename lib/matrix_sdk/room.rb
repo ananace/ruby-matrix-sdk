@@ -75,6 +75,7 @@ module MatrixSdk
       raise ArgumentError, 'Must be given a Client instance' unless client.is_a? Client
 
       @client = client
+      tinycache_adapter.client = client
       room_id = MXID.new room_id unless room_id.is_a?(MXID)
       raise ArgumentError, 'room_id must be a valid Room ID' unless room_id.room_id?
 
@@ -208,26 +209,30 @@ module MatrixSdk
       nil
     end
 
-    # Checks if the room is a direct / 1:1 room
+    # Checks if the room is a direct message / 1:1 room
     #
+    # @param members_only [Boolean] Should directness only care about member count?
     # @return [Boolean]
-    def direct?
-      return true if client.direct_rooms.key? id.to_s
+    def dm?(members_only: false)
+      return true if !members_only && client.direct_rooms.any? { |_uid, rooms| rooms.include? id.to_s }
 
-      members.count <= 2
+      joined_members.count <= 2
     end
 
-    # 
-    def direct=(direct)
+    # Mark a room as a direct (1:1) message Room
+    def dm=(direct)
       rooms = client.direct_rooms
+      dirty = false
       list_for_room = (rooms[id.to_s] ||= [])
-      if direct
+      if direct && !list_for_room.include?(id.to_s)
         list_for_room << id.to_s
-      else
+        dirty = true
+      elsif !direct && list_for_room.include?(id.to_s)
         list_for_room.delete id.to_s
         rooms.delete id.to_s if list_for_room.empty?
+        dirty = true
       end
-      client.api.set_account_data(client.mxid, 'm.direct', rooms)
+      client.api.set_account_data(client.mxid, 'm.direct', rooms) if dirty
     end
 
     # Gets the avatar url of the room - if any
@@ -420,6 +425,31 @@ module MatrixSdk
     # @note The URLs should all be of the 'mxc://' schema
     def send_audio(url, name, audio_info = {})
       client.api.send_content(id, url, name, 'm.audio', extra_information: audio_info)
+    end
+
+    # Sends a customized message to the Room
+    #
+    # @param body [String] The clear-text body of the message
+    # @param content [Hash] The custom content of the message
+    # @param msgtype [String] The type of the message, should be one of the known types (m.text, m.notice, m.emote, etc)
+    def send_custom_message(body, content = {}, msgtype: nil)
+      content.merge!(
+        body: body,
+        msgtype: msgtype || 'm.text'
+      )
+
+      client.api.send_message_event(id, 'm.room.message', content)
+    end
+
+    # Sends a custom timeline event to the Room
+    #
+    # @param type [String,Symbol] The type of the Event.
+    #   For custom events, this should be written in reverse DNS format (e.g. com.example.event)
+    # @param content [Hash] The contents of the message, this will be the
+    #   :content key of the resulting event object
+    # @see Protocols::CS#send_message_event
+    def send_event(type, content = {})
+      client.api.send_message_event(room.id, type, content)
     end
 
     # Redacts a message from the room
@@ -883,10 +913,14 @@ module MatrixSdk
     private
 
     def ensure_member(member)
+      return unless client.cache == :all
+
       tinycache_adapter.write(:joined_members, []) unless tinycache_adapter.exist? :joined_members
 
       members = tinycache_adapter.read(:joined_members) || []
       members << member unless members.any? { |m| m.id == member.id }
+
+      tinycache_adapter.write(:joined_members, members)
     end
 
     def handle_power_levels(event)

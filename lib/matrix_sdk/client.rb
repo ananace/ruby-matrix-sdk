@@ -22,7 +22,7 @@ module MatrixSdk
     #   @return [Hash,String] A filter definition, either as defined by the
     #           Matrix spec, or as an identifier returned by a filter creation request
     attr_reader :api, :next_batch
-    attr_accessor :cache, :sync_filter
+    attr_accessor :cache, :sync_filter, :sync_token
 
     events :error, :event, :presence_event, :invite_event, :leave_event, :ephemeral_event, :state_event
     ignore_inspect :api,
@@ -45,10 +45,10 @@ module MatrixSdk
     # @see #initialize
     def self.new_for_domain(domain, **params)
       api = MatrixSdk::Api.new_for_domain(domain, keep_wellknown: true)
-      return new(api, params) unless api.well_known&.key?('m.identity_server')
+      return new(api, **params) unless api.well_known&.key?('m.identity_server')
 
       identity_server = MatrixSdk::Api.new(api.well_known['m.identity_server']['base_url'], protocols: %i[IS])
-      new(api, params.merge(identity_server: identity_server))
+      new(api, **params.merge(identity_server: identity_server))
     end
 
     # @param hs_url [String,URI,Api] The URL to the Matrix homeserver, without the /_matrix/ part, or an existing Api instance
@@ -500,8 +500,9 @@ module MatrixSdk
       else
         @should_listen = false
       end
+
       if @sync_thread.alive?
-        ret = @sync_thread.join(2)
+        ret = @sync_thread.join(0.1)
         @sync_thread.kill unless ret
       end
       @sync_thread = nil
@@ -570,10 +571,13 @@ module MatrixSdk
       while @should_listen
         begin
           sync(**params.merge(timeout: timeout))
+          return unless @should_listen
 
           bad_sync_timeout = orig_bad_sync_timeout
           sleep(sync_interval) if sync_interval.positive?
         rescue MatrixRequestError => e
+          return unless @should_listen
+
           logger.warn("A #{e.class} occurred during sync")
           if e.httpstatus >= 500
             logger.warn("Serverside error, retrying in #{bad_sync_timeout} seconds...")
