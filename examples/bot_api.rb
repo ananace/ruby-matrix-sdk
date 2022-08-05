@@ -4,14 +4,17 @@
 # An example of a lightweight bot using the bot DSL
 #
 # This bot will implement a subset of the maubot ping/echo module
-# It showcases required and optional parameters
+# It showcases required and optional parameters, as well as limitations on commands
 
 require 'matrix_sdk/bot'
 
 set :bot_name, 'pingbot'
 
-command :spam, only: :dm, desc: 'Spams a bunch of nonsense' do
-  spam = 5.times.map { (10..20).map { rand(65..91).chr }.join }
+command :spam, only: :dm, desc: 'Spams a bunch of nonsense' do |message_count = 5|
+  message_count_i = message_count.to_i
+  raise ArgumentError, 'Message count must be an integer' if message_count_i.to_s != message_count.to_s
+
+  spam = message_count_i.times.map { rand(10..30).times.map { rand(65..91).chr }.join }
   spam.each do |msg|
     room.send_notice(msg)
   end

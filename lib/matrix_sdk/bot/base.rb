@@ -7,7 +7,13 @@ module MatrixSdk::Bot
   class Base
     extend MatrixSdk::Extensions
 
-    RequestHandler = Struct.new('RequestHandler', :command, :proc, :data)
+    RequestHandler = Struct.new('RequestHandler', :command, :proc, :data) do
+      def arity
+        arity = self.proc.parameters.count { |t, _| %i[opt req].include? t }
+        arity = -arity if self.proc.parameters.any? { |t, _| t.to_s.include? 'rest' }
+        arity
+      end
+    end
 
     attr_reader :client
 
@@ -47,6 +53,40 @@ module MatrixSdk::Bot
         l.level = settings.log_level unless settings.logging?
       end
     end
+
+    # Register a command during runtime
+    #
+    # @param command [String] The command to register
+    # @see Base.command for full parameter information
+    def register_command(command, **params, &block)
+      self.class.command(command, **params, &block)
+    end
+
+    # Removes a registered command during runtime
+    #
+    # @param command [String] The command to remove
+    # @see Base.remove_command
+    def unregister_command(command)
+      self.class.remove_command(command)
+    end
+
+    # Gets the handler for a command
+    #
+    # @param command [String] The command to retrieve
+    # @return [RequestHandler] The registered command handler
+    # @see Base.get_command
+    def get_command(command, **params)
+      self.class.get_command(command, **params)
+    end
+
+    # Checks for the existence of a command
+    #
+    # @param command [String] The command to check
+    # @see Base.command?
+    def command?(command, **params)
+      self.class.command?(command, **params)
+    end
+
 
     # Access settings defined with Base.set
     def settings
@@ -194,8 +234,19 @@ module MatrixSdk::Bot
         if ignore_inherited
           @handlers[command]
         else
-          self.class.all_handlers[command]
+          all_handlers[command]
         end
+      end
+
+      # Removes a registered command from the bot
+      #
+      # @note This will only affect local commands, not ones inherited
+      # @param command [String] The command to remove
+      def remove_command(command)
+        return false unless @handlers.key? command
+
+        @handers.delete command
+        true
       end
 
       def client(&block)
@@ -318,6 +369,9 @@ module MatrixSdk::Bot
         end
       end
 
+      # Helper to convert a proc to a non-callable lambda
+      #
+      # This method is only used to get a correct parameter list, the resulting lambda is invalid and can't be used to actually execute a call
       def convert_to_lambda(this: nil, &block)
         return block if block.lambda?
 
@@ -343,14 +397,6 @@ module MatrixSdk::Bot
       end
     end
 
-    def get_command(command, **params)
-      self.class.get_command(command, **params)
-    end
-
-    def command?(command, **params)
-      self.class.command?(command, **params)
-    end
-
     def command_allowed?(command, event)
       return false unless command? command
 
@@ -359,17 +405,17 @@ module MatrixSdk::Bot
 
       req = MatrixSdk::Bot::Request.new self, event
       req.logger = Logging.logger[self]
-      return false if [handler.data[:only]].flatten.any? do |only|
+      return false if [handler.data[:only]].flatten.compact.any? do |only|
         if only.is_a? Proc
           req.instance_exec(&only)
         else
           case only.to_s.downcase.to_sym
           when :dm
-            !room.dm?(members_only: true)
+            !req.room.dm?(members_only: true)
           when :admin
-            !sender.admin?(room)
+            !req.sender.admin?(room)
           when :mod
-            !sender.moderator?(room)
+            !req.sender.moderator?(room)
           end
         end
       end
@@ -392,7 +438,7 @@ module MatrixSdk::Bot
       type = event[:content][:msgtype]
       return unless settings.allowed_types.include? type
 
-      message = event[:content][:body]
+      message = event[:content][:body].dup
 
       room = client.ensure_room(event[:room_id])
       if room.dm?(members_only: true)
@@ -426,9 +472,7 @@ module MatrixSdk::Bot
 
       logger.debug "Handling command #{handler.command}"
 
-      arity = handler.proc.parameters.count { |t, _| %i[opt req].include? t }
-      arity = -arity if handler.proc.parameters.any? { |t, _| t.to_s.include? 'rest' }
-
+      arity = handler.arity
       case arity
       when 0
         req.instance_exec(&handler.proc)
@@ -436,10 +480,17 @@ module MatrixSdk::Bot
         message = message.sub("#{settings.command_prefix}#{command}", '').lstrip
         message = nil if message.empty?
 
+        # TODO: What's the most correct way to handle messages with quotes?
+        # XXX   Currently all quotes are kept
+
         req.instance_exec(message, &handler.proc)
       else
         req.instance_exec(*parts, &handler.proc)
       end
+    # Argument errors are likely to be a "friendly" error, so don't direct the user to the log
+    rescue ArgumentError => e
+      logger.error "#{e.class} when handling #{settings.command_prefix}#{command}: #{e}\n#{e.backtrace[0, 10].join("\n")}"
+      room.send_notice("Failed to handle #{command} - #{e}.")
     rescue StandardError => e
       logger.error "#{e.class} when handling #{settings.command_prefix}#{command}: #{e}\n#{e.backtrace[0, 10].join("\n")}"
       room.send_notice("Failed to handle #{command} - #{e}.\nMore information is available in the bot logs")
@@ -534,6 +585,7 @@ module MatrixSdk::Bot
         info = handler.data[:args]
         info += " - #{handler.data[:desc]}" if handler.data[:desc]
         info += "\n  #{handler.data[:notes].split("\n").join("\n  ")}" if !command.nil? && handler.data[:notes]
+        info = nil if info.empty?
 
         [
           room.dm? ? "#{bot.settings.command_prefix}#{handler.command}" : "#{bot.expanded_prefix}#{handler.command}",
