@@ -22,7 +22,7 @@ module MatrixSdk
     #   @return [Hash,String] A filter definition, either as defined by the
     #           Matrix spec, or as an identifier returned by a filter creation request
     attr_reader :api, :next_batch
-    attr_accessor :cache, :sync_filter
+    attr_accessor :cache, :sync_filter, :sync_token
 
     events :error, :event, :presence_event, :invite_event, :leave_event, :ephemeral_event, :state_event
     ignore_inspect :api,
