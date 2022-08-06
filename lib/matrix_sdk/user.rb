@@ -28,6 +28,12 @@ module MatrixSdk
       end
     end
 
+    def to_s
+      "#{display_name} (#{id})" if @display_name
+
+      @id.to_s
+    end
+
     # @return [String] the display name
     # @see MatrixSdk::Protocols::CS#get_display_name
     def display_name
@@ -66,6 +72,22 @@ module MatrixSdk
     def avatar_url=(url)
       client.api.set_avatar_url(id, url)
       @avatar_url = url
+    end
+
+    # Check if the user is an admin in a given room
+    #
+    # @param room [String,MXID] the room to check
+    # @return [Boolean] If the user is an admin (PL >= 100)
+    def admin?(room)
+      client.ensure_room(room).user_powerlevel(self) >= 100
+    end
+
+    # Check if the user is a moderator in a given room
+    #
+    # @param room [String,MXID] the room to check
+    # @return [Boolean] If the user is an admin (PL >= 50)
+    def moderator?(room)
+      client.ensure_room(room).user_powerlevel(self) >= 50
     end
 
     # Get the user's current presence status
