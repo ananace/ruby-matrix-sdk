@@ -75,6 +75,7 @@ module MatrixSdk
       raise ArgumentError, 'Must be given a Client instance' unless client.is_a? Client
 
       @client = client
+      tinycache_adapter.client = client
       room_id = MXID.new room_id unless room_id.is_a?(MXID)
       raise ArgumentError, 'room_id must be a valid Room ID' unless room_id.room_id?
 
