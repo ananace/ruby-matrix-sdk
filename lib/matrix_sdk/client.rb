@@ -162,6 +162,8 @@ module MatrixSdk
     # @return [Hash[String,Array[String]]] A mapping of MXIDs to a list of direct rooms with that user
     def direct_rooms
       api.get_account_data(mxid, 'm.direct').transform_keys(&:to_s)
+    rescue MatrixNotFoundError
+      {}
     end
 
     # Gets a direct message room for the given user if one exists
@@ -498,8 +500,9 @@ module MatrixSdk
       else
         @should_listen = false
       end
+
       if @sync_thread.alive?
-        ret = @sync_thread.join(2)
+        ret = @sync_thread.join(0.1)
         @sync_thread.kill unless ret
       end
       @sync_thread = nil
@@ -568,10 +571,13 @@ module MatrixSdk
       while @should_listen
         begin
           sync(**params.merge(timeout: timeout))
+          return unless @should_listen
 
           bad_sync_timeout = orig_bad_sync_timeout
           sleep(sync_interval) if sync_interval.positive?
         rescue MatrixRequestError => e
+          return unless @should_listen
+
           logger.warn("A #{e.class} occurred during sync")
           if e.httpstatus >= 500
             logger.warn("Serverside error, retrying in #{bad_sync_timeout} seconds...")
