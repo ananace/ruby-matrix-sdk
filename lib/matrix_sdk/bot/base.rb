@@ -325,7 +325,6 @@ module MatrixSdk::Bot
 
         auth = bot_settings.delete :auth
         bot = new cl, **bot_settings
-        bot.client.cache = settings.client_cache
         bot.logger.level = settings.log_level
         bot.logger.info "Starting #{settings.bot_name}..."
 
