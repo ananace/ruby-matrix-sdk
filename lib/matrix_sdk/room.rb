@@ -913,10 +913,14 @@ module MatrixSdk
     private
 
     def ensure_member(member)
+      return unless client.cache == :all
+
       tinycache_adapter.write(:joined_members, []) unless tinycache_adapter.exist? :joined_members
 
       members = tinycache_adapter.read(:joined_members) || []
       members << member unless members.any? { |m| m.id == member.id }
+
+      tinycache_adapter.write(:joined_members, members)
     end
 
     def handle_power_levels(event)
