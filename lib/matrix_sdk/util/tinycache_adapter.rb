@@ -2,7 +2,11 @@
 
 module MatrixSdk::Util
   class TinycacheAdapter
+    extend MatrixSdk::Extensions
+
     attr_accessor :config, :client
+
+    ignore_inspect :client
 
     def initialize
       @config = {}
