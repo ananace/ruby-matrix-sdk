@@ -26,7 +26,7 @@ api.request :get, :federation_v1, '/version'
 ```
 
 ```ruby
-# Client wrapper
+# Client wrapper with login
 require 'matrix_sdk'
 
 client = MatrixSdk::Client.new 'https://example.com'
@@ -43,7 +43,7 @@ hq.send_text "This is an example message - don't actually do this ;)"
 ```
 
 ```ruby
-# Client wrapper
+# Client wrapper with token
 require 'matrix_sdk'
 
 client = MatrixSdk::Client.new 'https://example.com'
@@ -56,6 +56,19 @@ client.rooms.count
 client.sync
 client.rooms.count
 # => 5
+```
+
+```ruby
+#!/bin/env ruby
+# Bot DSL
+require 'matrix_sdk/bot'
+
+command :plug do
+  room.send_text <<~PLUG
+    The Ruby SDK is a fine method for writing applications communicating over the Matrix protocol.
+    It can easily be integrated with Rails, and it supports most client/bot use-cases.
+  PLUG
+end
 ```
 
 ## Contributing
