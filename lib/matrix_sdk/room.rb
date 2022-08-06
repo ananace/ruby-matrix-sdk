@@ -209,6 +209,32 @@ module MatrixSdk
       nil
     end
 
+    # Checks if the room is a direct message / 1:1 room
+    #
+    # @param members_only [Boolean] Should directness only care about member count?
+    # @return [Boolean]
+    def dm?(members_only: false)
+      return true if !members_only && client.direct_rooms.any? { |_uid, rooms| rooms.include? id.to_s }
+
+      joined_members.count <= 2
+    end
+
+    # Mark a room as a direct (1:1) message Room
+    def dm=(direct)
+      rooms = client.direct_rooms
+      dirty = false
+      list_for_room = (rooms[id.to_s] ||= [])
+      if direct && !list_for_room.include?(id.to_s)
+        list_for_room << id.to_s
+        dirty = true
+      elsif !direct && list_for_room.include?(id.to_s)
+        list_for_room.delete id.to_s
+        rooms.delete id.to_s if list_for_room.empty?
+        dirty = true
+      end
+      client.api.set_account_data(client.mxid, 'm.direct', rooms) if dirty
+    end
+
     # Gets the avatar url of the room - if any
     #
     # @return [String,nil] The avatar URL - if any
