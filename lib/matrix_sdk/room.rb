@@ -427,6 +427,31 @@ module MatrixSdk
       client.api.send_content(id, url, name, 'm.audio', extra_information: audio_info)
     end
 
+    # Sends a customized message to the Room
+    #
+    # @param body [String] The clear-text body of the message
+    # @param content [Hash] The custom content of the message
+    # @param msgtype [String] The type of the message, should be one of the known types (m.text, m.notice, m.emote, etc)
+    def send_custom_message(body, content = {}, msgtype: nil)
+      content.merge!(
+        body: body,
+        msgtype: msgtype || 'm.text'
+      )
+
+      client.api.send_message_event(id, 'm.room.message', content)
+    end
+
+    # Sends a custom timeline event to the Room
+    #
+    # @param type [String,Symbol] The type of the Event.
+    #   For custom events, this should be written in reverse DNS format (e.g. com.example.event)
+    # @param content [Hash] The contents of the message, this will be the
+    #   :content key of the resulting event object
+    # @see Protocols::CS#send_message_event
+    def send_event(type, content = {})
+      client.api.send_message_event(room.id, type, content)
+    end
+
     # Redacts a message from the room
     #
     # @param event_id [String] the ID of the event to redact
