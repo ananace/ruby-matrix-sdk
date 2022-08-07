@@ -15,7 +15,8 @@ module MatrixSdk::Bot
       end
     end
 
-    attr_reader :client
+    attr_reader :client, :event
+    attr_writer :logger
 
     ignore_inspect :client
 
@@ -33,12 +34,6 @@ module MatrixSdk::Bot
 
       @client.on_event.add_handler('m.room.message') { |ev| _handle_event(ev) }
       @client.on_invite_event.add_handler { |ev| client.join_room(ev[:room_id]) if settings.accept_invites? }
-    end
-
-    def expanded_prefix
-      return "#{settings.command_prefix}#{settings.bot_name} " if settings.bot_name
-
-      settings.command_prefix
     end
 
     def logger
@@ -400,32 +395,72 @@ module MatrixSdk::Bot
     end
 
     def command_allowed?(command, event)
+      pre_event = @event
+
       return false unless command? command
 
       handler = get_command(command)
       return true if (handler.data[:only] || []).empty?
 
       # Avoid modifying input data for a checking method
-      event = MatrixSdk::Response.new(client.api, event.dup)
-
-      req = MatrixSdk::Bot::Request.new self, event
-      req.logger = Logging.logger[self]
+      @event = MatrixSdk::Response.new(client.api, event.dup)
       return false if [handler.data[:only]].flatten.compact.any? do |only|
         if only.is_a? Proc
-          req.instance_exec(&only)
+          instance_exec(&only)
         else
           case only.to_s.downcase.to_sym
           when :dm
-            !req.room.dm?(members_only: true)
+            !room.dm?(members_only: true)
           when :admin
-            !req.sender.admin?(room)
+            !sender_admin?
           when :mod
-            !req.sender.moderator?(room)
+            !sender_moderator?
           end
         end
       end
 
       true
+    ensure
+      @event = pre_event
+    end
+
+    #
+    # Helpers for handling events
+    #
+
+    def in_event?
+      !@event.nil?
+    end
+
+    def bot
+      self
+    end
+
+    def room
+      client.ensure_room(event[:room_id]) if in_event?
+    end
+
+    def sender
+      client.get_user(event[:sender]) if in_event?
+    end
+
+    # Helpers for checking power levels
+    def sender_admin?
+      sender&.admin? room
+    end
+
+    def sender_moderator?
+      sender&.moderator? room
+    end
+
+    #
+    # Helpers
+    #
+
+    def expanded_prefix
+      return "#{settings.command_prefix}#{settings.bot_name} " if settings.bot_name?
+
+      settings.command_prefix
     end
 
     private
@@ -436,6 +471,7 @@ module MatrixSdk::Bot
 
     # TODO: Add handling results - Ok, NoSuchCommand, NotAllowed, etc
     def _handle_event(event)
+      return if in_event?
       return if settings.ignore_own? && client.mxid == event[:sender]
 
       logger.debug "Received event #{event}"
@@ -472,17 +508,13 @@ module MatrixSdk::Bot
       return unless handler
       return unless command_allowed?(command, event)
 
-      event = MatrixSdk::Response.new(client.api, event)
-
-      req = MatrixSdk::Bot::Request.new self, event
-      req.logger = Logging.logger[self]
-
+      @event = MatrixSdk::Response.new(client.api, event)
       logger.debug "Handling command #{handler.command}"
 
       arity = handler.arity
       case arity
       when 0
-        req.instance_exec(&handler.proc)
+        instance_exec(&handler.proc)
       when 1
         message = message.sub("#{settings.command_prefix}#{command}", '').lstrip
         message = nil if message.empty?
@@ -490,17 +522,20 @@ module MatrixSdk::Bot
         # TODO: What's the most correct way to handle messages with quotes?
         # XXX   Currently all quotes are kept
 
-        req.instance_exec(message, &handler.proc)
+        instance_exec(message, &handler.proc)
       else
-        req.instance_exec(*parts, &handler.proc)
+        instance_exec(*parts, &handler.proc)
       end
     # Argument errors are likely to be a "friendly" error, so don't direct the user to the log
     rescue ArgumentError => e
       logger.error "#{e.class} when handling #{settings.command_prefix}#{command}: #{e}\n#{e.backtrace[0, 10].join("\n")}"
       room.send_notice("Failed to handle #{command} - #{e}.")
     rescue StandardError => e
+      puts e, e.backtrace if settings.respond_to?(:testing?) && settings.testing?
       logger.error "#{e.class} when handling #{settings.command_prefix}#{command}: #{e}\n#{e.backtrace[0, 10].join("\n")}"
       room.send_notice("Failed to handle #{command} - #{e}.\nMore information is available in the bot logs")
+    ensure
+      @event = nil
     end
 
     #
@@ -522,6 +557,8 @@ module MatrixSdk::Bot
     set :ignore_own, true
     # Should the bot require full-name commands in non-DM rooms?
     set :require_fullname, false
+    # Sets a text to display before the usage information in the built-in help command
+    set :help_preamble, nil
 
     ## Sync token handling
     # Token specified by the user
@@ -573,6 +610,7 @@ module MatrixSdk::Bot
     # Default commands
     #
 
+    # Displays an usage information text, listing all available commands as well as their arguments
     command(
       :help,
       desc: 'Shows this help text',
@@ -584,9 +622,9 @@ module MatrixSdk::Bot
       logger.info "Handling request for built-in help for #{sender}" if command.nil?
       logger.info "Handling request for built-in help for #{sender} on #{command.inspect}" unless command.nil?
 
-      commands = bot.class.all_handlers
+      commands = self.class.all_handlers
       commands.select! { |c, _| c.include? command } if command
-      commands.select! { |c, _| bot.command_allowed? c, event }
+      commands.select! { |c, _| command_allowed? c, event }
 
       commands = commands.map do |_cmd, handler|
         info = handler.data[:args]
@@ -595,7 +633,7 @@ module MatrixSdk::Bot
         info = nil if info.empty?
 
         [
-          room.dm? ? "#{bot.settings.command_prefix}#{handler.command}" : "#{bot.expanded_prefix}#{handler.command}",
+          room.dm? ? "#{settings.command_prefix}#{handler.command}" : "#{expanded_prefix}#{handler.command}",
           info
         ].compact
       end
@@ -608,7 +646,7 @@ module MatrixSdk::Bot
           room.send_notice("Help for #{command};\n#{commands}")
         end
       else
-        room.send_notice("Usage:\n\n#{commands}")
+        room.send_notice("#{settings.help_preamble? ? "#{settings.help_preamble}\n\n" : ''}Usage:\n\n#{commands}")
       end
     end
   end

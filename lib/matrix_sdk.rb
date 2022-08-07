@@ -30,7 +30,6 @@ module MatrixSdk
 
   module Bot
     autoload :Base, 'matrix_sdk/bot/base'
-    autoload :Request, 'matrix_sdk/bot/request'
   end
 
   module Rooms
