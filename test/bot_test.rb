@@ -21,6 +21,10 @@ class BotTest < Test::Unit::TestCase
     command :test_event do
       bot.send :test_event, event.event_id
     end
+
+    event 'dev.ananace.ruby-sdk.TestEvent' do
+      bot.send :test_state_event
+    end
   end
 
   def setup
@@ -76,6 +80,7 @@ class BotTest < Test::Unit::TestCase
     @room.stubs(:dm?).returns(false)
 
     ev = {
+      type: 'm.room.message',
       sender: '@bob:example.com',
       room_id: @id,
       content: {
@@ -88,6 +93,7 @@ class BotTest < Test::Unit::TestCase
     @bot.send :_handle_event, ev
 
     ev = {
+      type: 'm.room.message',
       sender: '@bob:example.com',
       room_id: @id,
       content: {
@@ -103,6 +109,7 @@ class BotTest < Test::Unit::TestCase
     @bot.expects(:test_arr_executed).never
 
     ev = {
+      type: 'm.room.message',
       sender: '@bob:example.com',
       room_id: @id,
       content: {
@@ -118,6 +125,7 @@ class BotTest < Test::Unit::TestCase
     @bot.expects(:test_arr_executed).once
 
     ev = {
+      type: 'm.room.message',
       sender: '@bob:example.com',
       room_id: @id,
       content: {
@@ -130,6 +138,7 @@ class BotTest < Test::Unit::TestCase
     @bot.send :_handle_event, ev
 
     ev = {
+      type: 'm.room.message',
       sender: '@bob:example.com',
       room_id: @id,
       content: {
@@ -155,6 +164,7 @@ class BotTest < Test::Unit::TestCase
     @bot.expects(:test_executed).never
 
     ev = {
+      type: 'm.room.message',
       sender: '@alice:example.com',
       room_id: @id,
       content: {
@@ -176,6 +186,7 @@ class BotTest < Test::Unit::TestCase
     @bot.expects(:test_event).with('$someevent').once
 
     ev = {
+      type: 'm.room.message',
       sender: '@bob:example.com',
       room_id: @id,
       event_id: '$someevent',
@@ -186,6 +197,20 @@ class BotTest < Test::Unit::TestCase
     }
 
     assert @bot.command_allowed? 'test_event', ev
+    @bot.send :_handle_event, ev
+
+    @bot.expects(:test_state_event).once
+
+    ev = {
+      type: 'dev.ananace.ruby-sdk.TestEvent',
+      sender: '@bob:example.com',
+      room_id: @id,
+      content: {
+        hello: 'world'
+      }
+    }
+
+    assert @bot.event_allowed? ev
     @bot.send :_handle_event, ev
   end
 
@@ -202,6 +227,7 @@ class BotTest < Test::Unit::TestCase
     MSG
 
     @bot.send :_handle_event, {
+      type: 'm.room.message',
       sender: '@bob:example.com',
       room_id: @id,
       content: {
@@ -218,6 +244,7 @@ class BotTest < Test::Unit::TestCase
     MSG
 
     @bot.send :_handle_event, {
+      type: 'm.room.message',
       sender: '@bob:example.com',
       room_id: @id,
       content: {
@@ -239,6 +266,7 @@ class BotTest < Test::Unit::TestCase
     MSG
 
     @bot.send :_handle_event, {
+      type: 'm.room.message',
       sender: '@bob:example.com',
       room_id: @id,
       content: {
@@ -255,6 +283,7 @@ class BotTest < Test::Unit::TestCase
     MSG
 
     @bot.send :_handle_event, {
+      type: 'm.room.message',
       sender: '@bob:example.com',
       room_id: @id,
       content: {

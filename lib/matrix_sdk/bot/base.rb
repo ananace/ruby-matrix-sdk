@@ -1,13 +1,20 @@
 # frozen_string_literal: true
 
-require 'matrix_sdk/bot/request'
 require 'shellwords'
 
 module MatrixSdk::Bot
   class Base
     extend MatrixSdk::Extensions
 
-    RequestHandler = Struct.new('RequestHandler', :command, :proc, :data) do
+    RequestHandler = Struct.new('RequestHandler', :command, :type, :proc, :data) do
+      def command?
+        type == :command
+      end
+
+      def event?
+        type == :event
+      end
+
       def arity
         arity = self.proc.parameters.count { |t, _| %i[opt req].include? t }
         arity = -arity if self.proc.parameters.any? { |t, _| t.to_s.include? 'rest' }
@@ -32,7 +39,7 @@ module MatrixSdk::Bot
                   MatrixSdk::Client.new_for_domain hs_url, **params
                 end
 
-      @client.on_event.add_handler('m.room.message') { |ev| _handle_event(ev) }
+      @client.on_event.add_handler { |ev| _handle_event(ev) }
       @client.on_invite_event.add_handler { |ev| client.join_room(ev[:room_id]) if settings.accept_invites? }
     end
 
@@ -59,12 +66,28 @@ module MatrixSdk::Bot
       self.class.command(command, **params, &block)
     end
 
+    # Register an event during runtime
+    #
+    # @param event [String] The event to register
+    # @see Base.event for full parameter information
+    def register_event(event, **params, &block)
+      self.class.event(event, **params, &block)
+    end
+
     # Removes a registered command during runtime
     #
     # @param command [String] The command to remove
     # @see Base.remove_command
     def unregister_command(command)
       self.class.remove_command(command)
+    end
+
+    # Removes a registered event during runtime
+    #
+    # @param event [String] The event to remove
+    # @see Base.remove_event
+    def unregister_event(command)
+      self.class.remove_event(command)
     end
 
     # Gets the handler for a command
@@ -76,12 +99,29 @@ module MatrixSdk::Bot
       self.class.get_command(command, **params)
     end
 
+    # Gets the handler for an event
+    #
+    # @param event [String] The event to retrieve
+    # @return [RequestHandler] The registered event handler
+    # @see Base.get_event
+    def get_event(event, **params)
+      self.class.get_event(event, **params)
+    end
+
     # Checks for the existence of a command
     #
     # @param command [String] The command to check
     # @see Base.command?
     def command?(command, **params)
       self.class.command?(command, **params)
+    end
+
+    # Checks for the existence of a handled event
+    #
+    # @param event [String] The event to check
+    # @see Base.event?
+    def event?(event, **params)
+      self.class.event?(event, **params)
     end
 
     # Access settings defined with Base.set
@@ -128,9 +168,9 @@ module MatrixSdk::Bot
         @client_handler = nil
       end
 
-      def all_handlers
-        parent = superclass&.all_handlers if superclass.respond_to? :all_handlers
-        (parent || {}).merge(@handlers).compact
+      def all_handlers(type: :command)
+        parent = superclass&.all_handlers(type: type) if superclass.respond_to? :all_handlers
+        (parent || {}).merge(@handlers.select { |_, h| h.type == type }).compact
       end
 
       def set(option, value = (not_set = true), ignore_setter = false, &block) # rubocop:disable Style/OptionalBooleanParameter
@@ -181,10 +221,6 @@ module MatrixSdk::Bot
         opts.each { |key| set(key, false) }
       end
 
-      def add_handler(command, **data, &block)
-        @handlers[command] = RequestHandler.new command.to_s.downcase, block, data.compact
-      end
-
       # Register a bot command
       #
       # @note Due to the way blocks are handled, required parameters won't block execution.
@@ -214,6 +250,7 @@ module MatrixSdk::Bot
 
         add_handler(
           command.to_s.downcase,
+          type: :command,
           args: args,
           desc: desc,
           notes: notes,
@@ -222,17 +259,47 @@ module MatrixSdk::Bot
         )
       end
 
-      def command?(command, ignore_inherited: false)
-        return @handlers.key? command if ignore_inherited
+      def event(event, only: nil, **_params, &block)
+        logger.debug "Registering event #{event}"
 
-        all_handlers.key? command
+        add_handler(
+          event.to_s,
+          type: :event,
+          only: [only].flatten.compact,
+          &block
+        )
+      end
+
+      # Registers a block to be run when configuring the client, before starting the sync
+      def client(&block)
+        @client_handler = block
+      end
+
+      def command?(command, ignore_inherited: false)
+        return @handlers[command]&.command? if ignore_inherited
+
+        all_handlers[command]&.command? || false
+      end
+
+      def event?(event, ignore_inherited: false)
+        return @handlers[event]&.event? if ignore_inherited
+
+        all_handlers(type: :event)[event]&.event? || false
       end
 
       def get_command(command, ignore_inherited: false)
-        if ignore_inherited
+        if ignore_inherited && @handlers[command]&.command?
           @handlers[command]
-        else
+        elsif !ignore_inherited && all_handlers[command]&.command?
           all_handlers[command]
+        end
+      end
+
+      def get_event(event, ignore_inherited: false)
+        if ignore_inherited && @handlers[event]&.event?
+          @handlers[event]
+        elsif !ignore_inherited && all_handlers(type: :event)[event]&.event?
+          all_handlers(type: :event)[event]
         end
       end
 
@@ -241,14 +308,21 @@ module MatrixSdk::Bot
       # @note This will only affect local commands, not ones inherited
       # @param command [String] The command to remove
       def remove_command(command)
-        return false unless @handlers.key? command
+        return false unless @handlers[command]&.command?
 
         @handers.delete command
         true
       end
 
-      def client(&block)
-        @client_handler = block
+      # Removes a registered event from the bot
+      #
+      # @note This will only affect local event, not ones inherited
+      # @param event [String] The event to remove
+      def remove_event(event)
+        return false unless @handlers[event]&.event?
+
+        @handers.delete event
+        true
       end
 
       # Stops any running instance of the bot
@@ -311,6 +385,10 @@ module MatrixSdk::Bot
 
       private
 
+      def add_handler(command, type:, **data, &block)
+        @handlers[command] = RequestHandler.new command.to_s.downcase, type, block, data.compact
+      end
+
       def start_bot(bot_settings, &block)
         cl = if homeserver =~ %r{^https?://}
                MatrixSdk::Client.new homeserver
@@ -331,8 +409,8 @@ module MatrixSdk::Bot
 
         set :active_bot, bot
 
-        block&.call bot
         @client_handler&.call bot.client
+        block&.call bot
 
         if settings.sync_token?
           bot.client.instance_variable_set(:@next_batch, settings.sync_token)
@@ -424,6 +502,36 @@ module MatrixSdk::Bot
       @event = pre_event
     end
 
+    def event_allowed?(event)
+      pre_event = @event
+
+      return false unless event? event[:type]
+
+      handler = get_event(event[:type])
+      return true if (handler.data[:only] || []).empty?
+
+      # Avoid modifying input data for a checking method
+      @event = MatrixSdk::Response.new(client.api, event.dup)
+      return false if [handler.data[:only]].flatten.compact.any? do |only|
+        if only.is_a? Proc
+          instance_exec(&only)
+        else
+          case only.to_s.downcase.to_sym
+          when :dm
+            !room.dm?(members_only: true)
+          when :admin
+            !sender_admin?
+          when :mod
+            !sender_moderator?
+          end
+        end
+      end
+
+      true
+    ensure
+      @event = pre_event
+    end
+
     #
     # Helpers for handling events
     #
@@ -475,6 +583,31 @@ module MatrixSdk::Bot
       return if settings.ignore_own? && client.mxid == event[:sender]
 
       logger.debug "Received event #{event}"
+      return _handle_message(event) if event[:type] == 'm.room.message'
+      return unless event?(event[:type])
+
+      handler = get_event(event[:type])
+      return unless event_allowed? event
+
+      @event = MatrixSdk::Response.new(client.api, event)
+      logger.debug "Handling command #{handler.command}"
+
+      instance_exec(&handler.proc)
+    # Argument errors are likely to be a "friendly" error, so don't direct the user to the log
+    rescue ArgumentError => e
+      logger.error "#{e.class} when handling #{event[:type]}: #{e}\n#{e.backtrace[0, 10].join("\n")}"
+      room.send_notice("Failed to handle event of type #{event[:type]} - #{e}.")
+    rescue StandardError => e
+      puts e, e.backtrace if settings.respond_to?(:testing?) && settings.testing?
+      logger.error "#{e.class} when handling #{event[:type]}: #{e}\n#{e.backtrace[0, 10].join("\n")}"
+      room.send_notice("Failed to handle event of type #{event[:type]} - #{e}.\nMore information is available in the bot logs")
+    ensure
+      @event = nil
+    end
+
+    def _handle_message(event)
+      return if in_event?
+      return if settings.ignore_own? && client.mxid == event[:sender]
 
       type = event[:content][:msgtype]
       return unless settings.allowed_types.include? type
