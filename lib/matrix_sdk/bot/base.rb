@@ -409,7 +409,14 @@ module MatrixSdk::Bot
 
         set :active_bot, bot
 
-        @client_handler&.call bot.client
+        if @client_handler
+          case @client_handler.arity
+          when 0
+            bot.client.instance_exec(&@client_handler)
+          else
+            @client_handler.call(bot.client)
+          end
+        end
         block&.call bot
 
         if settings.sync_token?
