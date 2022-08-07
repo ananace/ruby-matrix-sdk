@@ -1,6 +1,10 @@
 ## **Unreleased**
 
+- Adds additional useful helpers for Room and User
+- Fixes Client.new_for_domain
 - Improves the handling of MXIDs as strings
+- Improves handling of caches for rooms
+- Improves Client shutdown when using Client#start_listener_thread
 
 ## 2.6.0 - 2022-07-15
 
