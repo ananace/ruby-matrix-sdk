@@ -259,6 +259,13 @@ module MatrixSdk::Bot
         )
       end
 
+      # Register a Matrix event
+      #
+      # @note Currently it's only possible to register one handler per event type
+      #
+      # @param event [String] The ID for the event to register
+      # @param only [Symbol,Proc,Array[Symbol,Proc]] The limitations to when the event should be handled
+      # @option params
       def event(event, only: nil, **_params, &block)
         logger.debug "Registering event #{event}"
 
@@ -745,6 +752,7 @@ module MatrixSdk::Bot
 
     ## Internal configuration values
     set :app_file, nil
+    set :active_bot, nil
 
     #
     # Default commands

@@ -33,11 +33,8 @@ module MatrixSdk::Bot
     set :logging, true
     set :log_level, :info
 
-    set :method_override, true
     set :app_file, caller_files.first || $PROGRAM_NAME
     set(:run) { File.expand_path($PROGRAM_NAME) == File.expand_path(app_file) }
-
-    set :active_bot, nil
 
     if run? && ARGV.any?
       error = PARAMS_CONFIG.delete(:optparse_error)
@@ -61,8 +58,8 @@ module MatrixSdk::Bot
       end
     end
 
-    delegate :command,
-             :client, :settings,
+    delegate :command, :client, :event,
+             :settings,
              :set, :enable, :disable
 
     class << self
