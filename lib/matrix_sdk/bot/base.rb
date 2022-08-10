@@ -145,7 +145,7 @@ module MatrixSdk::Bot
         /<internal:/                                        # internal in ruby >= 1.9.2
       ].freeze
 
-      # A filter that should only result in a valid sync token
+      # A filter that should only result in a valid sync token and no other data
       EMPTY_BOT_FILTER = {
         account_data: { types: [] },
         event_fields: [],
@@ -163,16 +163,27 @@ module MatrixSdk::Bot
         }
       }.freeze
 
+      # Reset the bot class, removing any local handlers that have been registered
       def reset!
         @handlers = {}
         @client_handler = nil
       end
 
+      # Retrieves all registered - including inherited - handlers for the bot
+      #
+      # @param type [:command,:event,:all] Which handler type to return, or :all to return all handlers regardless of type
+      # @return [Array[RequestHandler]] The registered handlers for the bot and parents
       def all_handlers(type: :command)
         parent = superclass&.all_handlers(type: type) if superclass.respond_to? :all_handlers
-        (parent || {}).merge(@handlers.select { |_, h| h.type == type }).compact
+        (parent || {}).merge(@handlers.select { |_, h| type == :all || h.type == type }).compact
       end
 
+      # Set a class-wide option for the bot
+      #
+      # @param option [Symbol,Hash] The option/options to set
+      # @param value [Proc,Symbol,Integer,Boolean,Hash,nil] The value to set for the option, should be ignored if option is a Hash
+      # @param ignore_setter [Boolean] Should any existing setter method be ignored during assigning of the option
+      # @yieldreturn The value that the option should return when requested, as an alternative to passing the Proc as value
       def set(option, value = (not_set = true), ignore_setter = false, &block) # rubocop:disable Style/OptionalBooleanParameter
         raise ArgumentError if block && !not_set
 
@@ -212,11 +223,15 @@ module MatrixSdk::Bot
       end
 
       # Same as calling `set :option, true` for each of the given options.
+      #
+      # @param opts [Array[Symbol]] The options to set to true
       def enable(*opts)
         opts.each { |key| set(key, true) }
       end
 
       # Same as calling `set :option, false` for each of the given options.
+      #
+      # @param opts [Array[Symbol]] The options to set to false
       def disable(*opts)
         opts.each { |key| set(key, false) }
       end
@@ -282,18 +297,31 @@ module MatrixSdk::Bot
         @client_handler = block
       end
 
+      # Check if a command is registered
+      #
+      # @param command [String] The command to check
+      # @param ignore_inherited [Booleen] Should the check ignore any inherited commands and only check local registrations
       def command?(command, ignore_inherited: false)
-        return @handlers[command]&.command? if ignore_inherited
+        return @handlers[command.to_s.downcase]&.command? if ignore_inherited
 
-        all_handlers[command]&.command? || false
+        all_handlers[command.to_s.downcase]&.command? || false
       end
 
+      # Check if an event is registered
+      #
+      # @param event [String] The event type to check
+      # @param ignore_inherited [Booleen] Should the check ignore any inherited events and only check local registrations
       def event?(event, ignore_inherited: false)
         return @handlers[event]&.event? if ignore_inherited
 
         all_handlers(type: :event)[event]&.event? || false
       end
 
+      # Retrieves the RequestHandler for a given command
+      #
+      # @param command [String] The command to retrieve
+      # @param ignore_inherited [Booleen] Should the retrieval ignore any inherited commands and only check local registrations
+      # @return [RequestHandler,nil] The registered handler for the command if any
       def get_command(command, ignore_inherited: false)
         if ignore_inherited && @handlers[command]&.command?
           @handlers[command]
@@ -302,6 +330,11 @@ module MatrixSdk::Bot
         end
       end
 
+      # Retrieves the RequestHandler for a given event
+      #
+      # @param event [String] The event type to retrieve
+      # @param ignore_inherited [Booleen] Should the retrieval ignore any inherited events and only check local registrations
+      # @return [RequestHandler,nil] The registered handler for the event if any
       def get_event(event, ignore_inherited: false)
         if ignore_inherited && @handlers[event]&.event?
           @handlers[event]
