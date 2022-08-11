@@ -92,9 +92,14 @@ class ClientTest < Test::Unit::TestCase
     assert_equal({ hello: 'world' }, cl.account_data['example_key'])
     assert_equal({}, cl.account_data[:example_key_2])
 
+    room = cl.ensure_room('!726s6s6q:example.com')
+    room.account_data # Prime the account_data cache existence
+
     response = JSON.parse(open('test/fixtures/sync_response.json').read, symbolize_names: true)
 
     cl.send :handle_sync_response, response
+
+    assert_equal %w[m.tag org.example.custom.room.config], room.account_data.keys
 
     cl.api
       .expects(:get_account_data)

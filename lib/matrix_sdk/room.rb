@@ -549,6 +549,8 @@ module MatrixSdk
     end
 
     def account_data
+      return MatrixSdk::Util::AccountDataCache.new client, room: self if client.cache == :none
+
       @account_data ||= MatrixSdk::Util::AccountDataCache.new client, room: self
     end
 

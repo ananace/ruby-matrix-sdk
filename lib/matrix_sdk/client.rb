@@ -643,6 +643,13 @@ module MatrixSdk
         room.instance_variable_set '@prev_batch', join.dig(:timeline, :prev_batch)
         room.instance_variable_set :@members_loaded, true unless sync_filter.fetch(:room, {}).fetch(:state, {}).fetch(:lazy_load_members, false)
 
+        if room.instance_variable_defined?(:@account_data) && room.instance_variable_get(:@account_data)
+          join.dig(:account_data, :events)&.each do |account_data|
+            adapter = room.account_data.tinycache_adapter
+            adapter.write(account_data[:type], account_data[:content], expires_in: room.account_data.cache_time)
+          end
+        end
+
         join.dig(:state, :events)&.each do |event|
           event[:room_id] = room_id.to_s
           handle_state(room_id, event)
