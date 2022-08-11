@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module MatrixSdk::Util
   class AccountDataCache
     extend MatrixSdk::Extensions
@@ -9,7 +11,7 @@ module MatrixSdk::Util
 
     ignore_inspect :client, :room, :tinycache_adapter
 
-    def initialize(client, room: nil, cache_time: 1 * 60, **params)
+    def initialize(client, room: nil, cache_time: 1 * 60, **_params)
       raise ArgumentError, 'Must be given a Client instance' unless client.is_a? MatrixSdk::Client
 
       @client = client
