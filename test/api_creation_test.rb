@@ -106,12 +106,19 @@ class ApiTest < Test::Unit::TestCase
       .expects(:getresource)
       .raises(::Resolv::ResolvError)
 
-    ::Net::HTTP
-      .any_instance
+    http_mock = mock
+
+    http_mock
       .expects(:get)
       .with('/.well-known/matrix/server')
       .once
       .raises(StandardError)
+
+    Net::HTTP
+      .expects(:start)
+      .with('example.com', 443, use_ssl: true, open_timeout: 5, read_timeout: 5, write_timeout: 5)
+      .with_block_given
+      .yields(http_mock)
 
     MatrixSdk::Api
       .expects(:new)
