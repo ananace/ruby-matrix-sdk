@@ -161,9 +161,12 @@ module MatrixSdk
     #
     # @return [Hash[String,Array[String]]] A mapping of MXIDs to a list of direct rooms with that user
     def direct_rooms
-      api.get_account_data(mxid, 'm.direct').transform_keys(&:to_s)
-    rescue MatrixNotFoundError
-      {}
+      account_data['m.direct'].transform_keys(&:to_s)
+    end
+
+    # Retrieve an account data helper
+    def account_data
+      @account_data ||= MatrixSdk::Util::AccountDataCache.new self
     end
 
     # Gets a direct message room for the given user if one exists

@@ -232,7 +232,7 @@ module MatrixSdk
         rooms.delete id.to_s if list_for_room.empty?
         dirty = true
       end
-      client.api.set_account_data(client.mxid, 'm.direct', rooms) if dirty
+      client.account_data['m.direct'] = rooms if dirty
     end
 
     # Gets the avatar url of the room - if any
@@ -548,12 +548,16 @@ module MatrixSdk
       true
     end
 
+    def account_data
+      @account_data ||= MatrixSdk::Util::AccountDataCache.new client, room: self
+    end
+
     # Retrieves a custom entry from the room-specific account data
     #
     # @param type [String] the data type to retrieve
     # @return [Hash] the data that was stored under the given type
     def get_account_data(type)
-      client.api.get_room_account_data(client.mxid, id, type)
+      account_data[type]
     end
 
     # Stores a custom entry into the room-specific account data
@@ -561,7 +565,7 @@ module MatrixSdk
     # @param type [String] the data type to store
     # @param account_data [Hash] the data to store
     def set_account_data(type, account_data)
-      client.api.set_room_account_data(client.mxid, id, type, account_data)
+      self.account_data[type] = account_data
       true
     end
 
