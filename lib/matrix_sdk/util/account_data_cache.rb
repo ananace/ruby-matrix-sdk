@@ -27,6 +27,10 @@ module MatrixSdk::Util
       tinycache_adapter.clear
     end
 
+    def keys
+      tinycache_adapter.send(:cache).keys
+    end
+
     def delete(key)
       if room
         client.api.set_room_account_data(client.mxid, room.id, key.to_s, {})

@@ -91,6 +91,19 @@ class ClientTest < Test::Unit::TestCase
     assert_equal({ hello: 'world' }, cl.account_data['example_key'])
     assert_equal({ hello: 'world' }, cl.account_data['example_key'])
     assert_equal({}, cl.account_data[:example_key_2])
+
+    response = JSON.parse(open('test/fixtures/sync_response.json').read, symbolize_names: true)
+
+    cl.send :handle_sync_response, response
+
+    cl.api
+      .expects(:get_account_data)
+      .with('@alice:example.com', 'org.example.custom.config')
+      .never
+
+    assert_equal({ custom_config_key: 'custom_config_value' }, cl.account_data['org.example.custom.config'])
+
+    assert_equal %w[example_key example_key_2 org.example.custom.config], cl.account_data.keys
   end
 
   def test_sync_retry

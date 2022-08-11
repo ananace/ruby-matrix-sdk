@@ -166,6 +166,8 @@ module MatrixSdk
 
     # Retrieve an account data helper
     def account_data
+      return MatrixSdk::Util::AccountDataCache.new self if cache == :none
+
       @account_data ||= MatrixSdk::Util::AccountDataCache.new self
     end
 
@@ -615,6 +617,13 @@ module MatrixSdk
     end
 
     def handle_sync_response(data)
+      if cache != :none && instance_variable_defined?(:@account_data) && @account_data
+        data.dig(:account_data, :events)&.each do |account_data|
+          adapter = self.account_data.tinycache_adapter
+          adapter.write(account_data[:type], account_data[:content], expires_in: self.account_data.cache_time)
+        end
+      end
+
       data.dig(:presence, :events)&.each do |presence_update|
         fire_presence_event(MatrixEvent.new(self, presence_update))
       end
@@ -661,6 +670,7 @@ module MatrixSdk
       end
 
       unless cache == :none
+        account_data.tinycache_adapter.cleanup if instance_variable_defined?(:@account_data) && @account_data
         @rooms.each do |_id, room|
           # Clean up old cache data after every sync
           # TODO Run this in a thread?
