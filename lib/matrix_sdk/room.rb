@@ -804,11 +804,25 @@ module MatrixSdk
     def user_powerlevel(user, use_default: true)
       user = user.id if user.is_a? User
       user = MXID.new(user.to_s) unless user.is_a? MXID
-      raise ArgumentError, 'Must provide a valid user or MXID' unless user.user?
+      raise ArgumentError, 'Must provide a valid User or MXID' unless user.user?
 
       level = power_levels.dig(:users, user.to_s.to_sym)
-      level = power_levels[:users_default] || 0 if level.nil? && use_default
+      level ||= power_levels[:users_default] || 0 if use_default
       level
+    end
+
+    # Checks if a user can send a given event type in the room
+    #
+    # @param user [User,MXID,String] The user to check
+    # @param event [String,Symbol] The event type to check
+    # @param state [Boolean] If the given event is a state event or a message event
+    # @return [Boolean] If the given user is allowed to send an event of the given type
+    def user_can_send?(user, event, state: false)
+      user_pl = user_powerlevel(user)
+      event_pl = power_levels.dig(:events, event.to_s.to_sym)
+      event_pl ||= state ? (power_levels[:state_default] || 50) : (power_levels[:events_default] || 0)
+
+      user_pl >= event_pl
     end
 
     # Check if a user is an admin in the room
