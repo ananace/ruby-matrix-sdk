@@ -63,7 +63,7 @@ module MatrixSdk::Util
     end
 
     def cleanup
-      @cache.select { |_, v| v.expired? }.each { |_,  v| v.value = nil }
+      @cache.select { |_, v| v.expired? }.each { |_, v| v.value = nil }
     end
 
     private

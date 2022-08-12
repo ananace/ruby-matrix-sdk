@@ -48,10 +48,10 @@ module MatrixSdk::Util
       return to_enum(__method__, live: live) { keys.count } unless block_given?
 
       keys.each do |key|
-        v = live ? self[key] : tinycache_adapter.read(key) 
-        #hash = v.hash
+        v = live ? self[key] : tinycache_adapter.read(key)
+        # hash = v.hash
         yield key, v
-        #self[key] = v if hash != v.hash
+        # self[key] = v if hash != v.hash
       end
     end
 
