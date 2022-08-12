@@ -1,4 +1,4 @@
-## **Unreleased**
+## 2.7.0 - 2022-08-12
 
 - Adds a bot subsystem + DSL 
   - [An example](examples/bot_api.rb) can be found in the examples folder
