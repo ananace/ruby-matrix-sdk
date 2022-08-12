@@ -127,6 +127,12 @@ module MatrixSdk
       ensure_room_handlers[:event]
     end
 
+    # @!attribute [r] on_account_data
+    #   @return [EventHandlerArray] The list of event handlers for account data changes
+    def on_account_data
+      ensure_room_handlers[:account_data]
+    end
+
     # @!attribute [r] on_state_event
     #   @return [EventHandlerArray] The list of event handlers for only state events
     def on_state_event
@@ -976,6 +982,7 @@ module MatrixSdk
 
     def ensure_room_handlers
       client.instance_variable_get(:@room_handlers)[id] ||= {
+        account_data: MatrixSdk::EventHandlerArray.new,
         event: MatrixSdk::EventHandlerArray.new,
         state_event: MatrixSdk::EventHandlerArray.new,
         ephemeral_event: MatrixSdk::EventHandlerArray.new
@@ -991,11 +998,23 @@ module MatrixSdk
       'm.room.power_levels' => :handle_power_levels,
       'm.room.topic' => :handle_room_topic
     }.freeze
+
     def put_event(event)
       ensure_room_handlers[:event].fire(MatrixEvent.new(self, event), event[:type]) if room_handlers?
 
       @events.push event
       @events.shift if @events.length > @event_history_limit
+    end
+
+    def put_account_data(event)
+      if client.cache != :none
+        adapter = account_data.tinycache_adapter
+        adapter.write(event[:type], event[:content], expires_in: account_data.cache_time)
+      end
+
+      return unless room_handlers?
+
+      ensure_room_handlers[:account_data].fire(MatrixEvent.new(self, event))
     end
 
     def put_ephemeral_event(event)
