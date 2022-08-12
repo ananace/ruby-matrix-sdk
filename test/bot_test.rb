@@ -22,6 +22,10 @@ class BotTest < Test::Unit::TestCase
       bot.send :test_event, event.event_id
     end
 
+    command(:test_only_proc, only: -> { room.user_can_send? client.mxid, 'm.reaction' }) do
+      bot.send :test_only_proc
+    end
+
     event 'dev.ananace.ruby-sdk.TestEvent' do
       bot.send :test_state_event
     end
@@ -159,6 +163,29 @@ class BotTest < Test::Unit::TestCase
     assert @bot.command_allowed? 'test_only', ev
     @bot.send :_handle_event, ev
 
+    ev = {
+      type: 'm.room.message',
+      sender: '@bob:example.com',
+      room_id: @id,
+      content: {
+        msgtype: 'm.text',
+        body: '!test_only_proc'
+      }
+    }
+
+    @room.stubs(:user_can_send?).with('@alice:example.com', 'm.reaction').returns(false)
+    @bot.expects(:test_only_proc).never
+
+    refute @bot.command_allowed? 'test_only_proc', ev
+    @bot.send :_handle_event, ev
+
+    @room.stubs(:user_can_send?).with('@alice:example.com', 'm.reaction').returns(true)
+
+    @bot.expects(:test_only_proc).once
+
+    assert @bot.command_allowed? 'test_only_proc', ev
+    @bot.send :_handle_event, ev
+
     @room.stubs(:dm?).returns(false)
 
     @bot.expects(:test_executed).never
@@ -216,6 +243,7 @@ class BotTest < Test::Unit::TestCase
 
   def test_builtin_help
     @room.stubs(:dm?).returns(false)
+    @room.stubs(:user_can_send?).returns(false)
 
     @room.expects(:send_notice).with(<<~MSG.strip)
       Usage:
@@ -254,6 +282,7 @@ class BotTest < Test::Unit::TestCase
     }
 
     @room.stubs(:dm?).returns(true)
+    @room.stubs(:user_can_send?).returns(true)
 
     @room.expects(:send_notice).with(<<~MSG.strip)
       Usage:
@@ -263,6 +292,7 @@ class BotTest < Test::Unit::TestCase
       !test_arr [ARGS...]
       !test_only
       !test_event
+      !test_only_proc
     MSG
 
     @bot.send :_handle_event, {

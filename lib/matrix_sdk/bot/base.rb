@@ -531,7 +531,7 @@ module MatrixSdk::Bot
       @event = MatrixSdk::Response.new(client.api, event.dup)
       return false if [handler.data[:only]].flatten.compact.any? do |only|
         if only.is_a? Proc
-          instance_exec(&only)
+          !instance_exec(&only)
         else
           case only.to_s.downcase.to_sym
           when :dm

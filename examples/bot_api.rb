@@ -23,6 +23,16 @@ command :spam, only: :dm, desc: 'Spams a bunch of nonsense' do |message_count = 
   end
 end
 
+command(:thumbsup, desc: 'Gives you a thumbs up', only: -> { room.user_can_send? client.mxid, 'm.reaction' }) do
+  room.send_event 'm.reaction', {
+    'm.relates_to': {
+      rel_type: 'm.annotation',
+      event_id: event[:event_id],
+      key: '👍️'
+    }
+  }
+end
+
 command :echo, desc: 'Echoes the given message back as an m.notice' do |message|
   break if message.nil? # Don't echo empty requests
 
