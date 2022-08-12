@@ -617,7 +617,7 @@ module MatrixSdk
     end
 
     def handle_sync_response(data)
-      if cache != :none && instance_variable_defined?(:@account_data) && @account_data
+      if cache != :none
         data.dig(:account_data, :events)&.each do |account_data|
           adapter = self.account_data.tinycache_adapter
           adapter.write(account_data[:type], account_data[:content], expires_in: self.account_data.cache_time)
@@ -643,7 +643,7 @@ module MatrixSdk
         room.instance_variable_set '@prev_batch', join.dig(:timeline, :prev_batch)
         room.instance_variable_set :@members_loaded, true unless sync_filter.fetch(:room, {}).fetch(:state, {}).fetch(:lazy_load_members, false)
 
-        if room.instance_variable_defined?(:@account_data) && room.instance_variable_get(:@account_data)
+        if cache != :none
           join.dig(:account_data, :events)&.each do |account_data|
             adapter = room.account_data.tinycache_adapter
             adapter.write(account_data[:type], account_data[:content], expires_in: room.account_data.cache_time)
@@ -682,6 +682,7 @@ module MatrixSdk
           # Clean up old cache data after every sync
           # TODO Run this in a thread?
           room.tinycache_adapter.cleanup
+          room.account_data.tinycache_adapter.cleanup
         end
       end
 
