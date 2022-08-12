@@ -219,6 +219,10 @@ class RoomTest < Test::Unit::TestCase
     assert_true @room.moderator? '@bob:example.com'
     assert_false @room.moderator? '@charlie:example.com'
 
+    assert @room.user_can_send? '@alice:example.com', 'm.room.message'
+    assert @room.user_can_send? '@alice:example.com', 'm.room.name', state: true
+    refute @room.user_can_send? '@charlie:example.com', 'm.room.topic', state: true
+
     @api.expects(:set_power_levels).with(@id, { users: { '@alice:example.com': 100, '@bob:example.com': 50, '@charlie:example.com': 50 }, users_default: 0 })
     @room.moderator! '@charlie:example.com'
 

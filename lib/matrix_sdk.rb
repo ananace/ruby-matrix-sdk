@@ -10,7 +10,7 @@ autoload :Logging, 'logging'
 
 module MatrixSdk
   autoload :Api, 'matrix_sdk/api'
-  autoload :ApplicationService, 'matrix_sdk/application_service'
+  # autoload :ApplicationService, 'matrix_sdk/application_service'
   autoload :Client, 'matrix_sdk/client'
   autoload :MXID, 'matrix_sdk/mxid'
   autoload :Response, 'matrix_sdk/response'
@@ -27,6 +27,10 @@ module MatrixSdk
   autoload :MatrixConnectionError, 'matrix_sdk/errors'
   autoload :MatrixTimeoutError, 'matrix_sdk/errors'
   autoload :MatrixUnexpectedResponseError, 'matrix_sdk/errors'
+
+  module Bot
+    autoload :Base, 'matrix_sdk/bot/base'
+  end
 
   module Rooms
     autoload :Space, 'matrix_sdk/rooms/space'
