@@ -46,6 +46,8 @@ module MatrixSdk::Bot
         logger.info "Received invite to #{ev[:room_id]}, joining."
         client.join_room(ev[:room_id])
       end
+
+      logger.warn 'The bot abstraction is not fully finalized and can be expected to change.'
     end
 
     def logger
