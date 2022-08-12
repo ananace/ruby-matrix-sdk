@@ -24,9 +24,9 @@ module MatrixSdk
     attr_reader :api, :next_batch
     attr_accessor :cache, :sync_filter, :sync_token
 
-    events :error, :event, :presence_event, :invite_event, :leave_event, :ephemeral_event, :state_event
+    events :error, :event, :account_data, :presence_event, :invite_event, :leave_event, :ephemeral_event, :state_event
     ignore_inspect :api,
-                   :on_event, :on_presence_event, :on_invite_event, :on_leave_event, :on_ephemeral_event
+                   :on_event, :on_account_data, :on_presence_event, :on_invite_event, :on_leave_event, :on_ephemeral_event
 
     def_delegators :@api,
                    :access_token, :access_token=, :device_id, :device_id=, :homeserver, :homeserver=,
@@ -161,9 +161,14 @@ module MatrixSdk
     #
     # @return [Hash[String,Array[String]]] A mapping of MXIDs to a list of direct rooms with that user
     def direct_rooms
-      api.get_account_data(mxid, 'm.direct').transform_keys(&:to_s)
-    rescue MatrixNotFoundError
-      {}
+      account_data['m.direct'].transform_keys(&:to_s)
+    end
+
+    # Retrieve an account data helper
+    def account_data
+      return MatrixSdk::Util::AccountDataCache.new self if cache == :none
+
+      @account_data ||= MatrixSdk::Util::AccountDataCache.new self
     end
 
     # Gets a direct message room for the given user if one exists
@@ -612,6 +617,14 @@ module MatrixSdk
     end
 
     def handle_sync_response(data)
+      data.dig(:account_data, :events)&.each do |account_data|
+        if cache != :none
+          adapter = self.account_data.tinycache_adapter
+          adapter.write(account_data[:type], account_data[:content], expires_in: self.account_data.cache_time)
+        end
+        fire_account_data(MatrixEvent.new(self, account_data))
+      end
+
       data.dig(:presence, :events)&.each do |presence_update|
         fire_presence_event(MatrixEvent.new(self, presence_update))
       end
@@ -630,6 +643,13 @@ module MatrixSdk
         room = ensure_room(room_id)
         room.instance_variable_set '@prev_batch', join.dig(:timeline, :prev_batch)
         room.instance_variable_set :@members_loaded, true unless sync_filter.fetch(:room, {}).fetch(:state, {}).fetch(:lazy_load_members, false)
+
+        join.dig(:account_data, :events)&.each do |account_data|
+          account_data[:room_id] = room_id.to_s
+          room.send :put_account_data, account_data
+
+          fire_account_data(MatrixEvent.new(self, account_data))
+        end
 
         join.dig(:state, :events)&.each do |event|
           event[:room_id] = room_id.to_s
@@ -658,10 +678,12 @@ module MatrixSdk
       end
 
       unless cache == :none
+        account_data.tinycache_adapter.cleanup if instance_variable_defined?(:@account_data) && @account_data
         @rooms.each do |_id, room|
           # Clean up old cache data after every sync
           # TODO Run this in a thread?
           room.tinycache_adapter.cleanup
+          room.account_data.tinycache_adapter.cleanup
         end
       end
 

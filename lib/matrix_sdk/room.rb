@@ -75,7 +75,6 @@ module MatrixSdk
       raise ArgumentError, 'Must be given a Client instance' unless client.is_a? Client
 
       @client = client
-      tinycache_adapter.client = client
       room_id = MXID.new room_id unless room_id.is_a?(MXID)
       raise ArgumentError, 'room_id must be a valid Room ID' unless room_id.room_id?
 
@@ -126,6 +125,12 @@ module MatrixSdk
     #   @return [EventHandlerArray] The list of event handlers for all events
     def on_event
       ensure_room_handlers[:event]
+    end
+
+    # @!attribute [r] on_account_data
+    #   @return [EventHandlerArray] The list of event handlers for account data changes
+    def on_account_data
+      ensure_room_handlers[:account_data]
     end
 
     # @!attribute [r] on_state_event
@@ -232,7 +237,7 @@ module MatrixSdk
         rooms.delete id.to_s if list_for_room.empty?
         dirty = true
       end
-      client.api.set_account_data(client.mxid, 'm.direct', rooms) if dirty
+      client.account_data['m.direct'] = rooms if dirty
     end
 
     # Gets the avatar url of the room - if any
@@ -548,12 +553,18 @@ module MatrixSdk
       true
     end
 
+    def account_data
+      return MatrixSdk::Util::AccountDataCache.new client, room: self if client.cache == :none
+
+      @account_data ||= MatrixSdk::Util::AccountDataCache.new client, room: self
+    end
+
     # Retrieves a custom entry from the room-specific account data
     #
     # @param type [String] the data type to retrieve
     # @return [Hash] the data that was stored under the given type
     def get_account_data(type)
-      client.api.get_room_account_data(client.mxid, id, type)
+      account_data[type]
     end
 
     # Stores a custom entry into the room-specific account data
@@ -561,7 +572,7 @@ module MatrixSdk
     # @param type [String] the data type to store
     # @param account_data [Hash] the data to store
     def set_account_data(type, account_data)
-      client.api.set_room_account_data(client.mxid, id, type, account_data)
+      self.account_data[type] = account_data
       true
     end
 
@@ -971,6 +982,7 @@ module MatrixSdk
 
     def ensure_room_handlers
       client.instance_variable_get(:@room_handlers)[id] ||= {
+        account_data: MatrixSdk::EventHandlerArray.new,
         event: MatrixSdk::EventHandlerArray.new,
         state_event: MatrixSdk::EventHandlerArray.new,
         ephemeral_event: MatrixSdk::EventHandlerArray.new
@@ -986,11 +998,23 @@ module MatrixSdk
       'm.room.power_levels' => :handle_power_levels,
       'm.room.topic' => :handle_room_topic
     }.freeze
+
     def put_event(event)
       ensure_room_handlers[:event].fire(MatrixEvent.new(self, event), event[:type]) if room_handlers?
 
       @events.push event
       @events.shift if @events.length > @event_history_limit
+    end
+
+    def put_account_data(event)
+      if client.cache != :none
+        adapter = account_data.tinycache_adapter
+        adapter.write(event[:type], event[:content], expires_in: account_data.cache_time)
+      end
+
+      return unless room_handlers?
+
+      ensure_room_handlers[:account_data].fire(MatrixEvent.new(self, event))
     end
 
     def put_ephemeral_event(event)

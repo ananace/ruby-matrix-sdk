@@ -47,6 +47,70 @@ class ClientTest < Test::Unit::TestCase
     assert !cl_all.instance_variable_get(:@users).empty?
   end
 
+  def test_account_data
+    cl = MatrixSdk::Client.new 'https://example.com', user_id: '@alice:example.com'
+
+    cl.api
+      .expects(:get_account_data)
+      .with('@alice:example.com', 'example_key')
+      .returns({ hello: 'world' })
+      .once
+
+    cl.api
+      .expects(:get_account_data)
+      .with('@alice:example.com', 'example_key_2')
+      .raises(MatrixSdk::MatrixNotFoundError.new({ errcode: 404, error: '' }, 404))
+      .once
+
+    assert_equal({ hello: 'world' }, cl.account_data['example_key'])
+    assert_equal({ hello: 'world' }, cl.account_data['example_key'])
+    assert_equal({}, cl.account_data[:example_key_2])
+
+    cl.api
+      .expects(:set_account_data)
+      .with('@alice:example.com', 'example_key', { hello: 'test' })
+      .once
+
+    assert cl.account_data['example_key'] = { hello: 'test' }
+    assert_equal({ hello: 'test' }, cl.account_data['example_key'])
+
+    cl.account_data.reload!
+
+    cl.api
+      .expects(:get_account_data)
+      .with('@alice:example.com', 'example_key')
+      .returns({ hello: 'world' })
+      .once
+
+    cl.api
+      .expects(:get_account_data)
+      .with('@alice:example.com', 'example_key_2')
+      .raises(MatrixSdk::MatrixNotFoundError.new({ errcode: 404, error: '' }, 404))
+      .once
+
+    assert_equal({ hello: 'world' }, cl.account_data['example_key'])
+    assert_equal({ hello: 'world' }, cl.account_data['example_key'])
+    assert_equal({}, cl.account_data[:example_key_2])
+
+    room = cl.ensure_room('!726s6s6q:example.com')
+    room.account_data # Prime the account_data cache existence
+
+    response = JSON.parse(open('test/fixtures/sync_response.json').read, symbolize_names: true)
+
+    cl.send :handle_sync_response, response
+
+    assert_equal %w[m.tag org.example.custom.room.config], room.account_data.keys
+
+    cl.api
+      .expects(:get_account_data)
+      .with('@alice:example.com', 'org.example.custom.config')
+      .never
+
+    assert_equal({ custom_config_key: 'custom_config_value' }, cl.account_data['org.example.custom.config'])
+
+    assert_equal %w[example_key example_key_2 org.example.custom.config], cl.account_data.keys
+  end
+
   def test_sync_retry
     cl = MatrixSdk::Client.new 'https://example.com'
     cl.api.expects(:sync)

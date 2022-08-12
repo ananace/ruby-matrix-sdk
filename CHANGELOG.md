@@ -7,6 +7,7 @@
 - Improves the handling of MXIDs as strings
 - Improves handling of caches for rooms
 - Improves Client shutdown when using Client#start_listener_thread
+- Improves account data handling, with caches on both Client and Room level
 
 ## 2.6.0 - 2022-07-15
 
