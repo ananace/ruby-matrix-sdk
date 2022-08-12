@@ -454,7 +454,7 @@ module MatrixSdk
     #   :content key of the resulting event object
     # @see Protocols::CS#send_message_event
     def send_event(type, content = {})
-      client.api.send_message_event(room.id, type, content)
+      client.api.send_message_event(id, type, content)
     end
 
     # Redacts a message from the room

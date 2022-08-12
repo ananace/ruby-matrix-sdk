@@ -686,6 +686,8 @@ module MatrixSdk::Bot
 
       handler = get_command(command)
       return unless handler
+
+      event = event.data if event.is_a? MatrixSdk::MatrixEvent
       return unless command_allowed?(command, event)
 
       @event = MatrixSdk::Response.new(client.api, event)
