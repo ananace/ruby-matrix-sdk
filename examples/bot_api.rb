@@ -11,9 +11,10 @@ require 'matrix_sdk/bot'
 # Util methods added at end of class, to keep command listing near the top
 module Utils; end
 
-set :bot_name, 'pingbot'
+set :bot_name, 'examplebot'
 
-command :spam, only: :dm, desc: 'Spams a bunch of nonsense' do |message_count = 5|
+command :spam, only: :dm, desc: 'Spams a bunch of nonsense' do |message_count = nil|
+  message_count ||= 5
   message_count_i = message_count.to_i
   raise ArgumentError, 'Message count must be an integer' if message_count_i.to_s != message_count.to_s
 

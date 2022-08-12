@@ -40,7 +40,12 @@ module MatrixSdk::Bot
                 end
 
       @client.on_event.add_handler { |ev| _handle_event(ev) }
-      @client.on_invite_event.add_handler { |ev| client.join_room(ev[:room_id]) if settings.accept_invites? }
+      @client.on_invite_event.add_handler do |ev|
+        break unless settings.accept_invites?
+
+        logger.info "Received invite to #{ev[:room_id]}, joining."
+        client.join_room(ev[:room_id])
+      end
     end
 
     def logger
@@ -629,6 +634,8 @@ module MatrixSdk::Bot
       return if in_event?
       return if settings.ignore_own? && client.mxid == event[:sender]
 
+      event = event.data if event.is_a? MatrixSdk::MatrixEvent
+
       logger.debug "Received event #{event}"
       return _handle_message(event) if event[:type] == 'm.room.message'
       return unless event?(event[:type])
@@ -636,9 +643,9 @@ module MatrixSdk::Bot
       handler = get_event(event[:type])
       return unless event_allowed? event
 
-      @event = MatrixSdk::Response.new(client.api, event)
-      logger.debug "Handling command #{handler.command}"
+      logger.info "Handling event #{event[:sender]}/#{event[:room_id]} => #{event[:type]}"
 
+      @event = MatrixSdk::Response.new(client.api, event)
       instance_exec(&handler.proc)
     # Argument errors are likely to be a "friendly" error, so don't direct the user to the log
     rescue ArgumentError => e
@@ -686,13 +693,11 @@ module MatrixSdk::Bot
 
       handler = get_command(command)
       return unless handler
-
-      event = event.data if event.is_a? MatrixSdk::MatrixEvent
       return unless command_allowed?(command, event)
 
-      @event = MatrixSdk::Response.new(client.api, event)
-      logger.debug "Handling command #{handler.command}"
+      logger.info "Handling command #{event[:sender]}/#{event[:room_id]}: #{settings.command_prefix}#{command}"
 
+      @event = MatrixSdk::Response.new(client.api, event)
       arity = handler.arity
       case arity
       when 0
@@ -802,8 +807,8 @@ module MatrixSdk::Bot
         E.g. !login "my username" "this is not a real password"
       NOTES
     ) do |command = nil|
-      logger.info "Handling request for built-in help for #{sender}" if command.nil?
-      logger.info "Handling request for built-in help for #{sender} on #{command.inspect}" unless command.nil?
+      logger.debug "Handling request for built-in help for #{sender}" if command.nil?
+      logger.debug "Handling request for built-in help for #{sender} on #{command.inspect}" unless command.nil?
 
       commands = self.class.all_handlers
       commands.select! { |c, _| c.include? command } if command
