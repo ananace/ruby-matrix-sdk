@@ -175,7 +175,7 @@ module MatrixSdk
 
     # @return [String, nil] the canonical alias of the room
     def canonical_alias
-      client.api.get_room_state(id, 'm.room.canonical_alias')[:alias]
+      get_state('m.room.canonical_alias')[:alias]
     rescue MatrixSdk::MatrixNotFoundError
       nil
     end
@@ -289,11 +289,21 @@ module MatrixSdk
       join_rule == :knock
     end
 
+    # Gets a state object in the room
+    def get_state(type, state_key: nil)
+      client.api.get_room_state(id, type, key: state_key)
+    end
+
+    # Sets a state object in the room
+    def set_state(type, data, state_key: nil)
+      client.api.set_room_state(id, type, data, state_key: state_key)
+    end
+
     # Gets the history visibility of the room
     #
     # @return [:invited,:joined,:shared,:world_readable] The current history visibility for the room
     def history_visibility
-      client.api.get_room_state(id, 'm.room.history_visibility')[:history_visibility]&.to_sym
+      get_state('m.room.history_visibility')[:history_visibility]&.to_sym
     end
 
     # Checks if the room history is world readable
@@ -309,7 +319,7 @@ module MatrixSdk
     # @param canonical_only [Boolean] Should the list of aliases only contain the canonical ones
     # @return [Array[String]] The assigned room aliases
     def aliases(canonical_only: true)
-      canonical = client.api.get_room_state(id, 'm.room.canonical_alias') rescue {}
+      canonical = get_state('m.room.canonical_alias') rescue {}
       aliases = ([canonical[:alias]].compact + (canonical[:alt_aliases] || [])).uniq.sort
       return aliases if canonical_only
 

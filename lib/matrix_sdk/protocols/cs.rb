@@ -519,6 +519,8 @@ module MatrixSdk::Protocols::CS
     request(:put, client_api_latest, "/rooms/#{room_id}/state/#{event_type}#{"/#{state_key}" unless state_key.nil?}", body: content, query: query)
   end
 
+  alias set_room_state send_state_event
+
   # Sends a message event to a room
   # @param room_id [MXID,String] The room ID to send the message event to
   # @param event_type [String] The event type of the message
