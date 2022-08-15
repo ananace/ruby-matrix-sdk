@@ -21,8 +21,8 @@ module MatrixSdk
     # @!attribute sync_filter [rw] The global sync filter
     #   @return [Hash,String] A filter definition, either as defined by the
     #           Matrix spec, or as an identifier returned by a filter creation request
-    attr_reader :api, :next_batch
-    attr_accessor :cache, :sync_filter, :sync_token
+    attr_reader :api
+    attr_accessor :cache, :sync_filter, :next_batch
 
     events :error, :event, :account_data, :presence_event, :invite_event, :leave_event, :ephemeral_event, :state_event
     ignore_inspect :api,
@@ -75,7 +75,6 @@ module MatrixSdk
       @identity_server = nil
       @mxid = nil
 
-      @sync_token = nil
       @sync_thread = nil
       @sync_filter = { room: { timeline: { limit: params.fetch(:sync_filter_limit, 20) }, state: { lazy_load_members: true } } }
 
@@ -98,6 +97,9 @@ module MatrixSdk
 
       @mxid = params[:user_id]
     end
+
+    alias sync_token next_batch
+    alias sync_token= next_batch=
 
     # Gets the currently logged in user's MXID
     #
