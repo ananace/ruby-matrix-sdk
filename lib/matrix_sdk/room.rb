@@ -962,26 +962,6 @@ module MatrixSdk
       tinycache_adapter.write(:joined_members, members)
     end
 
-    def handle_power_levels(event)
-      tinycache_adapter.write(:power_levels, event[:content])
-    end
-
-    def handle_room_name(event)
-      tinycache_adapter.write(:name, event.dig(*%i[content name]))
-    end
-
-    def handle_room_topic(event)
-      tinycache_adapter.write(:topic, event.dig(*%i[content topic]))
-    end
-
-    def handle_room_guest_access(event)
-      tinycache_adapter.write(:guest_access, event.dig(*%i[content guest_access])&.to_sym)
-    end
-
-    def handle_room_join_rules(event)
-      tinycache_adapter.write(:join_rule, event.dig(*%i[content join_rule])&.to_sym)
-    end
-
     def handle_room_member(event)
       return unless client.cache == :all
 
@@ -996,7 +976,8 @@ module MatrixSdk
     end
 
     def handle_room_canonical_alias(event)
-      canonical_alias = tinycache_adapter.write(:canonical_alias, event.dig(*%i[content alias]))
+      room_state.tinycache_adapter.write('m.room.canonical_alias', event[:content], expires_in: room_state.cache_time)
+      canonical_alias = event.dig(*%i[content alias])
 
       data = tinycache_adapter.read(:aliases) || []
       data << canonical_alias
@@ -1016,16 +997,6 @@ module MatrixSdk
         ephemeral_event: MatrixSdk::EventHandlerArray.new
       }
     end
-
-    INTERNAL_HANDLERS = {
-      'm.room.canonical_alias' => :handle_room_canonical_alias,
-      'm.room.guest_access' => :handle_room_guest_access,
-      'm.room.join_rules' => :handle_room_join_rules,
-      'm.room.member' => :handle_room_member,
-      'm.room.name' => :handle_room_name,
-      'm.room.power_levels' => :handle_power_levels,
-      'm.room.topic' => :handle_room_topic
-    }.freeze
 
     def put_event(event)
       ensure_room_handlers[:event].fire(MatrixEvent.new(self, event), event[:type]) if room_handlers?
@@ -1051,15 +1022,20 @@ module MatrixSdk
       ensure_room_handlers[:ephemeral_event].fire(MatrixEvent.new(self, event), event[:type])
     end
 
+    INTERNAL_HANDLERS = {
+      'm.room.canonical_alias' => :handle_room_canonical_alias,
+      'm.room.member' => :handle_room_member
+    }.freeze
+
     def put_state_event(event)
-      if client.cache != :none && event[:type] != 'm.room.member'
+      if INTERNAL_HANDLERS.key? event[:type]
+        send(INTERNAL_HANDLERS[event[:type]], event)
+      elsif client.cache != :none
         adapter = room_state.tinycache_adapter
         key = event[:type]
         key += "|#{event[:state_key]}" unless event[:state_key].nil? || event[:state_key].empty?
         adapter.write(key, event[:content], expires_in: room_state.cache_time)
       end
-
-      send(INTERNAL_HANDLERS[event[:type]], event) if INTERNAL_HANDLERS.key? event[:type]
 
       return unless room_handlers?
 
