@@ -180,10 +180,10 @@ class RoomTest < Test::Unit::TestCase
     assert_nil tags[:'test.tag']
     assert_not_nil tags[:'example.tag']
 
-    expect_message(@api, :send_state_event, @id, 'm.room.name', { name: 'name' })
+    expect_message(@api, :set_room_state, @id, 'm.room.name', { name: 'name' })
     @room.name = 'name'
 
-    expect_message(@api, :send_state_event, @id, 'm.room.topic', { topic: 'topic' })
+    expect_message(@api, :set_room_state, @id, 'm.room.topic', { topic: 'topic' })
     @room.topic = 'topic'
 
     @api.expects(:request).with(
@@ -195,23 +195,23 @@ class RoomTest < Test::Unit::TestCase
     )
     @room.add_alias('#room:example.com')
 
-    expect_message(@api, :send_state_event, @id, 'm.room.join_rules', { join_rule: :invite }).twice
+    expect_message(@api, :set_room_state, @id, 'm.room.join_rules', { join_rule: :invite }).twice
     @room.invite_only = true
     @room.join_rule = :invite
 
-    expect_message(@api, :send_state_event, @id, 'm.room.join_rules', { join_rule: :public }).twice
+    expect_message(@api, :set_room_state, @id, 'm.room.join_rules', { join_rule: :public }).twice
     @room.invite_only = false
     @room.join_rule = :public
 
-    expect_message(@api, :send_state_event, @id, 'm.room.guest_access', { guest_access: :can_join }).twice
+    expect_message(@api, :set_room_state, @id, 'm.room.guest_access', { guest_access: :can_join }).twice
     @room.allow_guests = true
     @room.guest_access = :can_join
 
-    expect_message(@api, :send_state_event, @id, 'm.room.guest_access', { guest_access: :forbidden }).twice
+    expect_message(@api, :set_room_state, @id, 'm.room.guest_access', { guest_access: :forbidden }).twice
     @room.allow_guests = false
     @room.guest_access = :forbidden
 
-    @api.expects(:get_power_levels).with(@id).times(3).returns({ users: { '@alice:example.com': 100, '@bob:example.com': 50 }, users_default: 0 })
+    @api.expects(:get_room_state).with(@id, 'm.room.power_levels').times(3).returns({ users: { '@alice:example.com': 100, '@bob:example.com': 50 }, users_default: 0 })
     @room.power_levels
 
     assert_true @room.admin? '@alice:example.com'
@@ -223,20 +223,20 @@ class RoomTest < Test::Unit::TestCase
     assert @room.user_can_send? '@alice:example.com', 'm.room.name', state: true
     refute @room.user_can_send? '@charlie:example.com', 'm.room.topic', state: true
 
-    @api.expects(:set_power_levels).with(@id, { users: { '@alice:example.com': 100, '@bob:example.com': 50, '@charlie:example.com': 50 }, users_default: 0 })
+    @api.expects(:set_room_state).with(@id, 'm.room.power_levels', { users: { '@alice:example.com': 100, '@bob:example.com': 50, '@charlie:example.com': 50 }, users_default: 0 })
     @room.moderator! '@charlie:example.com'
 
-    @api.expects(:set_power_levels).with(@id, { users: { '@alice:example.com': 100, '@bob:example.com': 50, '@charlie:example.com': 100 }, users_default: 0 })
+    @api.expects(:set_room_state).with(@id, 'm.room.power_levels', { users: { '@alice:example.com': 100, '@bob:example.com': 50, '@charlie:example.com': 100 }, users_default: 0 })
     @room.admin! '@charlie:example.com'
   end
 
   def test_state_refresh
-    @api.expects(:get_room_name).with(@id).returns name: 'New name'
+    @api.expects(:get_room_state).with(@id, 'm.room.name').returns name: 'New name'
     @room.reload_name!
 
     assert_equal 'New name', @room.name
 
-    @api.expects(:get_room_topic).with(@id).returns topic: 'New topic'
+    @api.expects(:get_room_state).with(@id, 'm.room.topic').returns topic: 'New topic'
     @room.reload_topic!
 
     assert_equal 'New topic', @room.topic
@@ -255,6 +255,7 @@ class RoomTest < Test::Unit::TestCase
 
     @api.expects(:get_room_state).with(@id, 'm.room.canonical_alias').returns(MatrixSdk::Response.new(@api, alias: '#test:example.com', alt_aliases: ['#test:example1.com']))
     @api.expects(:get_room_aliases).with(@id).returns(MatrixSdk::Response.new(@api, aliases: ['#test:example2.com']))
+    @room.reload_aliases!
     aliases = @room.aliases(canonical_only: false)
     assert aliases.include? '#test:example.com'
     assert aliases.include? '#test:example1.com'
@@ -262,26 +263,28 @@ class RoomTest < Test::Unit::TestCase
 
     @api.expects(:get_room_state).with(@id, 'm.room.canonical_alias').raises(MatrixSdk::MatrixNotFoundError)
     @api.expects(:get_room_aliases).with(@id).returns(MatrixSdk::Response.new(@api, aliases: ['#test:example.com']))
+    @room.reload_aliases!
     assert @room.aliases(canonical_only: false).include? '#test:example.com'
 
     @api.expects(:get_room_state).with(@id, 'm.room.canonical_alias').raises(MatrixSdk::MatrixNotFoundError)
     @api.expects(:get_room_aliases).with(@id).returns(MatrixSdk::Response.new(@api, aliases: ['#test2:example.com']))
-
+    @room.reload_aliases!
     assert @room.aliases(canonical_only: false).include?('#test2:example.com')
 
     @api.expects(:get_room_state).with(@id, 'm.room.canonical_alias').raises(MatrixSdk::MatrixNotFoundError)
     @api.expects(:get_room_aliases).with(@id).returns(MatrixSdk::Response.new(@api, aliases: ['#test2:example.com']))
+    @room.reload_aliases!
     assert !@room.aliases(canonical_only: false).include?('#test:example.com')
   end
 
   def test_modifies
-    @api.expects(:get_power_levels).with(@id).returns users_default: 0, redact: 50
+    @api.expects(:get_room_state).with(@id, 'm.room.power_levels').returns users_default: 0, redact: 50
 
-    @api.expects(:set_power_levels).with(@id, users_default: 5, redact: 50, users: { '@alice:example.com': 100 })
+    @api.expects(:set_room_state).with(@id, 'm.room.power_levels', users_default: 5, redact: 50, users: { '@alice:example.com': 100 })
     @room.modify_user_power_levels({ '@alice:example.com': 100 }, 5)
 
-    @api.expects(:get_power_levels).with(@id).returns users_default: 0, redact: 50
-    @api.expects(:set_power_levels).with(@id, users_default: 0, redact: 50, events: { 'm.room.message': 100 })
+    @api.expects(:get_room_state).with(@id, 'm.room.power_levels').returns users_default: 0, redact: 50
+    @api.expects(:set_room_state).with(@id, 'm.room.power_levels', users_default: 0, redact: 50, events: { 'm.room.message': 100 })
     @room.modify_required_power_levels 'm.room.message': 100
   end
 end

@@ -58,6 +58,12 @@ module MatrixSdk::Util
       true
     end
 
+    def expire(key)
+      return unless exist? key
+
+      cache[key].expires_at = Time.at(0)
+    end
+
     def clear
       @cache = {}
     end

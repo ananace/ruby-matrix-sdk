@@ -38,6 +38,7 @@ module MatrixSdk
 
   module Util
     autoload :AccountDataCache, 'matrix_sdk/util/account_data_cache'
+    autoload :StateEventCache, 'matrix_sdk/util/state_event_cache'
     autoload :Tinycache, 'matrix_sdk/util/tinycache'
     autoload :TinycacheAdapter, 'matrix_sdk/util/tinycache_adapter'
   end

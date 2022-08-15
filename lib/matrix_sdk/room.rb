@@ -37,9 +37,6 @@ module MatrixSdk
     cached :aliases, unless: proc { |args| args.any? }, cache_level: :all, expires_in: 60 * 60
     cached :all_members, unless: proc { |args| args.any? }, cache_level: :all, expires_in: 60 * 60
 
-    # Much simpler to look up, and lighter data-wise, so the cache is wider
-    cached :canonical_alias, :name, :avatar_url, :topic, :guest_access, :join_rule, :power_levels, cache_level: :some, expires_in: 15 * 60
-
     alias room_id id
     alias members joined_members
 
@@ -83,6 +80,12 @@ module MatrixSdk
       @room_type = nil
 
       @prev_batch = nil
+
+      %i[name topic canonical_alias avatar_url].each do |type|
+        room_state.tinycache_adapter.write("m.room.#{type}", { type => data.delete(type) }) if data.key? type
+      end
+      room_state.tinycache_adapter.write('m.room.join_rules', { join_rule: data.delete(:join_rule) }) if data.key? :join_rule
+      room_state.tinycache_adapter.write('m.room.history_visibility', { history_visibility: data.delete(:world_readable) ? :world_readable : nil }) if data.key? :world_readable
 
       data.each do |k, v|
         next if %i[client].include? k
@@ -208,7 +211,7 @@ module MatrixSdk
     #
     # @return [String,nil] The room name - if any
     def name
-      client.api.get_room_name(id)[:name]
+      get_state('m.room.name')[:name]
     rescue MatrixNotFoundError
       # No room name has been specified
       nil
@@ -244,7 +247,7 @@ module MatrixSdk
     #
     # @return [String,nil] The avatar URL - if any
     def avatar_url
-      client.api.get_room_avatar(id)[:url]
+      get_state('m.room.avatar_url')[:url]
     rescue MatrixNotFoundError
       # No avatar has been set
       nil
@@ -254,7 +257,7 @@ module MatrixSdk
     #
     # @return [String,nil] The topic of the room
     def topic
-      client.api.get_room_topic(id)[:topic]
+      get_state('m.room.topic')[:topic]
     rescue MatrixNotFoundError
       # No room name has been specified
       nil
@@ -264,14 +267,14 @@ module MatrixSdk
     #
     # @return [:can_join,:forbidden] The current guest access right
     def guest_access
-      client.api.get_room_guest_access(id)[:guest_access]&.to_sym
+      get_state('m.room.guest_access')[:guest_access]&.to_sym
     end
 
     # Gets the join rule for the room
     #
     # @return [:public,:knock,:invite,:private] The current join rule
     def join_rule
-      client.api.get_room_join_rules(id)[:join_rule]&.to_sym
+      get_state('m.room.join_rules')[:join_rule]&.to_sym
     end
 
     # Checks if +guest_access+ is set to +:can_join+
@@ -289,14 +292,20 @@ module MatrixSdk
       join_rule == :knock
     end
 
+    def room_state
+      return MatrixSdk::Util::StateEventCache.new self if client.cache == :none
+
+      @room_state ||= MatrixSdk::Util::StateEventCache.new self
+    end
+
     # Gets a state object in the room
     def get_state(type, state_key: nil)
-      client.api.get_room_state(id, type, key: state_key)
+      room_state[type, state_key]
     end
 
     # Sets a state object in the room
     def set_state(type, data, state_key: nil)
-      client.api.set_room_state(id, type, data, state_key: state_key)
+      room_state[type, state_key] = data
     end
 
     # Gets the history visibility of the room
@@ -608,8 +617,7 @@ module MatrixSdk
     #
     # @return [Response] The content of the m.room.create event
     def creation_info
-      # Not caching here, easier to cache the important values separately instead
-      client.api.get_room_creation_info(id)
+      room_state['m.room.create']
     end
 
     # Retrieves the type of the room
@@ -617,9 +625,6 @@ module MatrixSdk
     # @return ['m.space',String,nil] The type of the room
     def room_type
       # Can't change, so a permanent cache is ok
-      return @room_type if @room_type_retrieved || @room_type
-
-      @room_type_retrieved = true
       @room_type ||= creation_info[:type]
     end
 
@@ -627,6 +632,7 @@ module MatrixSdk
     #
     # @return [String] The version of the room
     def room_version
+      # Can't change, so a permanent cache is ok
       @room_version ||= creation_info[:room_version]
     end
 
@@ -701,8 +707,7 @@ module MatrixSdk
     #
     # @param name [String] The new name to set
     def name=(name)
-      tinycache_adapter.write(:name, name)
-      client.api.set_room_name(id, name)
+      room_state['m.room.name'] = { name: name }
       name
     end
 
@@ -710,7 +715,7 @@ module MatrixSdk
     #
     # @return [Boolean] if the name was changed or not
     def reload_name!
-      clear_name_cache
+      room_state.expire('m.room.name')
     end
     alias refresh_name! reload_name!
 
@@ -718,8 +723,7 @@ module MatrixSdk
     #
     # @param topic [String] The new topic to set
     def topic=(topic)
-      tinycache_adapter.write(:topic, topic)
-      client.api.set_room_topic(id, topic)
+      room_state['m.room.topic'] = { topic: topic }
       topic
     end
 
@@ -727,7 +731,7 @@ module MatrixSdk
     #
     # @return [Boolean] if the topic was changed or not
     def reload_topic!
-      clear_topic_cache
+      room_state.expire('m.room.topic')
     end
     alias refresh_topic! reload_topic!
 
@@ -746,6 +750,7 @@ module MatrixSdk
     # @note The list of aliases is not sorted, ordering changes will result in
     #       alias list updates.
     def reload_aliases!
+      room_state.expire('m.room.canonical_alias')
       clear_aliases_cache
     end
     alias refresh_aliases! reload_aliases!
@@ -762,8 +767,7 @@ module MatrixSdk
     #
     # @param join_rule [:invite,:public] The join rule of the room
     def join_rule=(join_rule)
-      client.api.set_room_join_rules(id, join_rule)
-      tinycache_adapter.write(:join_rule, join_rule)
+      room_state['m.room.join_rules'] = { join_rule: join_rule }
       join_rule
     end
 
@@ -779,8 +783,7 @@ module MatrixSdk
     #
     # @param guest_access [:can_join,:forbidden] The new guest access status of the room
     def guest_access=(guest_access)
-      client.api.set_room_guest_access(id, guest_access)
-      tinycache_adapter.write(:guest_access, guest_access)
+      room_state['m.room.guest_access'] = { guest_access: guest_access }
       guest_access
     end
 
@@ -791,8 +794,7 @@ module MatrixSdk
       avatar_url = URI(avatar_url) unless avatar_url.is_a? URI
       raise ArgumentError, 'Must be a valid MXC URL' unless avatar_url.is_a? URI::MXC
 
-      client.api.set_room_avatar(id, avatar_url)
-      tinycache_adapter.write(:avatar_url, avatar_url)
+      room_state['m.room.avatar_url'] = { avatar_url: avatar_url }
       avatar_url
     end
 
@@ -802,7 +804,7 @@ module MatrixSdk
     # @return [Hash] The current power levels as set for the room
     # @see Protocols::CS#get_power_levels
     def power_levels
-      client.api.get_power_levels(id)
+      get_state('m.room.power_levels')
     end
 
     # Gets the power level of a user in the room
@@ -899,8 +901,9 @@ module MatrixSdk
     def modify_user_power_levels(users = nil, users_default = nil)
       return false if users.nil? && users_default.nil?
 
-      data = power_levels_without_cache
-      tinycache_adapter.write(:power_levels, data)
+      room_state.tinycache_adapter.expire 'm.room.power_levels'
+
+      data = power_levels
       data[:users_default] = users_default unless users_default.nil?
 
       if users
@@ -918,7 +921,7 @@ module MatrixSdk
         end
       end
 
-      client.api.set_power_levels(id, data)
+      room_state['m.room.power_levels'] = data
       true
     end
 
@@ -930,8 +933,9 @@ module MatrixSdk
     def modify_required_power_levels(events = nil, params = {})
       return false if events.nil? && (params.nil? || params.empty?)
 
-      data = power_levels_without_cache
-      tinycache_adapter.write(:power_levels, data)
+      room_state.tinycache_adapter.expire 'm.room.power_levels'
+
+      data = power_levels
       data.merge!(params)
       data.delete_if { |_k, v| v.nil? }
 
@@ -941,7 +945,7 @@ module MatrixSdk
         data[:events].delete_if { |_k, v| v.nil? }
       end
 
-      client.api.set_power_levels(id, data)
+      room_state['m.room.power_levels'] = data
       true
     end
 
@@ -1048,6 +1052,13 @@ module MatrixSdk
     end
 
     def put_state_event(event)
+      if client.cache != :none && event[:type] != 'm.room.member'
+        adapter = room_state.tinycache_adapter
+        key = event[:type]
+        key += "|#{event[:state_key]}" unless event[:state_key].nil? || event[:state_key].empty?
+        adapter.write(key, event[:content], expires_in: room_state.cache_time)
+      end
+
       send(INTERNAL_HANDLERS[event[:type]], event) if INTERNAL_HANDLERS.key? event[:type]
 
       return unless room_handlers?
