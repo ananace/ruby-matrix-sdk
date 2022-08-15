@@ -686,6 +686,7 @@ module MatrixSdk
           # TODO Run this in a thread?
           room.tinycache_adapter.cleanup
           room.account_data.tinycache_adapter.cleanup
+          room.room_state.tinycache_adapter.cleanup
         end
       end
 
