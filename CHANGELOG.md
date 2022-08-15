@@ -1,3 +1,9 @@
+## **Unreleased**
+
+- Adds helpers for accessing room state
+- Fixes Client#sync_token usage
+- Improves caching of state events in rooms
+
 ## 2.7.0 - 2022-08-12
 
 - Adds a bot subsystem + DSL 
