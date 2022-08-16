@@ -47,11 +47,15 @@ module MatrixSdk::Bot
         client.join_room(ev[:room_id])
       end
 
+      @event = nil
+
       logger.warn 'The bot abstraction is not fully finalized and can be expected to change.'
     end
 
     def logger
-      @logger || self.class.logger
+      return @logger if instance_variable_defined?(:@logger) && @logger
+
+      self.class.logger
     end
 
     def self.logger
