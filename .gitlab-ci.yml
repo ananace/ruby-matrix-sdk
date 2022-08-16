@@ -5,7 +5,7 @@ cache:
     - vendor/ruby
 
 lint:rubocop:
-  image: "ruby:2.6"
+  image: ruby
   script:
     - gem install rubocop -N
     - rubocop lib
@@ -24,10 +24,6 @@ lint:rubocop:
       - coverage/
     reports:
       junit: "reports/TEST-*.xml"
-
-test:ruby2.6:
-  extends: .test
-  image: "ruby:2.6"
 
 test:ruby2.7:
   extends: .test
