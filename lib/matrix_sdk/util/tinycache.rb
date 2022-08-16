@@ -76,24 +76,18 @@ module MatrixSdk::Util
         define_method(method_names[:with_cache]) do |*args|
           tinycache_adapter.fetch(__send__(method_names[:cache_key], *args), expires_in: expires_in) do
             named = args.delete_at(-1) if args.last.is_a? Hash
+            named ||= {}
 
-            if named
-              __send__(method_names[:without_cache], *args, **named)
-            else
-              __send__(method_names[:without_cache], *args)
-            end
+            __send__(method_names[:without_cache], *args, **named)
           end
         end
 
         define_method(method_names[:without_cache]) do |*args|
           orig = method(method_name).super_method
           named = args.delete_at(-1) if args.last.is_a? Hash
+          named ||= {}
 
-          if named
-            orig.call(*args, **named)
-          else
-            orig.call(*args)
-          end
+          orig.call(*args, **named)
         end
 
         define_method(method_names[:clear_cache]) do |*args|
