@@ -1,5 +1,6 @@
 ## **Unreleased**
 
+- Drops support for EoL Ruby 2.6
 - Adds helpers for accessing room state
 - Fixes Client#sync_token usage
 - Improves caching of state events in rooms
