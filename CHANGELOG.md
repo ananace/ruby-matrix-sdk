@@ -1,4 +1,4 @@
-## **Unreleased**
+## 2.8.0 - 2022-08-19
 
 - Drops support for EoL Ruby 2.6
 - Adds helpers for accessing room state
