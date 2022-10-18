@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'pp'
-
 unless Object.respond_to? :yield_self
   class Object
     def yield_self
@@ -52,9 +50,9 @@ module MatrixSdk
     end
 
     def ignore_inspect(*symbols)
-      class_eval %*
-        include PP::ObjectMixin
+      require 'pp'
 
+      class_eval %*
         def pretty_print_instance_variables
           instance_variables
             .reject { |f| %i[#{symbols.map { |s| "@#{s}" }.join ' '}].include? f }
@@ -62,7 +60,9 @@ module MatrixSdk
         end
 
         def pretty_print(pp)
-          pp.pp(self)
+          return pp.pp(self) if respond_to? :mocha_inspect
+
+          pp.pp_object(self)
         end
 
         alias inspect pretty_print_inspect
