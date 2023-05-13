@@ -651,8 +651,15 @@ module MatrixSdk::Bot
 
       logger.info "Handling event #{event[:sender]}/#{event[:room_id]} => #{event[:type]}"
 
-      @event = MatrixSdk::Response.new(client.api, event)
-      instance_exec(&handler.proc)
+      clean_event = MatrixSdk::Response.new(client.api, event)
+      arity = handler.arity
+      case arity
+      when 0
+        @event = clean_event
+        instance_exec(&handler.proc)
+      else
+        instance_exec(clean_event, &handler.proc)
+      end
     # Argument errors are likely to be a "friendly" error, so don't direct the user to the log
     rescue ArgumentError => e
       logger.error "#{e.class} when handling #{event[:type]}: #{e}\n#{e.backtrace[0, 10].join("\n")}"
@@ -752,6 +759,8 @@ module MatrixSdk::Bot
     set :require_fullname, false
     # Sets a text to display before the usage information in the built-in help command
     set :help_preamble, nil
+    # Should the bot automaticall follow tombstone events, when rooms are upgraded
+    set :follow_tombstones, true
 
     ## Sync token handling
     # Token specified by the user
@@ -842,6 +851,15 @@ module MatrixSdk::Bot
       else
         room.send_notice("#{settings.help_preamble? ? "#{settings.help_preamble}\n\n" : ''}Usage:\n\n#{commands}")
       end
+    end
+
+    #
+    # Default events
+    #
+
+    event('m.room.tombstone', only: -> { follow_tombstones }) do |tombstone|
+      logger.info "Received tombstone, following: #{tombstone.content.body}"
+      client.join_room tombstone.content.replacement_room
     end
   end
 end
