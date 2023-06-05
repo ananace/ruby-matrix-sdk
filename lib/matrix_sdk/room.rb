@@ -113,9 +113,8 @@ module MatrixSdk
     end
 
     def to_s
-      prefix = canonical_alias if canonical_alias_has_value?
-      prefix ||= id
-      return "#{prefix} | #{name}" if name_has_value?
+      prefix = canonical_alias || id
+      return "#{prefix} | #{name}" unless name.nil?
 
       prefix
     end
