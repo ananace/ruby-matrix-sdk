@@ -17,7 +17,7 @@ class ApiTest < Test::Unit::TestCase
   end
 
   def stub_versions_request
-    stub_request(:get, '/_matrix/client/versions').to_return_json(
+    stub_request(:get, 'https://example.com/_matrix/client/versions').to_return_json(
       body: {
         versions: [ "r0.0.1", "r0.1.0", "r0.2.0", "r0.3.0", "r0.4.0", "r0.5.0", "r0.6.0","r0.6.1", "v1.1", "v1.2", "v1.3", "v1.4","v1.5","v1.6" ],
         unstable_features: {
@@ -50,7 +50,7 @@ class ApiTest < Test::Unit::TestCase
 
   def test_api_versions
     stub_versions_request
-    assert_equal 'r0.4.0', @api.client_api_versions.latest
+    assert_equal 'v1.6', @api.client_api_versions.latest
   end
 
   def test_api_unsable_features
@@ -59,38 +59,37 @@ class ApiTest < Test::Unit::TestCase
   end
 
   def test_whoami
-    stub_get = stub_request(:get, '/_matrix/client/v3/account/whoami').to_return_json(
+    stub_request(:get, 'https://example.com/_matrix/client/r0/account/whoami').to_return_json(
       body: {
+        user_id: '@user:example.com',
+        device_id: 'SZXMMIIRVP',
+        is_guest: false
       }
     )
 
-    assert_equal @api.whoami?, user_id: '@user:example.com'
-    assert_requested stub_get
+    assert_equal '@user:example.com', @api.whoami?[:user_id]
   end
 
   def test_sync
-    @http.expects(:request).with do |req|
-      req.path == '/_matrix/client/r0/sync?timeout=30000'
-    end.returns(mock_success('{}'))
+    stub_request(:get, 'https://example.com/_matrix/client/r0/sync').with(query: { timeout: 30000 }).to_return_json(body: {})
     assert @api.sync
   end
 
   def test_sync_timeout
-    @http.expects(:request).with do |req|
-      req.path == '/_matrix/client/r0/sync?timeout=3000'
-    end.returns(mock_success('{}'))
-
+    stub_request(:get, 'https://example.com/_matrix/client/r0/sync').with(query: { timeout: 3000}).to_return_json(body: {})
     assert @api.sync(timeout: 3)
 
-    @http.expects(:request).with do |req|
-      req.path == '/_matrix/client/r0/sync'
-    end.returns(mock_success('{}'))
-
+    stub_request(:get, 'https://example.com/_matrix/client/r0/sync').with(query: nil).to_return_json(body: {})
     assert @api.sync(timeout: nil)
   end
 
   def test_send_message
-    @api.expects(:request).with(:put, :client_r0, '/rooms/%21room%3Aexample.com/send/m.room.message/42', body: { msgtype: 'm.text', body: 'this is a message' }, query: {}).returns({})
+    stub_request(:put, 'https://example.com/_matrix/client/r0/rooms/%21room%3Aexample.com/send/m.room.message/42').with(
+      body: {
+        msgtype: 'm.text',
+        body: 'this is a message'
+      }
+    ).to_return_json(body: {})
     assert @api.send_message('!room:example.com', 'this is a message', txn_id: 42)
   end
 
