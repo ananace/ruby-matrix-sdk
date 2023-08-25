@@ -3,6 +3,11 @@
 module MatrixSdk::Bot
   PARAMS_CONFIG = {} # rubocop:disable Style/MutableConstant Intended
 
+  PARAMS_CONFIG[:homeserver] = ENV['MATRIX_HS'] if ENV.key? 'MATRIX_HS'
+  PARAMS_CONFIG[:access_token] = ENV['MATRIX_TOKEN'] if ENV.key? 'MATRIX_TOKEN'
+  PARAMS_CONFIG[:username] = ENV['MATRIX_USERNAME'] if ENV.key? 'MATRIX_USERNAME'
+  PARAMS_CONFIG[:password] = ENV['MATRIX_PASSWORD'] if ENV.key? 'MATRIX_PASSWORD'
+
   require 'optparse'
   parser = OptionParser.new do |op|
     op.on('-s homeserver', 'Specify homeserver') { |val| PARAMS_CONFIG[:homeserver] = val }
