@@ -9,6 +9,7 @@ require 'matrix_sdk'
 
 require 'test/unit'
 require 'mocha/test_unit'
+require 'webmock/test_unit'
 
 RUBY_MAJOR_MINOR_VERSION = RUBY_VERSION[0..2].freeze
 OLDER_RUBY = %w[2.5 2.6].include?(RUBY_MAJOR_MINOR_VERSION)

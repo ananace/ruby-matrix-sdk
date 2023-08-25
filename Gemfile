@@ -4,3 +4,4 @@ source 'https://rubygems.org'
 gemspec
 
 # gem 'ci_reporter_test_unit'
+gem 'webmock'
