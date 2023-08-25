@@ -3,7 +3,7 @@
 
 # An example of a lightweight bot using the bot DSL
 #
-# This bot will implement a subset of the maubot ping/echo module
+# This bot will implement an intersection of the maubot ping/echo module
 # It showcases required and optional parameters, as well as limitations on commands
 
 require 'matrix_sdk/bot'
@@ -13,17 +13,6 @@ module Utils; end
 
 set :bot_name, 'examplebot'
 
-command :spam, only: :dm, desc: 'Spams a bunch of nonsense' do |message_count = nil|
-  message_count ||= 5
-  message_count_i = message_count.to_i
-  raise ArgumentError, 'Message count must be an integer' if message_count_i.to_s != message_count.to_s
-
-  spam = message_count_i.times.map { rand(10..30).times.map { rand(65..91).chr }.join }
-  spam.each do |msg|
-    room.send_notice(msg)
-  end
-end
-
 command(:thumbsup, desc: 'Gives you a thumbs up', only: -> { room.user_can_send? client.mxid, 'm.reaction' }) do
   room.send_event 'm.reaction', {
     'm.relates_to': {
@@ -32,6 +21,16 @@ command(:thumbsup, desc: 'Gives you a thumbs up', only: -> { room.user_can_send?
       key: '👍️'
     }
   }
+end
+
+command :multiply, only: :dm, desc: 'Performs a multiplication of two numbers' do |num_a, num_b|
+  num_rex = /^-?\d+(\.\d+)?$/
+  raise ArgumentError, 'Both arguments must be numbers' unless num_rex.match?(num_a) && num_rex.match?(num_b)
+
+  num_a_f = num_a.to_f
+  num_b_f = num_b.to_f
+
+  room.send_notice("#{num_a} * #{num_b} = #{(num_a_f * num_b_f).round(2)}")
 end
 
 command :echo, desc: 'Echoes the given message back as an m.notice' do |message|
