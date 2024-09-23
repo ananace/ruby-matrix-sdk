@@ -2,64 +2,20 @@ require 'test_helper'
 
 class ApiTest < Test::Unit::TestCase
   def setup
+    super
     @api = MatrixSdk::Api.new 'https://example.com', protocols: :CS, threadsafe: false
-    @api.stubs(:print_http)
-
-    matrixsdk_add_api_stub
-  end
-
-  def mock_success(body)
-    response = mock
-    response.stubs(:is_a?).with(Net::HTTPTooManyRequests).returns(false)
-    response.stubs(:is_a?).with(Net::HTTPSuccess).returns(true)
-    response.stubs(:body).returns(body)
-    response
-  end
-
-  def stub_versions_request
-    stub_request(:get, 'https://example.com/_matrix/client/versions').to_return_json(
-      body: {
-        versions: [ "r0.0.1", "r0.1.0", "r0.2.0", "r0.3.0", "r0.4.0", "r0.5.0", "r0.6.0","r0.6.1", "v1.1", "v1.2", "v1.3", "v1.4","v1.5","v1.6" ],
-        unstable_features: {
-          "org.matrix.label_based_filtering": true,
-          "org.matrix.e2e_cross_signing": true,
-          "org.matrix.msc2432": true,
-          "uk.half-shot.msc2666.query_mutual_rooms": true,
-          "io.element.e2ee_forced.public": false,
-          "io.element.e2ee_forced.private": false,
-          "io.element.e2ee_forced.trusted_private": false,
-          "org.matrix.msc3026.busy_presence": false,
-          "org.matrix.msc2285.stable": true,
-          "org.matrix.msc3827.stable": true,
-          "org.matrix.msc3440.stable": true,
-          "org.matrix.msc3771": true,
-          "org.matrix.msc3773": false,
-          "fi.mau.msc2815": false,
-          "fi.mau.msc2659.stable": true,
-          "org.matrix.msc3882": false,
-          "org.matrix.msc3881": false,
-          "org.matrix.msc3874": false,
-          "org.matrix.msc3886": false,
-          "org.matrix.msc3912": false,
-          "org.matrix.msc3981": false,
-          "org.matrix.msc3391": false
-        }
-      }
-    )
   end
 
   def test_api_versions
-    stub_versions_request
-    assert_equal 'v1.6', @api.client_api_versions.latest
+    assert_equal 'v1.11', @api.client_api_versions.latest
   end
 
   def test_api_unsable_features
-    stub_versions_request
     assert_equal true, @api.client_api_unstable_features.has?(:"org.matrix.label_based_filtering")
   end
 
   def test_whoami
-    stub_request(:get, 'https://example.com/_matrix/client/r0/account/whoami').to_return_json(
+    stub_request(:get, 'https://example.com/_matrix/client/v3/account/whoami').to_return_json(
       body: {
         user_id: '@user:example.com',
         device_id: 'SZXMMIIRVP',
@@ -71,20 +27,20 @@ class ApiTest < Test::Unit::TestCase
   end
 
   def test_sync
-    stub_request(:get, 'https://example.com/_matrix/client/r0/sync').with(query: { timeout: 30000 }).to_return_json(body: {})
+    stub_request(:get, 'https://example.com/_matrix/client/v3/sync').with(query: { timeout: 30000 }).to_return_json(body: {})
     assert @api.sync
   end
 
   def test_sync_timeout
-    stub_request(:get, 'https://example.com/_matrix/client/r0/sync').with(query: { timeout: 3000}).to_return_json(body: {})
+    stub_request(:get, 'https://example.com/_matrix/client/v3/sync').with(query: { timeout: 3000}).to_return_json(body: {})
     assert @api.sync(timeout: 3)
 
-    stub_request(:get, 'https://example.com/_matrix/client/r0/sync').with(query: nil).to_return_json(body: {})
+    stub_request(:get, 'https://example.com/_matrix/client/v3/sync').with(query: nil).to_return_json(body: {})
     assert @api.sync(timeout: nil)
   end
 
   def test_send_message
-    stub_request(:put, 'https://example.com/_matrix/client/r0/rooms/%21room%3Aexample.com/send/m.room.message/42').with(
+    stub_request(:put, 'https://example.com/_matrix/client/v3/rooms/!room:example.com/send/m.room.message/42').with(
       body: {
         msgtype: 'm.text',
         body: 'this is a message'
@@ -94,28 +50,43 @@ class ApiTest < Test::Unit::TestCase
   end
 
   def test_send_emote
-    @api.expects(:request).with(:put, :client_r0, '/rooms/%21room%3Aexample.com/send/m.room.message/42', body: { msgtype: 'm.emote', body: 'this is an emote' }, query: {}).returns({})
+    stub_request(:put, 'https://example.com/_matrix/client/v3/rooms/!room:example.com/send/m.room.message/42').with(
+      body: {
+        msgtype: 'm.emote',
+        body: 'this is an emote'
+      }
+    ).to_return_json(body: {})
     assert @api.send_emote('!room:example.com', 'this is an emote', txn_id: 42)
   end
 
   def test_redact_event
-    @api.expects(:request).with(:put, :client_r0, '/rooms/%21room%3Aexample.com/redact/%24eventid%3Aexample.com/42', body: {}, query: {}).returns({})
+    stub_request(:put, 'https://example.com/_matrix/client/v3/rooms/!room:example.com/redact/$eventid:example.com/42').to_return_json(body: {})
     assert @api.redact_event('!room:example.com', '$eventid:example.com', txn_id: 42)
   end
 
   def test_redact_event_w_reason
-    @api.expects(:request).with(:put, :client_r0, '/rooms/%21room%3Aexample.com/redact/%24eventid%3Aexample.com/42', body: { reason: 'oops' }, query: {}).returns({})
+    stub_request(:put, 'https://example.com/_matrix/client/v3/rooms/!room:example.com/redact/$eventid:example.com/42').with(
+      body: {
+        reason: 'oops'
+      }
+    ).to_return_json(body: {})
     assert @api.redact_event('!room:example.com', '$eventid:example.com', txn_id: 42, reason: 'oops')
   end
 
   def test_eventv3_slashes
-    @api.expects(:request).with(:put, :client_r0, '/rooms/%21room%3Aexample.com/redact/%24acR1l0raoZnm60CBwAVgqbZqoO%2FmYU81xysh1u7XcJk/42', body: { reason: 'oops' }, query: {}).returns({})
+    stub_request(:put, 'https://example.com/_matrix/client/v3/rooms/!room:example.com/redact/$acR1l0raoZnm60CBwAVgqbZqoO%2FmYU81xysh1u7XcJk/42').with(
+      body: {
+        reason: 'oops'
+      }
+    ).to_return_json(body: {})
     assert @api.redact_event('!room:example.com', '$acR1l0raoZnm60CBwAVgqbZqoO/mYU81xysh1u7XcJk', txn_id: 42, reason: 'oops')
   end
 
   def test_query_handling
-    Net::HTTP::Get.expects(:new).with('/_matrix/client/r0/sync?filter=%7B%22room%22%3A%7B%22timeline%22%3A%7B%22limit%22%3A20%7D%2C%22state%22%3A%7B%22lazy_load_members%22%3Atrue%7D%7D%7D&full_state=false&timeout=15000').raises(RuntimeError, 'Expectation succeeded')
-    e = assert_raises(RuntimeError) { @api.sync(filter: '{"room":{"timeline":{"limit":20},"state":{"lazy_load_members":true}}}', full_state: false, timeout: 15) }
+    Net::HTTP::Get.expects(:new).with('/_matrix/client/v3/sync?filter=%7B%22room%22%3A%7B%22timeline%22%3A%7B%22limit%22%3A20%7D%2C%22state%22%3A%7B%22lazy_load_members%22%3Atrue%7D%7D%7D&full_state=false&timeout=15000').raises(RuntimeError, 'Expectation succeeded')
+    e = assert_raises(RuntimeError) {
+      @api.sync(filter: '{"room":{"timeline":{"limit":20},"state":{"lazy_load_members":true}}}', full_state: false, timeout: 15)
+    }
     assert_equal 'Expectation succeeded', e.message
   end
 
@@ -233,7 +204,6 @@ class ApiTest < Test::Unit::TestCase
   end
 
   def test_download_url
-    assert_equal 'https://example.com/_matrix/media/r0/download/example.com/media', @api.get_download_url('mxc://example.com/media').to_s
-    assert_equal 'https://matrix.org/_matrix/media/r0/download/example.com/media', @api.get_download_url('mxc://example.com/media', source: 'matrix.org').to_s
+    assert_equal 'https://example.com/_matrix/media/v3/download/example.com/media', @api.get_download_url('mxc://example.com/media').to_s
   end
 end

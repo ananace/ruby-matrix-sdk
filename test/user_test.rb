@@ -2,15 +2,9 @@ require 'test_helper'
 
 class UserTest < Test::Unit::TestCase
   def setup
-    # Silence debugging output
-    ::MatrixSdk.logger.level = :error
-
-    @http = mock
-    @http.stubs(:active?).returns(true)
+    super
 
     @api = MatrixSdk::Api.new 'https://example.com', protocols: :CS
-    @api.instance_variable_set :@http, @http
-    @api.stubs(:print_http)
 
     @client = MatrixSdk::Client.new @api
     @client.stubs(:mxid).returns('@alice:example.com')
@@ -20,24 +14,24 @@ class UserTest < Test::Unit::TestCase
   end
 
   def test_wrappers
-    @api.expects(:get_display_name).with(@id).returns(displayname: nil)
+    stub_request(:get, 'https://example.com/_matrix/client/v3/profile/@alice:example.com/displayname').to_return_json(body: { displayname: nil })
     assert_equal @id, @user.friendly_name
 
-    @api.expects(:get_display_name).with(@id).returns displayname: 'Alice'
+    stub_request(:get, 'https://example.com/_matrix/client/v3/profile/@alice:example.com/displayname').to_return_json(body: { displayname: 'Alice' })
     assert_equal 'Alice', @user.display_name
     assert_equal 'Alice', @user.friendly_name
 
-    @api.expects(:set_display_name).with(@id, 'Alice')
+    stub_request(:put, 'https://example.com/_matrix/client/v3/profile/@alice:example.com/displayname').with(body: { displayname: 'Alice' }).to_return_json(body: {})
     @user.display_name = 'Alice'
 
-    @api.expects(:get_avatar_url).with(@id).returns avatar_url: 'mxc://example.com/avatar'
+    stub_request(:get, 'https://example.com/_matrix/client/v3/profile/@alice:example.com/avatar_url').to_return_json(body: { avatar_url: 'mxc://example.com/avatar' })
     assert_equal 'mxc://example.com/avatar', @user.avatar_url
 
-    @api.expects(:set_avatar_url).with(@id, 'mxc://example.com/avatar')
+    stub_request(:put, 'https://example.com/_matrix/client/v3/profile/@alice:example.com/avatar_url').with(body: { avatar_url: 'mxc://example.com/avatar' }).to_return_json(body: {})
     @user.avatar_url = 'mxc://example.com/avatar'
 
     data = { device_keys: { @id.to_sym => ['Keys here'] } }
-    @api.expects(:keys_query).with(device_keys: { @id => [] }).returns(data)
+    stub_request(:post, 'https://example.com/_matrix/client/v3/keys/query').with(body: hash_including(device_keys: { '@alice:example.com': [] })).to_return_json(body: data)
     assert_equal ['Keys here'], @user.device_keys
 
     data = {
@@ -46,7 +40,7 @@ class UserTest < Test::Unit::TestCase
       currently_active: true,
       status_msg: 'Testing'
     }
-    @api.expects(:get_presence_status).times(4).with(@id).returns data
+    stub_request(:get, 'https://example.com/_matrix/client/v3/presence/@alice:example.com/status').to_return_json(body: data)
 
     assert @user.active?
     assert_equal :online, @user.presence

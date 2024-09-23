@@ -32,25 +32,17 @@ class BotTest < Test::Unit::TestCase
   end
 
   def setup
-    ::Net::HTTP.any_instance.expects(:request).never
-
-    @http = mock
-    @http.stubs(:active?).returns(true)
-
+    super
     @api = MatrixSdk::Api.new 'https://example.com', protocols: :CS
-    @api.instance_variable_set :@http, @http
-    @api.stubs(:print_http)
 
     @client = MatrixSdk::Client.new @api
     @client.stubs(:mxid).returns('@alice:example.com')
 
     @id = '!room:example.com'
-    @client.send :ensure_room, @id
+    @client.send :ensure_room, @id, with_type: false
     @room = @client.rooms.first
 
     @bot = ExampleBot.new @client
-
-    matrixsdk_add_api_stub
   end
 
   def test_configuration

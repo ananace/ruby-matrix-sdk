@@ -4,12 +4,8 @@ require 'test_helper'
 
 class ResponseTest < Test::Unit::TestCase
   def setup
-    @http = mock
-    @http.stubs(:active?).returns(true)
-
+    super
     @api = MatrixSdk::Api.new 'https://example.com'
-    @api.instance_variable_set :@http, @http
-    @api.stubs(:print_http)
   end
 
   def test_creation

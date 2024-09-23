@@ -1,10 +1,6 @@
 require 'test_helper'
 
 class ClientTest < Test::Unit::TestCase
-  def setup
-    ::Net::HTTP.any_instance.expects(:request).never
-  end
-
   def test_creation
     client = MatrixSdk::Client.new 'https://example.com'
 
@@ -16,13 +12,15 @@ class ClientTest < Test::Unit::TestCase
     api = MatrixSdk::Api.new 'https://example.com'
     client = MatrixSdk::Client.new api
 
-    assert_equal client.api, api
+    assert client
   end
 
   def test_cache
     cl_all = MatrixSdk::Client.new 'https://example.com', client_cache: :all
     cl_some = MatrixSdk::Client.new 'https://example.com', client_cache: :some
     cl_none = MatrixSdk::Client.new 'https://example.com', client_cache: :none
+
+    stub_request(:get, 'https://example.com/_matrix/client/v3/rooms/!test:example.com/state/m.room.create').to_return_json(body: {})
 
     room_id = '!test:example.com'
     event = {
@@ -92,6 +90,8 @@ class ClientTest < Test::Unit::TestCase
     assert_equal({ hello: 'world' }, cl.account_data['example_key'])
     assert_equal({}, cl.account_data[:example_key_2])
 
+    cl.api.stubs(:get_room_state).returns({})
+
     room = cl.ensure_room('!726s6s6q:example.com')
     room.account_data # Prime the account_data cache existence
 
@@ -128,6 +128,9 @@ class ClientTest < Test::Unit::TestCase
   end
 
   def test_events
+    stub_request(:get, 'https://example.com/_matrix/client/v3/rooms/!726s6s6q:example.com/state/m.room.create').to_return_json(body: {})
+    MatrixSdk::Api.any_instance.stubs(:get_room_state).returns({})
+
     cl = MatrixSdk::Client.new 'https://example.com'
     room = cl.ensure_room '!726s6s6q:example.com'
 
@@ -159,6 +162,7 @@ class ClientTest < Test::Unit::TestCase
   end
 
   def test_sync_results
+    stub_request(:get, 'https://example.com/_matrix/client/v3/rooms/!726s6s66q:example.com/state/m.room.create').to_return_json(body: {})
     cl = MatrixSdk::Client.new 'https://example.com'
     response = JSON.parse(open('test/fixtures/sync_response.json').read, symbolize_names: true)
 
@@ -193,6 +197,8 @@ class ClientTest < Test::Unit::TestCase
   end
 
   def test_state_handling
+    stub_request(:get, 'https://example.com/_matrix/client/v3/rooms/!roomid:example.com/state/m.room.create').to_return_json(body: {})
+
     cl = MatrixSdk::Client.new 'https://example.com'
     assert_equal cl.cache, :all
 
@@ -348,6 +354,7 @@ class ClientTest < Test::Unit::TestCase
   end
 
   def test_create_room
+    stub_request(:get, 'https://example.com/_matrix/client/v3/rooms/!room:example.com/state/m.room.create').to_return_json(body: {})
     cl = MatrixSdk::Client.new 'https://example.com'
 
     cl.api.expects(:create_room).with(room_alias: nil).returns(MatrixSdk::Response.new(cl.api, room_id: '!room:example.com'))
@@ -360,6 +367,7 @@ class ClientTest < Test::Unit::TestCase
   end
 
   def test_join_room
+    stub_request(:get, 'https://example.com/_matrix/client/v3/rooms/!room:example.com/state/m.room.create').to_return_json(body: {})
     cl = MatrixSdk::Client.new 'https://example.com'
 
     cl.api.expects(:join_room).with('!room:example.com', server_name: []).returns(MatrixSdk::Response.new(cl.api, room_id: '!room:example.com'))

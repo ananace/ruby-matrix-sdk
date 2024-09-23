@@ -20,10 +20,13 @@ def expect_message(object, message, *args)
 end
 
 class Test::Unit::TestCase
-  def matrixsdk_add_api_stub
-    MatrixSdk::Api
-      .any_instance
-      .stubs(:client_api_latest)
-      .returns(:client_r0)
+  def stub_api_version_request
+    body = JSON.parse(File.read(File.join(__dir__, 'fixtures/versions_response.json')))
+
+    stub_request(:get, %r{https://.+/_matrix/client/versions}).to_return_json(body:)
+  end
+
+  def setup
+    stub_api_version_request
   end
 end

@@ -63,12 +63,12 @@ module MatrixSdk
       params[:user_id] ||= params[:mxid] if params[:mxid]
 
       if hs_url.is_a? Api
-        @api = hs_url
+        @api = hs_url.with_cs
         params.each do |k, v|
           api.instance_variable_set("@#{k}", v) if api.instance_variable_defined? "@#{k}"
         end
       else
-        @api = Api.new hs_url, **params
+        @api = Api.new(hs_url, **params).with_cs
       end
 
       @cache = client_cache
@@ -557,14 +557,17 @@ module MatrixSdk
     # Ensures that a room exists in the cache
     #
     # @param room_id [String,MXID] The room ID to ensure
+    # @param with_type [Boolean] Should the room be converted to a typed room class if available
     # @return [Room] The room object for the requested room
-    def ensure_room(room_id)
+    def ensure_room(room_id, with_type: false)
       room_id = MXID.new room_id.to_s unless room_id.is_a? MXID
       raise ArgumentError, 'Must be a room ID' unless room_id.room_id?
 
       room_id = room_id.to_s
       ret = @rooms.fetch(room_id) do
-        room = Room.new(self, room_id)
+        room = Room.new_with_type(self, room_id) if with_type == true
+        room ||= Room.new_with_type(self, room_id, room_type: with_type) if with_type
+        room ||= Room.new(self, room_id)
         @rooms[room_id] = room unless cache == :none
         room
       end

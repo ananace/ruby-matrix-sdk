@@ -5,10 +5,10 @@ GET|_matrix/client/versions:
     200: |
       {
         "versions": [
-          "r0.0.1"
+          "v3.0.1"
         ]
       }
-GET|_matrix/client/r0/login:
+GET|_matrix/client/v3/login:
   method: :allowed_login_methods
   results:
     429: &429 |
@@ -25,7 +25,7 @@ GET|_matrix/client/r0/login:
           }
         ]
       }
-POST|_matrix/client/r0/login:
+POST|_matrix/client/v3/login:
   method: :login
   requests:
     - args: [{ initial_device_display_name: 'test', identifier: { type: 'm.id.user', user: 'cheeky_monkey' } }]
@@ -52,17 +52,17 @@ POST|_matrix/client/r0/login:
         "errcode": "M_FORBIDDEN"
       }
     429: *429
-POST|_matrix/client/r0/logout:
+POST|_matrix/client/v3/logout:
   method: :logout
   results:
     200: |
       {}
-POST|_matrix/client/r0/logout/all:
+POST|_matrix/client/v3/logout/all:
   method: :logout_all
   results:
     200: |
       {}
-POST|_matrix/client/r0/register:
+POST|_matrix/client/v3/register:
   method: :register
   requests:
     - args: [{ kind: 'guest' }]
@@ -107,7 +107,7 @@ POST|_matrix/client/r0/register:
         ]
       }
     429: *429
-POST|_matrix/client/r0/register/email/requestToken:
+POST|_matrix/client/v3/register/email/requestToken:
   method: :register_email_request
   requests:
     - args: ['monkeys_are_GREAT', 'alice@example.org', { next_link: 'https://example.org/congratulations.html' }]
@@ -133,7 +133,7 @@ POST|_matrix/client/r0/register/email/requestToken:
         "errcode": "M_THREEPID_DENIED",
         "error": "Third party identifier is not allowed"
       }
-POST|_matrix/client/r0/register/msisdn/requestToken:
+POST|_matrix/client/v3/register/msisdn/requestToken:
   method: :register_msisdn_request
   requests:
     - args: ['monkeys_are_GREAT', 'GB', '07700900001', { next_link: 'https://example.org/congratulations.html' }]
@@ -160,7 +160,7 @@ POST|_matrix/client/r0/register/msisdn/requestToken:
         "errcode": "M_THREEPID_DENIED",
         "error": "Third party identifier is not allowed"
       }
-POST|_matrix/client/r0/account/password:
+POST|_matrix/client/v3/account/password:
   method: :change_password
   requests:
     - args: ['newpass', auth: { type: 'm.null' }]
@@ -192,7 +192,7 @@ POST|_matrix/client/r0/account/password:
         ]
       }
     429: *429
-POST|/_matrix/client/r0/account/password/email/requestToken:
+POST|/_matrix/client/v3/account/password/email/requestToken:
   method: :request_email_login_token
   requests:
     - args: ['monkeys_are_GREAT', 'alice@example.org', { next_link: 'https://example.org/congratulations.html' }]
@@ -218,7 +218,7 @@ POST|/_matrix/client/r0/account/password/email/requestToken:
         "errcode": "M_THREEPID_DENIED",
         "error": "Third party identifier is not allowed"
       }
-POST|/_matrix/client/r0/account/password/msisdn/requestToken:
+POST|/_matrix/client/v3/account/password/msisdn/requestToken:
   method: :request_msisdn_login_token
   requests:
     - args: ['monkeys_are_GREAT', 'GB', '07700900001', { next_link: 'https://example.org/congratulations.html' }]
@@ -245,7 +245,7 @@ POST|/_matrix/client/r0/account/password/msisdn/requestToken:
         "errcode": "M_THREEPID_DENIED",
         "error": "Third party identifier is not allowed"
       }
-POST|/_matrix/client/r0/account/deactivate:
+POST|/_matrix/client/v3/account/deactivate:
   method: :deactivate_account
   requests:
     - args: [{ type: 'example.type.foo', session: 'xxxxx', example_credential: 'verypoorsharedsecret' }, { id_server: 'example.org' }]
@@ -282,7 +282,7 @@ POST|/_matrix/client/r0/account/deactivate:
         ]
       }
     429: *429
-GET|/_matrix/client/r0/register/available:
+GET|/_matrix/client/v3/register/available:
   method: :username_available?
   requests:
     - args: ['example']
@@ -300,7 +300,7 @@ GET|/_matrix/client/r0/register/available:
         "error": "Desired user ID is already taken."
       }
     429: *429
-GET|/_matrix/client/r0/account/3pid:
+GET|/_matrix/client/v3/account/3pid:
   method: :get_3pids
   requests:
     - args: []
@@ -318,9 +318,9 @@ GET|/_matrix/client/r0/account/3pid:
           }
         ]
       }
-# POST|/_matrix/client/r0/account/3pid:
+# POST|/_matrix/client/v3/account/3pid:
 #   deprecated: true
-POST|/_matrix/client/r0/account/3pid/add:
+POST|/_matrix/client/v3/account/3pid/add:
   method: :complete_3pid_add
   requests:
     - args: [{session: 'abc123987', secret: "d0n'tT3ll"}]
@@ -351,7 +351,7 @@ POST|/_matrix/client/r0/account/3pid/add:
         ]
       }
     429: *429
-POST|/_matrix/client/r0/account/3pid/bind:
+POST|/_matrix/client/v3/account/3pid/bind:
   method: :bind_3pid
   requests:
     - args: [{secret: "d0n'tT3ll", id_server: 'example.org', id_server_token: 'abc123_OpaqueString', session: 'abc123987'}]
@@ -365,7 +365,7 @@ POST|/_matrix/client/r0/account/3pid/bind:
     200: |
       {}
     429: *429
-POST|/_matrix/client/r0/account/3pid/delete:
+POST|/_matrix/client/v3/account/3pid/delete:
   method: :delete_3pid
   requests:
     - args: ['email', 'example@example.org', {id_server: 'example.org'}]
@@ -386,7 +386,7 @@ POST|/_matrix/client/r0/account/3pid/delete:
         "id_server_unbind_result": "success"
       }
     429: *429
-POST|/_matrix/client/r0/account/3pid/unbind:
+POST|/_matrix/client/v3/account/3pid/unbind:
   method: :unbind_3pid
   requests:
     - args: ['email', 'example@example.org', {id_server: 'example.org'}]
@@ -407,9 +407,9 @@ POST|/_matrix/client/r0/account/3pid/unbind:
         "id_server_unbind_result": "success"
       }
     429: *429
-POST|/_matrix/client/r0/account/3pid/email/requestToken: {}
-POST|/_matrix/client/r0/account/3pid/msisdn/requestToken: {}
-GET|/_matrix/client/r0/account/whoami:
+POST|/_matrix/client/v3/account/3pid/email/requestToken: {}
+POST|/_matrix/client/v3/account/3pid/msisdn/requestToken: {}
+GET|/_matrix/client/v3/account/whoami:
   method: :whoami?
   results:
     200: |
@@ -427,7 +427,7 @@ GET|/_matrix/client/r0/account/whoami:
         "error": "Application service has not registered this user."
       }
     429: *429
-POST|/_matrix/client/r0/user/{userId}/filter:
+POST|/_matrix/client/v3/user/{userId}/filter:
   method: :create_filter
   requests:
     - args: ['@alice:example.com', { room: { state: { types: ['m.room.*'] } } }]
@@ -442,7 +442,7 @@ POST|/_matrix/client/r0/user/{userId}/filter:
       {
         "filter_id": "66696p746572"
       }
-GET|/_matrix/client/r0/user/{userId}/filter/{filterId}:
+GET|/_matrix/client/v3/user/{userId}/filter/{filterId}:
   method: :get_filter
   requests:
     - args: ['@alice:example.com', '66696p746572']
@@ -499,7 +499,7 @@ GET|/_matrix/client/r0/user/{userId}/filter/{filterId}:
           "sender"
         ]
       }
-GET|/_matrix/client/r0/sync:
+GET|/_matrix/client/v3/sync:
   method: :sync
   requests:
     - args: [{ filter: '66696p746572', since: 's72594_4483_1934', full_state: false, set_presence: 'offline', timeout: 30 }]
@@ -514,7 +514,7 @@ GET|/_matrix/client/r0/sync:
       {
         "too big": "and 100% ignored by the API abstraction"
       }
-GET|/_matrix/client/r0/rooms/{roomId}/event/{eventId}:
+GET|/_matrix/client/v3/rooms/{roomId}/event/{eventId}:
   method: :get_room_event
   requests:
     - args: ['!636q39766251:matrix.org', '$asfDuShaf7Gafaw:matrix.org']
@@ -537,7 +537,7 @@ GET|/_matrix/client/r0/rooms/{roomId}/event/{eventId}:
           "age": 1234
         }
       }
-GET|/_matrix/client/r0/rooms/{roomId}/state/{eventType}/{stateKey}:
+GET|/_matrix/client/v3/rooms/{roomId}/state/{eventType}/{stateKey}:
   method: :get_room_state
   requests:
     - args: ['!636q39766251:example.com', 'm.room.name', key: 'something']
@@ -547,7 +547,7 @@ GET|/_matrix/client/r0/rooms/{roomId}/state/{eventType}/{stateKey}:
       {
         "name": "Example room name"
       }
-GET|/_matrix/client/r0/rooms/{roomId}/state/{eventType}:
+GET|/_matrix/client/v3/rooms/{roomId}/state/{eventType}:
   method: :get_room_state
   requests:
     - args: ['!636q39766251:example.com', 'm.room.name']
@@ -557,7 +557,7 @@ GET|/_matrix/client/r0/rooms/{roomId}/state/{eventType}:
       {
         "name": "Example room name"
       }
-GET|/_matrix/client/r0/rooms/{roomId}/state:
+GET|/_matrix/client/v3/rooms/{roomId}/state:
   method: :get_room_state_all
   requests:
     - args: ['!636q39766251:example.com']
@@ -646,7 +646,7 @@ GET|/_matrix/client/r0/rooms/{roomId}/state:
           "state_key": ""
         }
       ]
-GET|/_matrix/client/r0/rooms/{roomId}/members:
+GET|/_matrix/client/v3/rooms/{roomId}/members:
   method: :get_room_members
   requests:
     - args: ['!636q39766251:example.com']
@@ -656,7 +656,7 @@ GET|/_matrix/client/r0/rooms/{roomId}/members:
       {
         "chunk": []
       }
-GET|/_matrix/client/r0/rooms/{roomId}/joined_members:
+GET|/_matrix/client/v3/rooms/{roomId}/joined_members:
   method: :get_room_joined_members
   requests:
     - args: ['!636q39766251:example.com']
@@ -673,7 +673,7 @@ GET|/_matrix/client/r0/rooms/{roomId}/joined_members:
       }
     403: |
       {}
-GET|/_matrix/client/r0/rooms/{roomId}/messages:
+GET|/_matrix/client/v3/rooms/{roomId}/messages:
   method: :get_room_messages
   requests:
     - args: ['!636q39766251:example.com', 's345_678_333', { limit: 3, direction: 'b', filter: { contains_url: true } }]
@@ -682,8 +682,7 @@ GET|/_matrix/client/r0/rooms/{roomId}/messages:
         :from: 's345_678_333'
         :dir: 'b'
         :limit: 3
-        :filter:
-          :contains_url: true
+        :filter: '{"contains_url":true}'
   results:
     200: |
       {
@@ -691,7 +690,7 @@ GET|/_matrix/client/r0/rooms/{roomId}/messages:
         "end": "t47409-4357353_219380_26003_2265",
         "chunk": [ ]
       }
-PUT|/_matrix/client/r0/rooms/{roomId}/state/{eventType}/{stateKey}:
+PUT|/_matrix/client/v3/rooms/{roomId}/state/{eventType}/{stateKey}:
   method: :send_state_event
   requests:
     - args: ['!636q39766251:example.com', 'm.room.member', { membership: 'join', avatar_url: 'mxc://...' }, { state_key: '@alice:example.com' }]
@@ -709,7 +708,7 @@ PUT|/_matrix/client/r0/rooms/{roomId}/state/{eventType}/{stateKey}:
         "errcode": "M_FORBIDDEN",
         "error": "You do not have permission to send the event."
       }
-PUT|/_matrix/client/r0/rooms/{roomId}/state/{eventType}:
+PUT|/_matrix/client/v3/rooms/{roomId}/state/{eventType}:
   method: :send_state_event
   requests:
     - args: ['!636q39766251:example.com', 'm.room.name', { name: 'Room name' }]
@@ -726,7 +725,7 @@ PUT|/_matrix/client/r0/rooms/{roomId}/state/{eventType}:
         "errcode": "M_FORBIDDEN",
         "error": "You do not have permission to send the event."
       }
-PUT|/_matrix/client/r0/rooms/{roomId}/send/{eventType}/{txnId}:
+PUT|/_matrix/client/v3/rooms/{roomId}/send/{eventType}/{txnId}:
   method: :send_message_event
   requests:
     - args: ['!636q39766251:example.com', 'm.room.message', { msgtype: 'm.text', body: 'hello' }, { txn_id: 35 }]
@@ -739,7 +738,7 @@ PUT|/_matrix/client/r0/rooms/{roomId}/send/{eventType}/{txnId}:
       {
         "event_id": "$YUwRidLecu:example.com"
       }
-PUT|/_matrix/client/r0/rooms/{roomId}/redact/{eventId}/{txnId}:
+PUT|/_matrix/client/v3/rooms/{roomId}/redact/{eventId}/{txnId}:
   method: :redact_event
   requests:
     - args: ['!636q39766251:example.com', '$bai2b1i9:matrix.org', { reason: 'Indecent material', txn_id: 37 }]
@@ -751,7 +750,7 @@ PUT|/_matrix/client/r0/rooms/{roomId}/redact/{eventId}/{txnId}:
       {
         "event_id": "$YUwRidLecu:example.com"
       }
-POST|/_matrix/client/r0/createRoom:
+POST|/_matrix/client/v3/createRoom:
   method: :create_room
   requests:
     - args: [{ preset: 'public_chat', room_alias: 'thepub', name: 'The Grand Duke Pub', topic: 'All about happy hour', creation_content: { 'm.federate': false } }]
@@ -764,7 +763,7 @@ POST|/_matrix/client/r0/createRoom:
         :topic: 'All about happy hour'
         :creation_content:
           :m.federate: false
-        :visibility: :public
+        :visibility: public
   results:
     200: |
       {
@@ -775,7 +774,7 @@ POST|/_matrix/client/r0/createRoom:
         "errcode": "M_UNKNOWN",
         "error": "An unknown error occurred"
       }
-PUT|/_matrix/client/r0/directory/room/{roomAlias}:
+PUT|/_matrix/client/v3/directory/room/{roomAlias}:
   method: :set_room_alias
   requests:
     - args: ['!abnjk1jdasj98:capuchins.com', '#monkeys:matrix.org']
@@ -791,7 +790,7 @@ PUT|/_matrix/client/r0/directory/room/{roomAlias}:
         "errcode": "M_UNKNOWN",
         "error": "Room alias #monkeys:matrix.org already exists."
       }
-GET|/_matrix/client/r0/directory/room/{roomAlias}:
+GET|/_matrix/client/v3/directory/room/{roomAlias}:
   method: :get_room_id
   requests:
     - args: ['#monkeys:matrix.org']
@@ -813,7 +812,7 @@ GET|/_matrix/client/r0/directory/room/{roomAlias}:
         "errcode": "M_NOT_FOUND",
         "error": "Room alias #monkeys:matrix.org not found."
       }
-DELETE|/_matrix/client/r0/directory/room/{roomAlias}:
+DELETE|/_matrix/client/v3/directory/room/{roomAlias}:
   method: :remove_room_alias
   requests:
     - args: ['#monkeys:matrix.org']
@@ -823,7 +822,7 @@ DELETE|/_matrix/client/r0/directory/room/{roomAlias}:
   results:
     200: |
       {}
-GET|/_matrix/client/r0/joined_rooms:
+GET|/_matrix/client/v3/joined_rooms:
   method: :get_joined_rooms
   requests:
     - args: []
@@ -837,7 +836,7 @@ GET|/_matrix/client/r0/joined_rooms:
           "!foo:example.com"
         ]
       }
-POST|/_matrix/client/r0/rooms/{roomId}/invite:
+POST|/_matrix/client/v3/rooms/{roomId}/invite:
   method: :invite_user
   requests:
     - args: ['!d41d8cd:matrix.org', '@cheeky_monkey:matrix.org']
@@ -854,7 +853,7 @@ POST|/_matrix/client/r0/rooms/{roomId}/invite:
         "error": "@cheeky_monkey:matrix.org is banned from the room"
       }
     429: *429
-POST|/_matrix/client/r0/rooms/{roomId}/join:
+POST|/_matrix/client/v3/rooms/{roomId}/join:
   method: :join_room_id
   requests:
     - args: ['!nkl290a:matrix.org']
@@ -879,8 +878,8 @@ POST|/_matrix/client/r0/rooms/{roomId}/join:
         "error": "You are not invited to this room."
       }
     429: *429
-POST|/_matrix/client/r0/rooms/{roomId}/upgrade: {}
-POST|/_matrix/client/r0/join/{roomIdOrAlias}:
+POST|/_matrix/client/v3/rooms/{roomId}/upgrade: {}
+POST|/_matrix/client/v3/join/{roomIdOrAlias}:
   method: :join_room
   requests:
     - args: ['#monkeys:matrix.org', { server_name: ['matrix.org', 'elsewhere.ca'] }]
@@ -903,7 +902,7 @@ POST|/_matrix/client/r0/join/{roomIdOrAlias}:
         "error": "You are not invited to this room."
       }
     429: *429
-POST|/_matrix/client/r0/rooms/{roomId}/leave:
+POST|/_matrix/client/v3/rooms/{roomId}/leave:
   method: :leave_room
   requests:
     - args: ['!nkl290a:matrix.org']
@@ -914,7 +913,7 @@ POST|/_matrix/client/r0/rooms/{roomId}/leave:
     200: |
       {}
     429: *429
-POST|/_matrix/client/r0/rooms/{roomId}/forget:
+POST|/_matrix/client/v3/rooms/{roomId}/forget:
   method: :forget_room
   requests:
     - args: ['!au1ba7o:matrix.org']
@@ -930,7 +929,7 @@ POST|/_matrix/client/r0/rooms/{roomId}/forget:
         "error": "User @example:matrix.org is in room !au1ba7o:matrix.org"
       }
     429: *429
-POST|/_matrix/client/r0/rooms/{roomId}/kick:
+POST|/_matrix/client/v3/rooms/{roomId}/kick:
   method: :kick_user
   requests:
     - args: ['!e42d8c:matrix.org', '@cheeky_monkey:matrix.org', { reason: 'Telling unfunny jokes' }]
@@ -947,7 +946,7 @@ POST|/_matrix/client/r0/rooms/{roomId}/kick:
         "errcode": "M_FORBIDDEN",
         "error": "You do not have a high enough power level to kick from this room."
       }
-POST|/_matrix/client/r0/rooms/{roomId}/ban:
+POST|/_matrix/client/v3/rooms/{roomId}/ban:
   method: :ban_user
   requests:
     - args: ['!e42d8c:matrix.org', '@cheeky_monkey:matrix.org', { reason: 'Telling unfunny jokes' }]
@@ -964,7 +963,7 @@ POST|/_matrix/client/r0/rooms/{roomId}/ban:
         "errcode": "M_FORBIDDEN",
         "error": "You do not have a high enough power level to ban from this room."
       }
-POST|/_matrix/client/r0/rooms/{roomId}/unban:
+POST|/_matrix/client/v3/rooms/{roomId}/unban:
   method: :unban_user
   requests:
     - args: ['!e42d8c:matrix.org', '@cheeky_monkey:matrix.org']
@@ -980,7 +979,7 @@ POST|/_matrix/client/r0/rooms/{roomId}/unban:
         "errcode": "M_FORBIDDEN",
         "error": "You do not have a high enough power level to unban from this room."
       }
-GET|/_matrix/client/r0/directory/list/room/{roomId}:
+GET|/_matrix/client/v3/directory/list/room/{roomId}:
   method: :get_room_directory_visibility
   requests:
     - args: ['!au1ba7o:matrix.org']
@@ -997,7 +996,7 @@ GET|/_matrix/client/r0/directory/list/room/{roomId}:
         "errcode": "M_NOT_FOUND",
         "error": "Room not found"
       }
-PUT|/_matrix/client/r0/directory/list/room/{roomId}:
+PUT|/_matrix/client/v3/directory/list/room/{roomId}:
   method: :set_room_directory_visibility
   requests:
     - args: ['!au1ba7o:matrix.org', public]
@@ -1013,7 +1012,7 @@ PUT|/_matrix/client/r0/directory/list/room/{roomId}:
         "errcode": "M_NOT_FOUND",
         "error": "Room not found"
       }
-GET|/_matrix/client/r0/publicRooms:
+GET|/_matrix/client/v3/publicRooms:
   method: :get_public_rooms
   requests:
     - args: []
@@ -1049,7 +1048,7 @@ GET|/_matrix/client/r0/publicRooms:
         "prev_batch": "p1902",
         "total_room_count_estimate": 115
       }
-POST|/_matrix/client/r0/publicRooms:
+POST|/_matrix/client/v3/publicRooms:
   method: :get_public_rooms
   requests:
     - args: [{ limit: 10, server: 'example.com', filter: 1 }]
@@ -1091,8 +1090,8 @@ POST|/_matrix/client/r0/publicRooms:
         "prev_batch": "p1902",
         "total_room_count_estimate": 115
       }
-POST|/_matrix/client/r0/user_directory/search: {}
-PUT|/_matrix/client/r0/profile/{userId}/displayname:
+POST|/_matrix/client/v3/user_directory/search: {}
+PUT|/_matrix/client/v3/profile/{userId}/displayname:
   method: :set_display_name
   requests:
     - args: ['@alice:example.com', 'Alice Margatroid']
@@ -1104,7 +1103,7 @@ PUT|/_matrix/client/r0/profile/{userId}/displayname:
     200: |
       {}
     429: *429
-GET|/_matrix/client/r0/profile/{userId}/displayname:
+GET|/_matrix/client/v3/profile/{userId}/displayname:
   method: :get_display_name
   requests:
     - args: ['@alice:example.com']
@@ -1117,7 +1116,7 @@ GET|/_matrix/client/r0/profile/{userId}/displayname:
         "displayname": "Alice Margatroid"
       }
     429: *429
-PUT|/_matrix/client/r0/profile/{userId}/avatar_url:
+PUT|/_matrix/client/v3/profile/{userId}/avatar_url:
   method: :set_avatar_url
   requests:
     - args: ['@alice:example.com', 'mxc://matrix.org/wefh34uihSDRGhw34']
@@ -1129,7 +1128,7 @@ PUT|/_matrix/client/r0/profile/{userId}/avatar_url:
     200: |
       {}
     429: *429
-GET|/_matrix/client/r0/profile/{userId}/avatar_url:
+GET|/_matrix/client/v3/profile/{userId}/avatar_url:
   method: :get_avatar_url
   requests:
     - args: ['@alice:example.com']
@@ -1142,7 +1141,7 @@ GET|/_matrix/client/r0/profile/{userId}/avatar_url:
         "avatar_url": "mxc://matrix.org/wefh34uihSDRGhw34"
       }
     429: *429
-GET|/_matrix/client/r0/profile/{userId}:
+GET|/_matrix/client/v3/profile/{userId}:
   method: :get_profile
   requests:
     - args: ['@alice:example.com']
@@ -1156,7 +1155,7 @@ GET|/_matrix/client/r0/profile/{userId}:
         "displayname": "Alice Margatroid"
       }
     429: *429
-GET|/_matrix/client/r0/voip/turnServer:
+GET|/_matrix/client/v3/voip/turnServer:
   method: :get_turn_server
   requests:
     - args: []
@@ -1176,7 +1175,7 @@ GET|/_matrix/client/r0/voip/turnServer:
         "ttl": 86400
       }
     429: *429
-PUT|/_matrix/client/r0/rooms/{roomId}/typing/{userId}:
+PUT|/_matrix/client/v3/rooms/{roomId}/typing/{userId}:
   method: :set_typing
   requests:
     - args: ['!wefh3sfukhs:example.com', '@alice:example.com']
@@ -1199,9 +1198,9 @@ PUT|/_matrix/client/r0/rooms/{roomId}/typing/{userId}:
     200: |
       {}
     429: *429
-POST|/_matrix/client/r0/rooms/{roomId}/receipt/{receiptType}/{eventId}: {}
-POST|/_matrix/client/r0/rooms/{roomId}/read_markers: {}
-PUT|/_matrix/client/r0/presence/{userId}/status:
+POST|/_matrix/client/v3/rooms/{roomId}/receipt/{receiptType}/{eventId}: {}
+POST|/_matrix/client/v3/rooms/{roomId}/read_markers: {}
+PUT|/_matrix/client/v3/presence/{userId}/status:
   method: :set_presence_status
   requests:
     - args: ['@alice:example.com', online, message: 'I am here']
@@ -1219,7 +1218,7 @@ PUT|/_matrix/client/r0/presence/{userId}/status:
     200: |
       {}
     429: *429
-GET|/_matrix/client/r0/presence/{userId}/status:
+GET|/_matrix/client/v3/presence/{userId}/status:
   method: :get_presence_status
   requests:
     - args: ['@alice:example.com']
@@ -1242,9 +1241,9 @@ GET|/_matrix/client/r0/presence/{userId}/status:
         "errcode": "M_UNKNOWN",
         "error": "An unknown error occurred"
       }
-# POST|/_matrix/client/r0/presence/list/{userId}: {}
-# GET|/_matrix/client/r0/presence/list/{userId}: {}
-POST|/_matrix/media/r0/upload:
+# POST|/_matrix/client/v3/presence/list/{userId}: {}
+# GET|/_matrix/client/v3/presence/list/{userId}: {}
+POST|/_matrix/media/v3/upload:
   method: :media_upload
   requests:
     - args: [ '{"json":true}', 'application/json' ]
@@ -1257,10 +1256,10 @@ POST|/_matrix/media/r0/upload:
         "content_uri": "mxc://example.com/AQwafuaFswefuhsfAFAgsw"
       }
     429: *429
-# GET|/_matrix/media/r0/download/{serverName}/{mediaId}: {}
-# GET|/_matrix/media/r0/download/{serverName}/{mediaId}/{fileName}: {}
-# GET|/_matrix/media/r0/thumbnail/{serverName}/{mediaId}: {}
-GET|/_matrix/media/r0/preview_url:
+# GET|/_matrix/media/v3/download/{serverName}/{mediaId}: {}
+# GET|/_matrix/media/v3/download/{serverName}/{mediaId}/{fileName}: {}
+# GET|/_matrix/media/v3/thumbnail/{serverName}/{mediaId}: {}
+GET|/_matrix/media/v3/preview_url:
   method: :get_url_preview
   requests:
     - args: ['https://matrix.org', { timestamp: 1510610716656 }]
@@ -1282,7 +1281,7 @@ GET|/_matrix/media/r0/preview_url:
         "matrix:image:size": 102400
       }
     429: *429
-GET|/_matrix/media/r0/config:
+GET|/_matrix/media/v3/config:
   method: :get_media_config
   requests:
     - args: []
@@ -1294,7 +1293,7 @@ GET|/_matrix/media/r0/config:
         "m.upload.size": 50000000
       }
     429: *429
-PUT|/_matrix/client/r0/sendToDevice/{eventType}/{txnId}:
+PUT|/_matrix/client/v3/sendToDevice/{eventType}/{txnId}:
   method: :send_to_device
   requests:
     - args: ['m.new_device', { messages: { '@alice:example.com': { 'TLLBEANAAG': { 'example_content_key': 'value' } } }, txn_id: 35 }]
@@ -1308,7 +1307,7 @@ PUT|/_matrix/client/r0/sendToDevice/{eventType}/{txnId}:
   results:
     200: |
       {}
-GET|/_matrix/client/r0/devices:
+GET|/_matrix/client/v3/devices:
   method: :get_devices
   requests:
     - args: []
@@ -1326,7 +1325,7 @@ GET|/_matrix/client/r0/devices:
           }
         ]
       }
-GET|/_matrix/client/r0/devices/{deviceId}:
+GET|/_matrix/client/v3/devices/{deviceId}:
   method: :get_device
   requests:
     - args: ['QBUAZIFURK']
@@ -1343,7 +1342,7 @@ GET|/_matrix/client/r0/devices/{deviceId}:
       }
     404: |
       {}
-PUT|/_matrix/client/r0/devices/{deviceId}:
+PUT|/_matrix/client/v3/devices/{deviceId}:
   method: :set_device
   requests:
     - args: ['QBUAZIFURK', display_name: 'My other phone']
@@ -1356,7 +1355,7 @@ PUT|/_matrix/client/r0/devices/{deviceId}:
       {}
     404: |
       {}
-DELETE|/_matrix/client/r0/devices/{deviceId}:
+DELETE|/_matrix/client/v3/devices/{deviceId}:
   method: :delete_device
   requests:
     - args: ['QBUAZIFURK', auth: { type: 'example.type.foo', session: 'xxxxx', example_credential: 'verypoorsharedsecret' }]
@@ -1389,9 +1388,9 @@ DELETE|/_matrix/client/r0/devices/{deviceId}:
           "example.type.foo"
         ]
       }
-POST|/_matrix/client/r0/delete_devices: {}
-POST|/_matrix/client/r0/keys/upload: {}
-POST|/_matrix/client/r0/keys/query:
+POST|/_matrix/client/v3/delete_devices: {}
+POST|/_matrix/client/v3/keys/upload: {}
+POST|/_matrix/client/v3/keys/query:
   method: :keys_query
   requests:
     - args: [{device_keys: { '@alice:example.com': [] }, token: 'string'}]
@@ -1430,7 +1429,7 @@ POST|/_matrix/client/r0/keys/query:
           }
         }
       }
-POST|/_matrix/client/r0/keys/claim:
+POST|/_matrix/client/v3/keys/claim:
   method: :claim_one_time_keys
   requests:
     - args: [{ '@alice:example.com': { 'JLAFKJWSCS': 'signed_curve25519' } }]
@@ -1460,7 +1459,7 @@ POST|/_matrix/client/r0/keys/claim:
           }
         }
       }
-GET|/_matrix/client/r0/keys/changes:
+GET|/_matrix/client/v3/keys/changes:
   method: :get_key_changes
   requests:
     - args: [{ from: s72594_4483_1934, to: s75689_5632_2435 }]
@@ -1481,7 +1480,7 @@ GET|/_matrix/client/r0/keys/changes:
           "@doug:example.org"
         ]
       }
-GET|/_matrix/client/r0/pushers:
+GET|/_matrix/client/v3/pushers:
   method: :get_pushers
   requests:
     - args: []
@@ -1506,7 +1505,7 @@ GET|/_matrix/client/r0/pushers:
           }
         ]
       }
-POST|/_matrix/client/r0/pushers/set:
+POST|/_matrix/client/v3/pushers/set:
   method: :set_pusher
   requests:
     - args: ["APA91bHPRgkF3JUikC4ENAHEeMrd41Zxv3hVZjC9KtT8OvPVGJ-hQMRKRrZuJAEcl7B338qju59zJMjw2DELjzEvxwYv7hH5Ynpc1ODQ0aT4U4OFEeco8ohsN5PjL1iC2dNtk2BAokeMCg2ZXKqpc8FXKmhX94kIxQ", { kind: 'http', app_id: 'com.example.app.ios', app_name: 'Mat Rix', device_name: 'iPhone 9', lang: 'en', data: { url: 'https://push-gateway.location.here/_matrix/push/v1/notify', format: 'event_id_only' }, profile_tag: 'xxyyzz', append: false }]
@@ -1533,7 +1532,7 @@ POST|/_matrix/client/r0/pushers/set:
         "errcode": "M_MISSING_PARAM"
       }
     429: *429
-GET|/_matrix/client/r0/notifications:
+GET|/_matrix/client/v3/notifications:
   method: :get_notifications
   requests:
     - args: [{ from: 'xxxxx', limit: 20, only: 'highlight' }]
@@ -1580,7 +1579,7 @@ GET|/_matrix/client/r0/notifications:
           }
         ]
       }
-GET|/_matrix/client/r0/pushrules/:
+GET|/_matrix/client/v3/pushrules/:
   method: :get_pushrules
   requests:
     - args: []
@@ -1782,7 +1781,7 @@ GET|/_matrix/client/r0/pushrules/:
           ]
         }
       }
-GET|/_matrix/client/r0/pushrules/{scope}/{kind}/{ruleId}:
+GET|/_matrix/client/v3/pushrules/{scope}/{kind}/{ruleId}:
   method: :get_pushrule
   requests:
     - args: [{ kind: 'content', id: 'nocake' }]
@@ -1800,9 +1799,9 @@ GET|/_matrix/client/r0/pushrules/{scope}/{kind}/{ruleId}:
         "enabled": true,
         "default": false
       }
-DELETE|/_matrix/client/r0/pushrules/{scope}/{kind}/{ruleId}: {}
-PUT|/_matrix/client/r0/pushrules/{scope}/{kind}/{ruleId}: {}
-GET|/_matrix/client/r0/pushrules/{scope}/{kind}/{ruleId}/enabled:
+DELETE|/_matrix/client/v3/pushrules/{scope}/{kind}/{ruleId}: {}
+PUT|/_matrix/client/v3/pushrules/{scope}/{kind}/{ruleId}: {}
+GET|/_matrix/client/v3/pushrules/{scope}/{kind}/{ruleId}/enabled:
   method: :get_pushrule_enabled
   requests:
     - args: [{ kind: 'content', id: 'nocake' }]
@@ -1814,7 +1813,7 @@ GET|/_matrix/client/r0/pushrules/{scope}/{kind}/{ruleId}/enabled:
       {
         "enabled": true
       }
-PUT|/_matrix/client/r0/pushrules/{scope}/{kind}/{ruleId}/enabled:
+PUT|/_matrix/client/v3/pushrules/{scope}/{kind}/{ruleId}/enabled:
   method: :set_pushrule_enabled
   requests:
     - args: [true, { kind: 'content', id: 'nocake' }]
@@ -1825,7 +1824,7 @@ PUT|/_matrix/client/r0/pushrules/{scope}/{kind}/{ruleId}/enabled:
   results:
     200: |
       {}
-GET|/_matrix/client/r0/pushrules/{scope}/{kind}/{ruleId}/actions:
+GET|/_matrix/client/v3/pushrules/{scope}/{kind}/{ruleId}/actions:
   method: :get_pushrule_actions
   requests:
     - args: [{ kind: 'content', id: 'nocake' }]
@@ -1839,7 +1838,7 @@ GET|/_matrix/client/r0/pushrules/{scope}/{kind}/{ruleId}/actions:
           "notify"
         ]
       }
-PUT|/_matrix/client/r0/pushrules/{scope}/{kind}/{ruleId}/actions:
+PUT|/_matrix/client/v3/pushrules/{scope}/{kind}/{ruleId}/actions:
   method: :set_pushrule_actions
   requests:
     - args: [['notify', 'coalesce'], { kind: 'content', id: 'nocake' }]
@@ -1858,8 +1857,8 @@ PUT|/_matrix/client/r0/pushrules/{scope}/{kind}/{ruleId}/actions:
   results:
     200: |
       {}
-POST|/_matrix/client/r0/search: {}
-GET|/_matrix/client/r0/user/{userId}/rooms/{roomId}/tags:
+POST|/_matrix/client/v3/search: {}
+GET|/_matrix/client/v3/user/{userId}/rooms/{roomId}/tags:
   method: :get_user_tags
   requests:
     - args: ['@alice:example.com', '!726s6s6q:example.com']
@@ -1879,7 +1878,7 @@ GET|/_matrix/client/r0/user/{userId}/rooms/{roomId}/tags:
           "u.Customers": {}
         }
       }
-PUT|/_matrix/client/r0/user/{userId}/rooms/{roomId}/tags/{tag}:
+PUT|/_matrix/client/v3/user/{userId}/rooms/{roomId}/tags/{tag}:
   method: :add_user_tag
   requests:
     - args: ['@alice:example.com', '!726s6s6q:example.com', 'u.work', order: 0.25]
@@ -1890,7 +1889,7 @@ PUT|/_matrix/client/r0/user/{userId}/rooms/{roomId}/tags/{tag}:
   results:
     200: |
       {}
-DELETE|/_matrix/client/r0/user/{userId}/rooms/{roomId}/tags/{tag}:
+DELETE|/_matrix/client/v3/user/{userId}/rooms/{roomId}/tags/{tag}:
   method: :remove_user_tag
   requests:
     - args: ['@alice:example.com', '!726s6s6q:example.com', 'u.work']
@@ -1900,7 +1899,7 @@ DELETE|/_matrix/client/r0/user/{userId}/rooms/{roomId}/tags/{tag}:
   results:
     200: |
       {}
-GET|/_matrix/client/r0/user/{userId}/account_data/{type}:
+GET|/_matrix/client/v3/user/{userId}/account_data/{type}:
   method: :get_account_data
   requests:
     - args: ['@alice:example.com', 'org.example.custom.config']
@@ -1912,7 +1911,7 @@ GET|/_matrix/client/r0/user/{userId}/account_data/{type}:
       {
         "custom_account_data_key": "custom_config_value"
       }
-PUT|/_matrix/client/r0/user/{userId}/account_data/{type}:
+PUT|/_matrix/client/v3/user/{userId}/account_data/{type}:
   method: :set_account_data
   requests:
     - args: ['@alice:example.com', 'org.example.custom.config', custom_account_data_key: 'custom_config_value']
@@ -1923,7 +1922,7 @@ PUT|/_matrix/client/r0/user/{userId}/account_data/{type}:
   results:
     200: |
       {}
-GET|/_matrix/client/r0/user/{userId}/rooms/{roomId}/account_data/{type}:
+GET|/_matrix/client/v3/user/{userId}/rooms/{roomId}/account_data/{type}:
   method: :get_room_account_data
   requests:
     - args: ['@alice:example.com', '!726s6s6q:example.com', 'org.example.custom.config']
@@ -1935,7 +1934,7 @@ GET|/_matrix/client/r0/user/{userId}/rooms/{roomId}/account_data/{type}:
       {
         "custom_account_data_key": "custom_config_value"
       }
-PUT|/_matrix/client/r0/user/{userId}/rooms/{roomId}/account_data/{type}:
+PUT|/_matrix/client/v3/user/{userId}/rooms/{roomId}/account_data/{type}:
   method: :set_room_account_data
   requests:
     - args: ['@alice:example.com', '!726s6s6q:example.com', 'org.example.custom.room.config', custom_account_data_key: 'custom_config_value']
@@ -1946,7 +1945,7 @@ PUT|/_matrix/client/r0/user/{userId}/rooms/{roomId}/account_data/{type}:
   results:
     200: |
       {}
-GET|/_matrix/client/r0/admin/whois/{userId}:
+GET|/_matrix/client/v3/admin/whois/{userId}:
   method: :whois
   requests:
     - args: ['@peter:rabbit.rocks']
@@ -1978,10 +1977,10 @@ GET|/_matrix/client/r0/admin/whois/{userId}:
           }
         }
       }
-GET|/_matrix/client/r0/rooms/{roomId}/context/{eventId}: {}
-# GET|/_matrix/client/r0/login/cas/redirect: {}
-# GET|/_matrix/client/r0/login/cas/ticket: {}
-POST|/_matrix/client/r0/rooms/{roomId}/report/{eventId}:
+GET|/_matrix/client/v3/rooms/{roomId}/context/{eventId}: {}
+# GET|/_matrix/client/v3/login/cas/redirect: {}
+# GET|/_matrix/client/v3/login/cas/ticket: {}
+POST|/_matrix/client/v3/rooms/{roomId}/report/{eventId}:
   method: :report_event
   requests:
     - args: ['!637q39766251:example.com', '$something:example.com', { score: -100, reason: 'This makes me sad' }]
@@ -1993,10 +1992,10 @@ POST|/_matrix/client/r0/rooms/{roomId}/report/{eventId}:
   results:
     200: |
       {}
-GET|/_matrix/client/r0/thirdparty/protocols: {}
-GET|/_matrix/client/r0/thirdparty/protocol/{protocol}: {}
-GET|/_matrix/client/r0/thirdparty/location/{protocol}: {}
-GET|/_matrix/client/r0/thirdparty/user/{protocol}: {}
-GET|/_matrix/client/r0/thirdparty/location: {}
-GET|/_matrix/client/r0/thirdparty/user: {}
-POST|/_matrix/client/r0/user/{userId}/openid/request_token: {}
+GET|/_matrix/client/v3/thirdparty/protocols: {}
+GET|/_matrix/client/v3/thirdparty/protocol/{protocol}: {}
+GET|/_matrix/client/v3/thirdparty/location/{protocol}: {}
+GET|/_matrix/client/v3/thirdparty/user/{protocol}: {}
+GET|/_matrix/client/v3/thirdparty/location: {}
+GET|/_matrix/client/v3/thirdparty/user: {}
+POST|/_matrix/client/v3/user/{userId}/openid/request_token: {}

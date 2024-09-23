@@ -102,16 +102,51 @@ module MatrixSdk
       logger.debug "Created room #{room_id}"
     end
 
+    # Create a (possibly) typed room
+    #
+    # @note This method isn't supposed to be used directly, rather rooms should
+    #       be retrieved from the Client abstraction.
+    #
+    # @param room_type [nil,String] A known type that the room should be
+    # @param require_type [Boolean] Should the room be required to be typed
+    #
+    # @see Room#initialize
+    def self.new_with_type(client, room_id, data = {}, room_type: nil, require_type: false)
+      raise "Unknown room type #{room_type.inspect}" if require_type && !room_types.key?(room_type)
+
+      create_obj = nil
+      room_type ||= client.api.get_room_state(room_id, 'm.room.create')[:type]
+      raise "No room type registered for #{room_type.inspect}" if require_type && !room_types.key?(room_type)
+
+      room_type_data = room_types[room_type]
+      room = if room_type_data
+               room_type_data[:klass].new client, room_id, data
+             else
+               return new client, room_id, data unless room_type_data
+             end
+
+      room.room_state.tinycache_adapter.write('m.room.create', create_obj) if create_obj
+
+      room
+    end
+
     #
     # Casting operators
     #
 
+    # Get a copy of the room as a Matrix Space
     def to_space
-      return nil unless space?
-
-      Rooms::Space.new self, nil
+      to_typed('m.space')
     end
 
+    # Get a copy of the room as a given type
+    #
+    # @param type [String] The type of the new room
+    def to_typed(type)
+      self.class.new_with_type(client, room_id, room_type: type, require_type: true)
+    end
+
+    # Get a textual representation of the room name
     def to_s
       prefix = canonical_alias || id
       return "#{prefix} | #{name}" unless name.nil?
@@ -608,7 +643,7 @@ module MatrixSdk
       data[:displayname] = display_name unless display_name.nil?
       data[:avatar_url] = avatar_url unless avatar_url.nil?
 
-      client.api.set_membership(id, client.mxid, 'join', reason || 'Updating room profile information', data)
+      client.api.set_membership(id, client.mxid, 'join', reason: reason || 'Updating room profile information', **data)
       true
     end
 
@@ -637,9 +672,30 @@ module MatrixSdk
 
     # Checks if the room is a Matrix Space
     #
-    # @return [Boolean,nil] True if the room is a space
+    # @return [Boolean,nil] If the room is a space
     def space?
-      room_type == 'm.space'
+      is_type? 'm.space'
+    end
+
+    # Checks if the room is of a given type
+    #
+    # @return [Boolean] If the room is of the given type
+    # @return [NilClass] If the room type is unknown (assumed typeless)
+    def is_type?(type)
+      return true if self.class.const_defined(:MX_TYPE) && self.class.const_get(:MX_TYPE) == type
+
+      room_type == type
+    rescue MatrixSdk::MatrixForbiddenError, MatrixSdk::MatrixNotFoundError
+      nil
+    end
+
+    # Checks if the room is of a non-default type
+    #
+    # @return [Boolean] If the room is of a non-default type
+    # @return [NilClass] If the room type is unknown
+    def is_typed?
+      return true if self.class.const_defined(:MX_TYPE)
+      !room_type.nil? && !room_type.empty?
     rescue MatrixSdk::MatrixForbiddenError, MatrixSdk::MatrixNotFoundError
       nil
     end
@@ -685,7 +741,7 @@ module MatrixSdk
     # @param [String] tag The tag to add
     # @param [Hash] data The data to assign to the tag
     def add_tag(tag, **data)
-      client.api.add_user_tag(client.mxid, id, tag, data)
+      client.api.add_user_tag(client.mxid, id, tag, **data)
       true
     end
 
@@ -946,6 +1002,28 @@ module MatrixSdk
 
       room_state['m.room.power_levels'] = data
       true
+    end
+
+    class << self
+      protected
+
+      def room_types
+       (@room_types ||= {})       
+      end
+
+      def room_type(type, **data, &block)
+        config = Openstruct.new
+        config.merge! data
+        yield config if block_given?
+
+        config.type = type
+        config.klass = self
+
+        self.const_set :MX_TYPE, type
+        self.const_set :MX_TYPE_CONFIG, config
+
+        MatrixSdk::Room.room_types[type] = config
+      end
     end
 
     private

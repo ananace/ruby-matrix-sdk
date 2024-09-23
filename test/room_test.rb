@@ -2,15 +2,12 @@ require 'test_helper'
 
 class RoomTest < Test::Unit::TestCase
   def setup
+    super
+
     # Silence debugging output
     ::MatrixSdk.logger.level = :error
 
-    @http = mock
-    @http.stubs(:active?).returns(true)
-
     @api = MatrixSdk::Api.new 'https://example.com', protocols: :CS
-    @api.instance_variable_set :@http, @http
-    @api.stubs(:print_http)
 
     @client = MatrixSdk::Client.new @api
     @client.stubs(:mxid).returns('@alice:example.com')
@@ -18,8 +15,6 @@ class RoomTest < Test::Unit::TestCase
     @id = '!room:example.com'
     @client.send :ensure_room, @id
     @room = @client.rooms.first
-
-    matrixsdk_add_api_stub
   end
 
   def test_pre_joined_members
@@ -37,13 +32,11 @@ class RoomTest < Test::Unit::TestCase
   def test_joined_members
     assert_equal :all, @room.client.cache
 
-    @api.expects(:get_room_joined_members).with('!room:example.com').returns(
-      joined: {
-        '@alice:example.com': {
-          display_name: 'Alice'
-        },
-        '@charlie:example.com': {
-          display_name: 'Charlie'
+    stub_request(:get, 'https://example.com/_matrix/client/v3/rooms/!room:example.com/joined_members').to_return_json(
+      body: {
+        joined: {
+          '@alice:example.com': { display_name: 'Alice' },
+          '@charlie:example.com': { display_name: 'Charlie' }
         }
       }
     )
@@ -55,18 +48,22 @@ class RoomTest < Test::Unit::TestCase
   end
 
   def test_dm
-    @api.expects(:get_room_joined_members).with('!room:example.com').returns(
-      joined: {
-        '@alice:example.com': {},
-        '@bob:example.com': {},
-        '@charlie:example.com': {}
+    stub_request(:get, 'https://example.com/_matrix/client/v3/rooms/!room:example.com/joined_members').to_return_json(
+      body: {
+        joined: {
+          '@alice:example.com': {},
+          '@bob:example.com': {},
+          '@charlie:example.com': {}
+        }
       }
     )
 
     refute @room.dm?(members_only: true)
 
-    @api.expects(:get_account_data).with('@alice:example.com', 'm.direct').returns(
-      '@bob:example.com' => [@id]
+    stub_request(:get, 'https://example.com/_matrix/client/v3/user/@alice:example.com/account_data/m.direct').to_return_json(
+      body: {
+        '@bob:example.com' => [@id]
+      }
     )
 
     assert @room.dm?
@@ -78,25 +75,25 @@ class RoomTest < Test::Unit::TestCase
     @client.expects(:get_user).twice.with('@alice:example.com').returns(MatrixSdk::User.new(@client, '@alice:example.com'))
     @client.expects(:get_user).once.with('@charlie:example.com').returns(MatrixSdk::User.new(@client, '@charlie:example.com'))
 
-    if Gem::Version.new(RUBY_VERSION) >= Gem::Version.new('2.7.0')
-      @api.expects(:get_room_members).once.with('!room:example.com').returns(chunk: [{ state_key: '@alice:example.com' }])
-    else
-      @api.expects(:get_room_members).once.with('!room:example.com', {}).returns(chunk: [{ state_key: '@alice:example.com' }])
-    end
+    stub_request(:get, 'https://example.com/_matrix/client/v3/rooms/!room:example.com/members').to_return_json(
+      body: {
+        chunk: [
+          { state_key: '@alice:example.com' }
+        ]
+      }
+    )
 
     # Two calls, cache should be kept
     assert_equal 1, @room.all_members.count
     assert_equal '@alice:example.com', @room.all_members.first.id
 
-    @api.expects(:get_room_members).once.with('!room:example.com', filter: 'something').returns(
-      chunk: [
-        {
-          state_key: '@alice:example.com'
-        },
-        {
-          state_key: '@charlie:example.com'
-        }
-      ]
+    stub_request(:get, 'https://example.com/_matrix/client/v3/rooms/!room:example.com/members?filter=something').to_return_json(
+      body: {
+        chunk: [
+          { state_key: '@alice:example.com' },
+          { state_key: '@charlie:example.com' }
+        ]
+      }
     )
 
     # Filter, should skip cache and return another value
@@ -112,106 +109,103 @@ class RoomTest < Test::Unit::TestCase
 
   def test_wrapped_methods
     text = '<b>test</b>'
-    @api.expects(:send_message).with(@id, text)
+    stub_request(:put, %r{https://example.com/_matrix/client/v3/rooms/!room:example.com/send/m.room.message/\d+}).with(body: { msgtype: 'm.text', body: text }).to_return_json(body: {})
     @room.send_text(text)
 
-    @api.expects(:send_message_event).with(@id, 'm.room.message', { body: 'test', msgtype: 'm.text', formatted_body: text, format: 'org.matrix.custom.html'})
+    stub_request(:put, %r{https://example.com/_matrix/client/v3/rooms/!room:example.com/send/m.room.message/\d+}).with(body: { msgtype: 'm.text', body: 'test', formatted_body: text, format: 'org.matrix.custom.html' }).to_return_json(body: {})
     @room.send_html(text)
 
-    @api.expects(:send_emote).with(@id, text)
+    stub_request(:put, %r{https://example.com/_matrix/client/v3/rooms/!room:example.com/send/m.room.message/\d+}).with(body: { msgtype: 'm.emote', body: text }).to_return_json(body: {})
     @room.send_emote(text)
 
-    @api.expects(:send_content).with(@id, 'mxc://example.com/file', text, 'm.file', extra_information: {})
+    stub_request(:put, %r{https://example.com/_matrix/client/v3/rooms/!room:example.com/send/m.room.message/\d+}).with(body: { msgtype: 'm.file', body: text, url: 'mxc://example.com/file', info: {} }).to_return_json(body: {})
     @room.send_file('mxc://example.com/file', text)
 
-    @api.expects(:send_notice).with(@id, text)
+    stub_request(:put, %r{https://example.com/_matrix/client/v3/rooms/!room:example.com/send/m.room.message/\d+}).with(body: { msgtype: 'm.notice', body: text }).to_return_json(body: {})
     @room.send_notice(text)
 
-    @api.expects(:send_content).with(@id, 'mxc://example.com/file', text, 'm.image', extra_information: {})
+    stub_request(:put, %r{https://example.com/_matrix/client/v3/rooms/!room:example.com/send/m.room.message/\d+}).with(body: { msgtype: 'm.image', body: text, url: 'mxc://example.com/file', info: {} }).to_return_json(body: {})
     @room.send_image('mxc://example.com/file', text)
 
-    @api.expects(:send_location).with(@id, 'geo:1,2,3', text, thumbnail_url: nil, thumbnail_info: {})
+    stub_request(:put, %r{https://example.com/_matrix/client/v3/rooms/!room:example.com/send/m.room.message/\d+}).with(body: { msgtype: 'm.location', body: text, geo_uri: 'geo:1,2,3', info: { thumbnail_url: nil, thumbnail_info: {} } }).to_return_json(body: {})
     @room.send_location('geo:1,2,3', text)
 
-    @api.expects(:send_content).with(@id, 'mxc://example.com/file', text, 'm.video', extra_information: {})
+    stub_request(:put, %r{https://example.com/_matrix/client/v3/rooms/!room:example.com/send/m.room.message/\d+}).with(body: { msgtype: 'm.video', body: text, url: 'mxc://example.com/file', info: {} }).to_return_json(body: {})
     @room.send_video('mxc://example.com/file', text)
 
-    @api.expects(:send_content).with(@id, 'mxc://example.com/file', text, 'm.audio', extra_information: {})
+    stub_request(:put, %r{https://example.com/_matrix/client/v3/rooms/!room:example.com/send/m.room.message/\d+}).with(body: { msgtype: 'm.audio', body: text, url: 'mxc://example.com/file', info: {} }).to_return_json(body: {})
     @room.send_audio('mxc://example.com/file', text)
 
-    @api.expects(:redact_event).with(@id, '$event:example.com', reason: text)
+    stub_request(:put, %r{https://example.com/_matrix/client/v3/rooms/!room:example.com/redact/\$event:example.com/\d+}).with(body: { reason: text }).to_return_json(body: {})
     @room.redact_message('$event:example.com', text)
 
-    @api.expects(:invite_user).with(@id, '@bob:example.com')
+    stub_request(:post, 'https://example.com/_matrix/client/v3/rooms/!room:example.com/invite').with(body: { user_id: '@bob:example.com' }).to_return_json(body: {})
     @room.invite_user('@bob:example.com')
 
-    @api.expects(:kick_user).with(@id, '@bob:example.com', reason: text)
+    stub_request(:post, 'https://example.com/_matrix/client/v3/rooms/!room:example.com/kick').with(body: { user_id: '@bob:example.com', reason: text }).to_return_json(body: {})
     @room.kick_user('@bob:example.com', text)
 
-    @api.expects(:ban_user).with(@id, '@bob:example.com', reason: text)
+    stub_request(:post, 'https://example.com/_matrix/client/v3/rooms/!room:example.com/ban').with(body: { user_id: '@bob:example.com', reason: text }).to_return_json(body: {})
     @room.ban_user('@bob:example.com', text)
 
-    @api.expects(:unban_user).with(@id, '@bob:example.com')
+    stub_request(:post, 'https://example.com/_matrix/client/v3/rooms/!room:example.com/unban').with(body: { user_id: '@bob:example.com' }).to_return_json(body: {})
     @room.unban_user('@bob:example.com')
 
-    @api.expects(:leave_room).with(@id)
+    stub_request(:post, 'https://example.com/_matrix/client/v3/rooms/!room:example.com/leave').to_return_json(body: {})
     @client.instance_variable_get(:@rooms).expects(:delete).with(@id)
     @room.leave
 
-    @api.expects(:get_room_account_data).with('@alice:example.com', @id, 'com.example.Test')
+    stub_request(:get, 'https://example.com/_matrix/client/v3/user/@alice:example.com/rooms/!room:example.com/account_data/com.example.Test').to_return_json(body: {})
     @room.get_account_data('com.example.Test')
 
-    @api.expects(:set_room_account_data).with('@alice:example.com', @id, 'com.example.Test', { data: true })
+    stub_request(:put, 'https://example.com/_matrix/client/v3/user/@alice:example.com/rooms/!room:example.com/account_data/com.example.Test').with(body: { data: true }).to_return_json(body: {})
     @room.set_account_data('com.example.Test', data: true)
 
-    @api.expects(:get_membership).with(@id, '@alice:example.com').returns(membership: 'join')
-    @api.expects(:set_membership).with(@id, '@alice:example.com', 'join', 'Updating room profile information', { membership: 'join', displayname: 'Alice', avatar_url: 'mxc://example.com/avatar' })
+    stub_request(:get, 'https://example.com/_matrix/client/v3/rooms/!room:example.com/state/m.room.member/@alice:example.com').to_return_json(body: { membership: 'join' })
+    stub_request(:put, 'https://example.com/_matrix/client/v3/rooms/!room:example.com/state/m.room.member/@alice:example.com').with(body: { membership: 'join', displayname: 'Alice', avatar_url: 'mxc://example.com/avatar', reason: 'Updating room profile information' }).to_return_json(body: {})
     @room.set_user_profile display_name: 'Alice', avatar_url: 'mxc://example.com/avatar'
 
-    @api.expects(:get_user_tags).with('@alice:example.com', @id).returns(tags: { 'example.tag': {} })
+    stub_request(:get, 'https://example.com/_matrix/client/v3/user/@alice:example.com/rooms/!room:example.com/tags').to_return_json(body: { tags: { 'example.tag': {} }})
     tags = @room.tags
 
-    @api.expects(:add_user_tag).with('@alice:example.com', @id, :'test.tag', { data: true })
+    stub_request(:put, 'https://example.com/_matrix/client/v3/user/@alice:example.com/rooms/!room:example.com/tags/test.tag').with(body: { }).to_return_json(body: {})
     tags.add 'test.tag', data: true
 
-    @api.expects(:remove_user_tag).with('@alice:example.com', @id, :'test.tag')
+    stub_request(:delete, 'https://example.com/_matrix/client/v3/user/@alice:example.com/rooms/!room:example.com/tags/test.tag').to_return_json(body: {})
     tags.remove 'test.tag'
 
     assert_nil tags[:'test.tag']
     assert_not_nil tags[:'example.tag']
 
-    expect_message(@api, :set_room_state, @id, 'm.room.name', { name: 'name' })
+    stub_request(:put, 'https://example.com/_matrix/client/v3/rooms/!room:example.com/state/m.room.name').with(body: { name: 'name' }).to_return_json(body: {})
     @room.name = 'name'
 
-    expect_message(@api, :set_room_state, @id, 'm.room.topic', { topic: 'topic' })
+    stub_request(:put, 'https://example.com/_matrix/client/v3/rooms/!room:example.com/state/m.room.topic').with(body: { topic: 'topic' }).to_return_json(body: {})
     @room.topic = 'topic'
 
-    @api.expects(:request).with(
-      :put,
-      :client_r0,
-      '/directory/room/%23room%3Aexample.com',
-      body: { room_id: '!room:example.com' },
-      query: {}
-    )
+    stub_request(:put, 'https://example.com/_matrix/client/v3/directory/room/%23room:example.com').with(body: { room_id: '!room:example.com' }).to_return_json(body: {})
     @room.add_alias('#room:example.com')
 
-    expect_message(@api, :set_room_state, @id, 'm.room.join_rules', { join_rule: :invite }).twice
+    stub_request(:put, 'https://example.com/_matrix/client/v3/rooms/!room:example.com/state/m.room.join_rules').with(body: { join_rule: 'invite' }).to_return_json(body: {}).times(2)
     @room.invite_only = true
     @room.join_rule = :invite
 
-    expect_message(@api, :set_room_state, @id, 'm.room.join_rules', { join_rule: :public }).twice
+    stub_request(:put, 'https://example.com/_matrix/client/v3/rooms/!room:example.com/state/m.room.join_rules').with(body: { join_rule: 'public' }).to_return_json(body: {}).times(2)
     @room.invite_only = false
     @room.join_rule = :public
 
-    expect_message(@api, :set_room_state, @id, 'm.room.guest_access', { guest_access: :can_join }).twice
+    stub_request(:put, 'https://example.com/_matrix/client/v3/rooms/!room:example.com/state/m.room.guest_access').with(body: { guest_access: 'can_join' }).to_return_json(body: {}).times(2)
     @room.allow_guests = true
     @room.guest_access = :can_join
 
-    expect_message(@api, :set_room_state, @id, 'm.room.guest_access', { guest_access: :forbidden }).twice
+    stub_request(:put, 'https://example.com/_matrix/client/v3/rooms/!room:example.com/state/m.room.guest_access').with(body: { guest_access: 'forbidden' }).to_return_json(body: {}).times(2)
     @room.allow_guests = false
     @room.guest_access = :forbidden
 
-    @api.expects(:get_room_state).with(@id, 'm.room.power_levels').times(3).returns({ users: { '@alice:example.com': 100, '@bob:example.com': 50 }, users_default: 0 })
+    stub_request(:get, 'https://example.com/_matrix/client/v3/rooms/!room:example.com/state/m.room.power_levels').to_return_json(body: {
+      users: { '@alice:example.com': 100, '@bob:example.com': 50 },
+      users_default: 0
+    })
     @room.power_levels
 
     assert_true @room.admin? '@alice:example.com'
@@ -223,68 +217,98 @@ class RoomTest < Test::Unit::TestCase
     assert @room.user_can_send? '@alice:example.com', 'm.room.name', state: true
     refute @room.user_can_send? '@charlie:example.com', 'm.room.topic', state: true
 
-    @api.expects(:set_room_state).with(@id, 'm.room.power_levels', { users: { '@alice:example.com': 100, '@bob:example.com': 50, '@charlie:example.com': 50 }, users_default: 0 })
+    stub_request(:put, 'https://example.com/_matrix/client/v3/rooms/!room:example.com/state/m.room.power_levels').with(body: {
+      users: { '@alice:example.com': 100, '@bob:example.com': 50, '@charlie:example.com': 50 },
+      users_default: 0
+    }).to_return_json(body: {}).times(2)
     @room.moderator! '@charlie:example.com'
 
-    @api.expects(:set_room_state).with(@id, 'm.room.power_levels', { users: { '@alice:example.com': 100, '@bob:example.com': 50, '@charlie:example.com': 100 }, users_default: 0 })
+    stub_request(:put, 'https://example.com/_matrix/client/v3/rooms/!room:example.com/state/m.room.power_levels').with(body: {
+      users: { '@alice:example.com': 100, '@bob:example.com': 50, '@charlie:example.com': 100 },
+      users_default: 0
+    }).to_return_json(body: {}).times(2)
     @room.admin! '@charlie:example.com'
   end
 
   def test_state_refresh
-    @api.expects(:get_room_state).with(@id, 'm.room.name').returns name: 'New name'
+    stub_request(:get, 'https://example.com/_matrix/client/v3/rooms/!room:example.com/state/m.room.name').to_return_json(body: { name: 'New name' })
     @room.reload_name!
 
     assert_equal 'New name', @room.name
 
-    @api.expects(:get_room_state).with(@id, 'm.room.topic').returns topic: 'New topic'
+    stub_request(:get, 'https://example.com/_matrix/client/v3/rooms/!room:example.com/state/m.room.topic').to_return_json(body: { topic: 'New topic' })
     @room.reload_topic!
 
     assert_equal 'New topic', @room.topic
 
-    @api.expects(:get_room_state).with(@id, 'm.room.canonical_alias').returns(MatrixSdk::Response.new(@api, alias: '#test:example.com'))
-    @api.expects(:get_room_aliases).with(@id).never
+    stub_request(:get, 'https://example.com/_matrix/client/v3/rooms/!room:example.com/state/m.room.canonical_alias').to_return_json(body: { alias: '#test:example.com' }).times(1)
+    assert @room.aliases.include? '#test:example.com'
     assert @room.aliases.include? '#test:example.com'
 
-    @api.expects(:get_room_state).with(@id, 'm.room.canonical_alias').never
-    assert @room.aliases.include? '#test:example.com'
-
-    @api.expects(:get_room_state).with(@id, 'm.room.canonical_alias').returns(MatrixSdk::Response.new(@api, alias: '#test:example.com', alt_aliases: ['#test:example1.com']))
+    stub_request(:get, 'https://example.com/_matrix/client/v3/rooms/!room:example.com/state/m.room.canonical_alias').to_return_json(body: { alias: '#test:example.com', alt_aliases: ['#test:example1.com'] }).times(1)
     @room.reload_aliases!
     assert @room.aliases.include? '#test:example.com'
     assert @room.aliases.include? '#test:example1.com'
 
-    @api.expects(:get_room_state).with(@id, 'm.room.canonical_alias').returns(MatrixSdk::Response.new(@api, alias: '#test:example.com', alt_aliases: ['#test:example1.com']))
-    @api.expects(:get_room_aliases).with(@id).returns(MatrixSdk::Response.new(@api, aliases: ['#test:example2.com']))
+    stub_request(:get, 'https://example.com/_matrix/client/v3/rooms/!room:example.com/state/m.room.canonical_alias').to_return_json(body: { alias: '#test:example.com', alt_aliases: ['#test:example2.com'] }).times(1)
+    stub_request(:get, 'https://example.com/_matrix/client/v3/rooms/!room:example.com/aliases').to_return_json(body: { aliases: ['#test:example1.com'] })
     @room.reload_aliases!
     aliases = @room.aliases(canonical_only: false)
     assert aliases.include? '#test:example.com'
     assert aliases.include? '#test:example1.com'
     assert aliases.include? '#test:example2.com'
 
-    @api.expects(:get_room_state).with(@id, 'm.room.canonical_alias').raises(MatrixSdk::MatrixNotFoundError)
-    @api.expects(:get_room_aliases).with(@id).returns(MatrixSdk::Response.new(@api, aliases: ['#test:example.com']))
+    stub_request(:get, 'https://example.com/_matrix/client/v3/rooms/!room:example.com/state/m.room.canonical_alias').to_return_json(status: 404, body: {})
+    stub_request(:get, 'https://example.com/_matrix/client/v3/rooms/!room:example.com/aliases').to_return_json(body: { aliases: ['#test:example.com'] })
     @room.reload_aliases!
     assert @room.aliases(canonical_only: false).include? '#test:example.com'
 
-    @api.expects(:get_room_state).with(@id, 'm.room.canonical_alias').raises(MatrixSdk::MatrixNotFoundError)
-    @api.expects(:get_room_aliases).with(@id).returns(MatrixSdk::Response.new(@api, aliases: ['#test2:example.com']))
+    stub_request(:get, 'https://example.com/_matrix/client/v3/rooms/!room:example.com/state/m.room.canonical_alias').to_return_json(status: 404, body: {})
+    stub_request(:get, 'https://example.com/_matrix/client/v3/rooms/!room:example.com/aliases').to_return_json(body: { aliases: ['#test2:example.com'] })
     @room.reload_aliases!
     assert @room.aliases(canonical_only: false).include?('#test2:example.com')
 
-    @api.expects(:get_room_state).with(@id, 'm.room.canonical_alias').raises(MatrixSdk::MatrixNotFoundError)
-    @api.expects(:get_room_aliases).with(@id).returns(MatrixSdk::Response.new(@api, aliases: ['#test2:example.com']))
+    stub_request(:get, 'https://example.com/_matrix/client/v3/rooms/!room:example.com/state/m.room.canonical_alias').to_return_json(status: 404, body: {})
+    stub_request(:get, 'https://example.com/_matrix/client/v3/rooms/!room:example.com/aliases').to_return_json(body: { aliases: ['#test2:example.com'] })
     @room.reload_aliases!
     assert !@room.aliases(canonical_only: false).include?('#test:example.com')
   end
 
   def test_modifies
-    @api.expects(:get_room_state).with(@id, 'm.room.power_levels').returns users_default: 0, redact: 50
-
-    @api.expects(:set_room_state).with(@id, 'm.room.power_levels', { users_default: 5, redact: 50, users: { '@alice:example.com': 100 }})
+    stub_request(:get, 'https://example.com/_matrix/client/v3/rooms/!room:example.com/state/m.room.power_levels').to_return_json(
+      body: {
+        users_default: 0,
+        redact: 50
+      }
+    )
+    stub_request(:put, 'https://example.com/_matrix/client/v3/rooms/!room:example.com/state/m.room.power_levels').with(
+      body: {
+        users_default: 5,
+        redact: 50,
+        users: {
+          '@alice:example.com': 100
+        }
+      }
+    ).to_return_json(
+      body: {}
+    )
     @room.modify_user_power_levels({ '@alice:example.com': 100 }, 5)
 
-    @api.expects(:get_room_state).with(@id, 'm.room.power_levels').returns users_default: 0, redact: 50
-    @api.expects(:set_room_state).with(@id, 'm.room.power_levels', { users_default: 0, redact: 50, events: { 'm.room.message': 100 }})
+    stub_request(:get, 'https://example.com/_matrix/client/v3/rooms/!room:example.com/state/m.room.power_levels').to_return_json(
+      body: {
+        users_default: 10,
+      }
+    )
+    stub_request(:put, 'https://example.com/_matrix/client/v3/rooms/!room:example.com/state/m.room.power_levels').with(
+      body: {
+        users_default: 10,
+        events: {
+          'm.room.message': 100
+        }
+      }
+    ).to_return_json(
+      body: {}
+    )
     @room.modify_required_power_levels 'm.room.message': 100
   end
 end

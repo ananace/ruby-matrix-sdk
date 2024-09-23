@@ -12,6 +12,12 @@ module MatrixSdk
     extend MatrixSdk::Extensions
     include MatrixSdk::Logging
 
+    # include MatrixSd::Protocols::AS
+    # include MatrixSd::Protocols::CS
+    # include MatrixSd::Protocols::IS
+    # include MatrixSd::Protocols::SS
+    # include MatrixSd::Protocols::MSC
+
     USER_AGENT = "Ruby Matrix SDK v#{MatrixSdk::VERSION}"
     DEFAULT_HEADERS = {
       'accept' => 'application/json',
@@ -72,11 +78,37 @@ module MatrixSdk
       self.threadsafe = params.fetch(:threadsafe, :multithread)
 
       ([params.fetch(:protocols, [:CS])].flatten - protocols).each do |proto|
-        self.class.include MatrixSdk::Protocols.const_get(proto)
+        extend MatrixSdk::Protocols.const_get(proto)
       end
+      extend MatrixSdk::Protocols::CS if protocol?(:AS) && !protocol?(:CS)
 
       login(user: @homeserver.user, password: @homeserver.password) if @homeserver.user && @homeserver.password && !@access_token && !params[:skip_login] && protocol?(:CS)
       @homeserver.userinfo = '' unless params[:skip_login]
+    end
+
+    # Get a copy of the connection with the Application Service API
+    def with_as
+      dup.tap { |api| api.protocol?(:AS) || api.extend(MatrixSdk::Protocols::AS) }
+    end
+
+    # Get a copy of the connection with the Client-to-Server API
+    def with_cs
+      dup.tap { |api| api.protocol?(:CS) || api.extend(MatrixSdk::Protocols::CS) }
+    end
+
+    # Get a copy of the connection with the Identity Service API
+    def with_is
+      dup.tap { |api| api.protocol?(:IS) || api.extend(MatrixSdk::Protocols::IS) }
+    end
+
+    # Get a copy of the connection with the Server-to-Server API
+    def with_ss
+      dup.tap { |api| api.protocol?(:SS) || api.extend(MatrixSdk::Protocols::SS) }
+    end
+
+    # Get a copy of the connection with experimental MSC APIs
+    def with_msc
+      dup.tap { |api| api.protocol?(:MSC) || api.extend(MatrixSdk::Protocols::MSC) }
     end
 
     # Create an API connection to a domain entry
@@ -187,7 +219,7 @@ module MatrixSdk
     # @return [Symbol[]] An array of enabled APIs
     def protocols
       self
-        .class.included_modules
+        .singleton_class.included_modules
         .reject { |m| m&.name.nil? }
         .select { |m| m.name.start_with? 'MatrixSdk::Protocols::' }
         .map { |m| m.name.split('::').last.to_sym }
@@ -283,9 +315,10 @@ module MatrixSdk
     # @option options [IO] :body_stream A body stream to attach to the request
     # @option options [Hash] :headers Additional headers to set on the request
     # @option options [Boolean] :skip_auth (false) Skip authentication
+    # @option options [Boolean] :raw_response Return the raw response object
     def request(method, api, path, **options)
       url = homeserver.dup.tap do |u|
-        u.path = api_to_path(api) + path
+        u.path = api_to_path(api, path) + path
         u.query = [u.query, URI.encode_www_form(options.fetch(:query))].flatten.compact.join('&') if options[:query]
         u.query = nil if u.query.nil? || u.query.empty?
       end
@@ -324,27 +357,33 @@ module MatrixSdk
 
         begin
           data = JSON.parse(response.body, symbolize_names: true)
-        rescue JSON::JSONError => e
+        rescue StandardError => e
           logger.debug "#{e.class} error when parsing response. #{e}"
           data = nil
         end
-
-        if response.is_a? Net::HTTPTooManyRequests
+        
+        case response
+        when Net::HTTPRedirection
+          url = response['location']
+          next
+        when Net::HTTPTooManyRequests
           raise MatrixRequestError.new_by_code(data, response.code) unless autoretry
 
           failures += 1
           waittime = data[:retry_after_ms] || data[:error][:retry_after_ms] || @backoff_time
           sleep(waittime.to_f / 1000.0)
           next
-        end
+        when Net::HTTPSuccess
+          return response if options[:raw_response]
 
-        if response.is_a? Net::HTTPSuccess
           unless data
+            puts "Received non-parsable data in 200 response; #{response.body.inspect}"
             logger.error "Received non-parsable data in 200 response; #{response.body.inspect}"
             raise MatrixConnectionError, response
           end
           return MatrixSdk::Response.new self, data
         end
+
         raise MatrixRequestError.new_by_code(data, response.code) if data
 
         raise MatrixConnectionError.class_by_code(response.code), response
@@ -414,20 +453,36 @@ module MatrixSdk
       logger.warn "#{e.class} occured while printing request debug; #{e.message}\n#{e.backtrace.join "\n"}"
     end
 
-    def api_to_path(api)
+    def api_to_path(api, path)
+      raise ArgumentError, "#{api.inspect} is not a Symbol" unless api.is_a? Symbol
+
+      case api
+      when :admin_latest
+        # TODO
+      when :client_latest
+        raise NotImplementedError, 'API created without CS protocol' unless protocol? :CS
+
+        api = client_api_latest(path.split('/'))
+      when :media_latest
+        raise NotImplementedError, 'API created without CS protocol' unless protocol? :CS
+
+        api = media_api_latest(path.split('/'))
+      end
+
       return "/_synapse/#{api.to_s.split('_').join('/')}" if @synapse && api.to_s.start_with?('admin_')
 
       # TODO: <api>_current / <api>_latest
       "/_matrix/#{api.to_s.split('_').join('/')}"
     end
 
-    def http
-      return @http if @http&.active?
+    def http(threaded: false)
+      threaded = true if @threadsafe == :multithread
+      return @http if @http&.active? && !threaded
 
       host = (@connection_address || homeserver.host)
       port = (@connection_port || homeserver.port)
 
-      connection = @http unless @threadsafe == :multithread
+      connection = @http unless threaded
       connection ||= if proxy_uri
                        Net::HTTP.new(host, port, proxy_uri.host, proxy_uri.port, proxy_uri.user, proxy_uri.password)
                      else
@@ -439,7 +494,7 @@ module MatrixSdk
       connection.use_ssl = homeserver.scheme == 'https'
       connection.verify_mode = validate_certificate ? ::OpenSSL::SSL::VERIFY_PEER : ::OpenSSL::SSL::VERIFY_NONE
       connection.start
-      @http = connection unless @threadsafe == :multithread
+      @http = connection unless threaded
 
       connection
     end

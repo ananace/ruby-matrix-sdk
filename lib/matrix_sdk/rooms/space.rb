@@ -2,9 +2,10 @@
 
 module MatrixSdk::Rooms
   class Space < MatrixSdk::Room
-    TYPE = 'm.space'
+    room_type 'm.space'
 
-    def tree(suggested_only: nil, max_rooms: nil)
+    # Get all child rooms in the space
+    def child_rooms(suggested_only: nil, max_rooms: nil)
       begin
         data = client.api.request :get, :client_r0, "/rooms/#{id}/spaces", query: {
           suggested_only: suggested_only,
@@ -20,21 +21,24 @@ module MatrixSdk::Rooms
       rooms = data.rooms.map do |r|
         next if r[:room_id] == id
 
-        room = client.ensure_room(r[:room_id])
-        room.instance_variable_set :@room_type, r[:room_type] if r.key? :room_type
-        room = room.to_space if room.space?
+        room = client.ensure_room(r[:room_id], with_type: r[:room_type])
 
         # Inject available room information
         r.each do |k, v|
-          if room.respond_to?("#{k}_cached?".to_sym) && send("#{k}_cached?".to_sym)
+          if room.respond_to?(:"#{k}_cached?") && send(:"#{k}_cached?")
             room.send(:tinycache_adapter).write(k, v)
-          elsif room.instance_variable_defined? "@#{k}"
-            room.instance_variable_set("@#{k}", v)
+          elsif room.instance_variable_defined? :"@#{k}"
+            room.instance_variable_set(:"@#{k}", v)
           end
         end
         room
       end
-      rooms.compact!
+      rooms.compact
+    end
+
+    # Get all child rooms arranged into a tree structure
+    def tree(suggested_only: nil, max_rooms: nil)
+      rooms = child_rooms(suggested_only:, max_rooms:)
 
       grouping = {}
       data.events.each do |ev|
@@ -50,8 +54,8 @@ module MatrixSdk::Rooms
 
         room = self if entry == id
         room ||= rooms.find { |r| r.id == entry }
-        puts "Unable to find room for entry #{entry}" unless room
-        # next if room.nil?
+        # puts "Unable to find room for entry #{entry}" unless room
+        next if room.nil?
 
         ret = {
           room => []
