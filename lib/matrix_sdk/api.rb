@@ -86,29 +86,54 @@ module MatrixSdk
       @homeserver.userinfo = '' unless params[:skip_login]
     end
 
+    # Ensure the Application Service API is enabled on the connection
+    def ensure_as!
+      protocol?(:AS) || extend(MatrixSdk::Protocols::AS)
+    end
+
+    # Ensure the Client-to-Server API is enabled on the connection
+    def ensure_cs!
+      protocol?(:CS) || extend(MatrixSdk::Protocols::CS)
+    end
+
+    # Ensures the Identity Service API is enabled on the connection
+    def ensure_is!
+      protocol?(:IS) || extend(MatrixSdk::Protocols::IS)
+    end
+
+    # Ensures the Server-to-Server API is enabled on the connection
+    def ensure_ss!
+      protocol?(:SS) || extend(MatrixSdk::Protocols::SS)
+    end
+
+    # Ensures the supported experimental MSC APIs are enabled on the connection
+    def ensure_msc!
+      protocol?(:MSC) || extend(MatrixSdk::Protocols::MSC)
+    end
+
     # Get a copy of the connection with the Application Service API
     def with_as
-      dup.tap { |api| api.protocol?(:AS) || api.extend(MatrixSdk::Protocols::AS) }
+      dup.tap { |api| api.ensure_as! }
     end
 
     # Get a copy of the connection with the Client-to-Server API
     def with_cs
-      dup.tap { |api| api.protocol?(:CS) || api.extend(MatrixSdk::Protocols::CS) }
+      dup.tap { |api| api.ensure_cs! }
     end
 
     # Get a copy of the connection with the Identity Service API
     def with_is
-      dup.tap { |api| api.protocol?(:IS) || api.extend(MatrixSdk::Protocols::IS) }
+      dup.tap { |api| api.ensure_is! }
     end
 
     # Get a copy of the connection with the Server-to-Server API
     def with_ss
-      dup.tap { |api| api.protocol?(:SS) || api.extend(MatrixSdk::Protocols::SS) }
+      dup.tap { |api| api.ensure_ss! }
     end
 
     # Get a copy of the connection with experimental MSC APIs
     def with_msc
-      dup.tap { |api| api.protocol?(:MSC) || api.extend(MatrixSdk::Protocols::MSC) }
+      dup.tap { |api| api.ensure_msc! }
     end
 
     # Create an API connection to a domain entry
