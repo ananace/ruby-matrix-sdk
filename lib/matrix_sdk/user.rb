@@ -159,6 +159,11 @@ module MatrixSdk
       end
     end
 
+    # Report the user
+    def report!(reason)
+      client.api.report_user(id, reason)
+    end
+
     private
 
     def raw_presence

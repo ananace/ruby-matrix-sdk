@@ -19,7 +19,7 @@ module MatrixSdk::Protocols::MSC
       .each { |v| api.extend v[:mod] if api.has_msc? v[:num] }
   end
 
-  # Check if there's support for MSC2108 - Sync over Server Sent Events
+  # Check which MSCs are supported by the server
   def has_msc?(num)
     @mscs ||= {}
     return @mscs[num] if @mscs.key? num

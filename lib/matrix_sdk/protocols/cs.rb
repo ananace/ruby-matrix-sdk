@@ -761,6 +761,44 @@ module MatrixSdk::Protocols::CS
     send_message_event(room_id, 'm.room.message', content, **params)
   end
 
+  # Report a room
+  # @param room_id [MXID,String] The room ID to report
+  # @param reason [String] The reason for the report
+  # @return [Response] A response hash with the parameter :event_id
+  # @see https://spec.matrix.org/latest/client-server-api/#post_matrixclientv3roomsroomidreport
+  #      The Matrix Spec, for more information about the call and response
+  def report_room(room_id, reason, **params)
+    query = {}
+    query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
+
+    content = {
+      reason:
+    }
+
+    room_id = ERB::Util.url_encode room_id.to_s
+
+    request(:put, :client_latest, "/rooms/#{room_id}/report", body: content, query: query)
+  end
+
+  # Report a user
+  # @param user_id [MXID,String] The user ID to report
+  # @param reason [String] The reason for the report
+  # @return [Response] A response hash with the parameter :event_id
+  # @see https://spec.matrix.org/latest/client-server-api/#post_matrixclientv3roomsroomidreport
+  #      The Matrix Spec, for more information about the call and response
+  def report_user(user_id, reason, **params)
+    query = {}
+    query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
+
+    content = {
+      reason:
+    }
+
+    user_id = ERB::Util.url_encode user_id.to_s
+
+    request(:put, :client_latest, "/users/#{user_id}/report", body: content, query: query)
+  end
+
   # Report an event in a room
   #
   # @param room_id [MXID,String] The room ID in which the event occurred
@@ -769,14 +807,14 @@ module MatrixSdk::Protocols::CS
   # @param reason [String] The reason for the report
   # @see https://matrix.org/docs/spec/client_server/latest#post-matrix-client-r0-rooms-roomid-report-eventid
   #      The Matrix Spec, for more information about the call and response
-  def report_event(room_id, event_id, score:, reason:, **params)
+  def report_event(room_id, event_id, score:, reason: nil, **params)
     query = {}
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
 
     body = {
       score: score,
       reason: reason
-    }
+    }.compact
 
     room_id = ERB::Util.url_encode room_id.to_s
     event_id = ERB::Util.url_encode event_id.to_s

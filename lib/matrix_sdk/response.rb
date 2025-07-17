@@ -21,13 +21,14 @@ module MatrixSdk
   # @!attribute [r] api
   #   @return [Api] The API connection that returned the response
   module Response
-    def self.new(api, data)
+    def self.new(api, data, raw_data = nil, parent: nil)
       if data.is_a? Array
         raise ArgumentError, 'Input data was not an array of hashes' unless data.all? { |v| v.is_a? Hash }
 
         data.each do |value|
-          Response.new api, value
+          Response.new api, value, raw_data, parent: data
         end
+        data.instance_variable_set(:@raw_data, raw_data) if raw_data
         return data
       end
 
@@ -37,15 +38,21 @@ module MatrixSdk
 
       data.extend(Extensions)
       data.instance_variable_set(:@api, api)
+      data.instance_variable_set(:@parent, parent) if parent
+      data.instance_variable_set(:@raw_data, raw_data) if raw_data
 
       data.select { |_k, v| v.is_a? Hash }
-          .each { |_v, v| Response.new api, v }
+          .each { |_v, v| Response.new api, v, parent: data }
 
       data
     end
 
     module Extensions
       attr_reader :api
+
+      def raw_data!
+        @raw_data || @parent&.raw_data! || @parent&.instance_variable_get(:@raw_data)
+      end
 
       def respond_to_missing?(name, *_args)
         return true if key? name

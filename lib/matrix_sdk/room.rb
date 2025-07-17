@@ -1004,6 +1004,11 @@ module MatrixSdk
       true
     end
 
+    # Report the room
+    def report!(reason)
+      client.api.report_room(id, reason)
+    end
+
     class << self
       protected
 

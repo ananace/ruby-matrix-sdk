@@ -406,7 +406,7 @@ module MatrixSdk
             logger.error "Received non-parsable data in 200 response; #{response.body.inspect}"
             raise MatrixConnectionError, response
           end
-          return MatrixSdk::Response.new self, data
+          return MatrixSdk::Response.new self, data, response.body
         end
 
         raise MatrixRequestError.new_by_code(data, response.code) if data

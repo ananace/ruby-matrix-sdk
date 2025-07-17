@@ -21,7 +21,7 @@ module MatrixSdk
     # @!attribute sync_filter [rw] The global sync filter
     #   @return [Hash,String] A filter definition, either as defined by the
     #           Matrix spec, or as an identifier returned by a filter creation request
-    attr_reader :api
+    attr_reader :api, :middlewares
     attr_accessor :cache, :sync_filter, :next_batch
 
     events :error, :event, :account_data, :presence_event, :invite_event, :leave_event, :ephemeral_event, :state_event
@@ -87,6 +87,8 @@ module MatrixSdk
         instance_variable_set("@#{k}", v) if instance_variable_defined? "@#{k}"
       end
 
+      @middlewares = []
+
       @rooms = {}
       @room_handlers = {}
       @users = {}
@@ -97,6 +99,16 @@ module MatrixSdk
       return unless params[:user_id]
 
       @mxid = params[:user_id]
+    end
+
+    def add_middleware(middleware)
+      middleware.client = self if middleware.respond_to? :client=
+      @middlewares << middleware
+    end
+
+    def enable_crypto!(path)
+      require_relative 'crypto/native'
+      add_middleware Crypto::Native.new(path)
     end
 
     alias sync_token next_batch
@@ -540,6 +552,8 @@ module MatrixSdk
       extra_params.merge!(params)
       extra_params[:filter] = extra_params[:filter].to_json unless extra_params[:filter].is_a? String
 
+      call_middlewares(:pre_sync, extra_params)
+
       attempts = 0
       data = loop do
         break api.sync(**extra_params)
@@ -589,7 +603,7 @@ module MatrixSdk
         rescue MatrixRequestError => e
           return unless @should_listen
 
-          logger.warn("A #{e.class} occurred during sync")
+          logger.warn("A(n) #{e.class} occurred during sync")
           if e.httpstatus >= 500
             logger.warn("Serverside error, retrying in #{bad_sync_timeout} seconds...")
             sleep(bad_sync_timeout) if bad_sync_timeout.positive? # rubocop:disable Metrics/BlockNesting
@@ -610,6 +624,9 @@ module MatrixSdk
       @api.access_token = data[:access_token]
       @api.device_id = data[:device_id]
       @api.homeserver = data[:home_server]
+
+      call_middlewares(:post_auth, data)
+
       access_token
     end
 
@@ -623,6 +640,8 @@ module MatrixSdk
     end
 
     def handle_sync_response(data)
+      call_middlewares(:post_sync, data)
+
       data.dig(:account_data, :events)&.each do |account_data|
         if cache != :none
           adapter = self.account_data.tinycache_adapter
@@ -695,6 +714,15 @@ module MatrixSdk
       end
 
       nil
+    end
+
+    def call_middlewares(stage, data)
+      @middlewares.select { |mw| mw.respond_to? stage }.each do |mw|
+        mw.public_send stage, data
+      rescue StandardError => ex
+        logger.warn "Failed to call #{stage} on #{mw} - #{ex.class}: #{ex}"
+        logger.debug ex.backtrace.join "\n"
+      end
     end
   end
 end
