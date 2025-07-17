@@ -8,7 +8,7 @@ module MatrixSdk
     def initialize(identifier)
       raise ArgumentError, 'Identifier must be a String' unless identifier.is_a? String
       raise ArgumentError, 'Identifier is too long' if identifier.size > 255
-      raise ArgumentError, 'Identifier lacks required data' unless identifier =~ %r{^([@!$+#][^:]+:[^:]+(?::\d+)?)|(\$[A-Za-z0-9+/]+)$}
+      raise ArgumentError, 'Identifier lacks required data' unless identifier =~ %r{^([@!$+#][^:]+:[^:]+(?::\d+)?)|([$!][A-Za-z0-9_+/-]+)$}
 
       # TODO: Community-as-a-Room / Profile-as-a-Room, in case they're going for room aliases
       @sigil = identifier[0]
