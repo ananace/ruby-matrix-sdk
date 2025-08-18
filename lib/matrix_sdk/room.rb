@@ -981,7 +981,7 @@ module MatrixSdk
       data = tinycache_adapter.read(:aliases) || []
       data << canonical_alias
       data += event.dig(*%i[content alt_aliases]) || []
-      tinycache_adapter.write(:aliases, data.uniq.sort)
+      tinycache_adapter.write(:aliases, data.compact.uniq.sort)
     end
 
     def room_handlers?
