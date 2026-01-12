@@ -60,11 +60,13 @@ module MatrixSdk::Crypto
     attr_reader :machine
 
     def initialize
+      raise NotImplementedError, "Still needs matrix-rust-sdk-crypto work"
+
       machine = RustCrypto::OlmMachine.new
     end
 
     def pre_sync(_params)
-      client.api
+      # client.api
     end
 
     def post_sync(data)
