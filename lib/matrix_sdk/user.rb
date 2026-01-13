@@ -74,6 +74,43 @@ module MatrixSdk
       @avatar_url = url
     end
 
+    # Gets the user-provided timezone
+    def timezone
+      self['m.tz']
+    end
+
+    # Sets the user-provided timezone
+    # 
+    # @param tz [String] The timezone, should be a valid IANA identifier
+    #   https://www.iana.org/time-zones
+    def timezone=(tz)
+      self['m.tz'] = tz
+    end
+
+    # Get an arbitrary profile key
+    #
+    # @param [Symbol] key The key to look up from the profile
+    # @see MatrixSdk::Protocols::CS#get_profile_key
+    def [](key)
+      key = key.to_s.to_sym unless key.is_a? Symbol
+
+      client.api.get_profile_key(id, key)[key]
+    end
+
+    # Set an arbitrary profile key
+    #
+    # Only works for the current user object, as requested by
+    #     client.get_user(:self)
+    #
+    # @param [Symbol] key The key to look up from the profile
+    # @param value Arbitrary data to store in the key, must be JSON-encodable
+    # @see MatrixSdk::Protocols::CS#get_profile_key
+    def []=(key, value)
+      key = key.to_s.to_sym unless key.is_a? Symbol
+
+      client.api.set_profile_key(id, key, value)
+    end
+
     # Check if the user is an admin in a given room
     #
     # @param room [String,MXID] the room to check

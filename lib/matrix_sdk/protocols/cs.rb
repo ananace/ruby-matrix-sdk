@@ -1389,6 +1389,21 @@ module MatrixSdk::Protocols::CS
     request(:put, :client_latest, "/directory/list/room/#{room_id}", body: body, query: query)
   end
 
+  # Gets the summary for a room
+  #
+  # @param [MXID,String] room The ID or alias of the room
+  # @param [String[],String] via The server names to query if the room is not known
+  # @see https://spec.matrix.org/v1.16/client-server-api/#get_matrixclientv1room_summaryroomidoralias
+  #      The Matrix Spec, for more information about the request and data
+  def get_room_summary(room, via: nil, **params)
+    query = {}
+    query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
+    query[:via] = via if via
+
+    room = ERB::Util.url_encode room.to_s
+    request(:get, :client_latest, "/room_summary/#{room}")
+  end
+
   def get_user_tags(user_id, room_id, **params)
     query = {}
     query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
@@ -1593,6 +1608,38 @@ module MatrixSdk::Protocols::CS
     user_id = ERB::Util.url_encode user_id.to_s
 
     request(:get, :client_latest, "/profile/#{user_id}", query: query)
+  end
+
+  # Gets a specific profile key for a user.
+  #
+  # @param [String,MXID] user_id The User ID to read the profile for
+  # @param [String,Symbol] key The key to pull for the user profile
+  # @return [Response] The user profile object
+  # @see #get_profile
+  def get_profile_key(user_id, key, **params)
+    query = {}
+    query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
+
+    user_id = ERB::Util.url_encode user_id.to_s
+    key = ERB::Util.url_encode key.to_s
+
+    request(:get, :client_latest, "/profile/#{user_id}/#{key}", query: query)
+  end
+
+  # Sets a specific profile key for a user.
+  #
+  # @param [String,MXID] user_id The User ID to read the profile for
+  # @param [String,Symbol] key The key to pull for the user profile
+  # @return [Response] The user profile object
+  # @see #get_profile
+  def set_profile_key(user_id, key, value, **params)
+    query = {}
+    query[:user_id] = params.delete(:user_id) if protocol?(:AS) && params.key?(:user_id)
+
+    user_id = ERB::Util.url_encode user_id.to_s
+    key = ERB::Util.url_encode key.to_s
+
+    request(:put, :client_latest, "/profile/#{user_id}/#{key}", query: query, body: { key => value })
   end
 
   # Gets TURN server connection information and credentials

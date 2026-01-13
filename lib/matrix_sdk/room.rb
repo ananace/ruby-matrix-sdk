@@ -32,6 +32,7 @@ module MatrixSdk
 
     # Requires heavy lookups, so they're cached for an hour
     cached :joined_members, cache_level: :all, expires_in: 60 * 60
+    cached :summary, cache_level: :all, expires_in: 60 * 60
 
     # Only cache unfiltered requests for aliases and members
     cached :aliases, unless: proc { |args| args.any? }, cache_level: :all, expires_in: 60 * 60
@@ -198,6 +199,7 @@ module MatrixSdk
     def display_name
       return name if name
       return canonical_alias if canonical_alias
+      return summary.cacnical_alias if summary.canonical_alias
 
       members = joined_members
                 .reject { |m| m.user_id == client.mxid }
@@ -213,6 +215,15 @@ module MatrixSdk
     # @return [String, nil] the canonical alias of the room
     def canonical_alias
       get_state('m.room.canonical_alias')[:alias]
+    rescue MatrixSdk::MatrixNotFoundError
+      nil
+    end
+
+    # Gets the summary of the room
+    #
+    # @return [Hash] The summary of the room
+    def summary(via: nil)
+      client.api.room_summary(id, via:)
     rescue MatrixSdk::MatrixNotFoundError
       nil
     end
