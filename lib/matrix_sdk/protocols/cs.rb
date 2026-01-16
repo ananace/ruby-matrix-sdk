@@ -1401,7 +1401,7 @@ module MatrixSdk::Protocols::CS
     query[:via] = via if via
 
     room = ERB::Util.url_encode room.to_s
-    request(:get, :client_latest, "/room_summary/#{room}")
+    request(:get, :client_latest, "/room_summary/#{room}", query:)
   end
 
   def get_user_tags(user_id, room_id, **params)

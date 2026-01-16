@@ -2,18 +2,22 @@
 
 module MatrixSdk
   class MXID
-    attr_accessor :sigil, :localpart, :domain, :port
+    MXID_REX = %r{\A(?<sigil>[^\w\s])(((?<localpart>[^:\0]+):(?<domain>[0-9a-z.-]+|\[[0-9A-Fa-f:.]+\])(?::(?<port>\d+))?)|(?<opaque>[^:]+))\z}i.freeze
 
-    # @param identifier [String] The Matrix ID string in the format of '&<localpart>:<domain>' where '&' is the sigil
+    attr_accessor :sigil, :localpart, :opaque, :domain, :port
+
+    # @param identifier [String] The Matrix ID string in the format of '&<localpart>:<domain>(:<port>)' or '&<base64>' where '&' is the sigil
     def initialize(identifier)
       raise ArgumentError, 'Identifier must be a String' unless identifier.is_a? String
       raise ArgumentError, 'Identifier is too long' if identifier.size > 255
-      raise ArgumentError, 'Identifier lacks required data' unless identifier =~ %r{^([@!$+#][^:]+:[^:]+(?::\d+)?)|([$!][A-Za-z0-9_+/-]+)$}
+      match = MXID_REX.match(identifier)
+      raise ArgumentError, 'Identifier is not of valid format' unless match
 
-      # TODO: Community-as-a-Room / Profile-as-a-Room, in case they're going for room aliases
-      @sigil = identifier[0]
-      @localpart, @domain, @port = identifier[1..].split(':')
-      @port = @port.to_i if @port
+      @sigil = match[:sigil]
+      @localpart = match[:localpart]
+      @opaque = match[:opaque]
+      @domain = match[:domain]
+      @port = match[:port]&.to_i
 
       raise ArgumentError, 'Identifier is not a valid MXID' unless valid?
     end
@@ -42,6 +46,8 @@ module MatrixSdk
     end
 
     def to_s
+      return "#{sigil}#{opaque}" if opaque
+
       "#{sigil}#{localpart}#{homeserver_suffix}"
     end
 
@@ -64,7 +70,14 @@ module MatrixSdk
     #
     # @return [Boolean] If the ID is a valid Matrix ID
     def valid?
-      !type.nil?
+      return false if type.nil?
+
+      case type
+      when :user_id, :group_id, :room_alias
+        return false unless domain
+      end
+
+      true
     end
 
     # Check if the ID is of a user

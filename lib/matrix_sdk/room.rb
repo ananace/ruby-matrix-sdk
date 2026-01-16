@@ -98,7 +98,7 @@ module MatrixSdk
         end
       end
 
-      @id = room_id.to_s
+      @id = room_id
 
       logger.debug "Created room #{room_id}"
     end
@@ -199,7 +199,8 @@ module MatrixSdk
     def display_name
       return name if name
       return canonical_alias if canonical_alias
-      return summary.cacnical_alias if summary.canonical_alias
+      summary = self.summary
+      return summary.canonical_alias if summary&.canonical_alias
 
       members = joined_members
                 .reject { |m| m.user_id == client.mxid }
@@ -223,7 +224,10 @@ module MatrixSdk
     #
     # @return [Hash] The summary of the room
     def summary(via: nil)
-      client.api.room_summary(id, via:)
+      via = [via].flatten.compact
+      via << id.homeserver if id.domain && !via.include?(id.homeserver)
+
+      client.api.get_room_summary(id, via:)
     rescue MatrixSdk::MatrixNotFoundError
       nil
     end

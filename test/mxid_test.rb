@@ -60,12 +60,31 @@ class MXIDTest < Test::Unit::TestCase
     assert_equal '#room:matrix.example.com:8448', parsed.to_s
   end
 
+  def test_parse_successes
+    [
+      '@user:example.com',
+      '!opaque:example.com',
+      '!b3BhcXVlCg++',
+      '$opaque:example.com',
+      '$b3BhcXVlCg++',
+      '+group:example.com',
+      '#alias:example.com',
+    ].each do |id|
+      assert_nothing_raised { MatrixSdk::MXID.new id }
+    end
+  end
+
   def test_parse_failures
-    assert_raises(ArgumentError) { MatrixSdk::MXID.new nil }
-    assert_raises(ArgumentError) { MatrixSdk::MXID.new true }
-    assert_raises(ArgumentError) { MatrixSdk::MXID.new '#asdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfadsfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfadsfasdfadsfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdf:example.com' }
-    assert_raises(ArgumentError) { MatrixSdk::MXID.new '' }
-    assert_raises(ArgumentError) { MatrixSdk::MXID.new 'user:example.com' }
-    assert_raises(ArgumentError) { MatrixSdk::MXID.new '@user' }
+    [
+      nil,
+      true,
+      '',
+      "##{'asdf'*70}:example.com",
+      'user:example.com',
+      '@user',
+      '@user:[not:ipv6]'
+    ].each do |id|
+      assert_raises(ArgumentError) { MatrixSdk::MXID.new id }
+    end
   end
 end

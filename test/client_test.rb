@@ -198,6 +198,7 @@ class ClientTest < Test::Unit::TestCase
 
   def test_state_handling
     stub_request(:get, 'https://example.com/_matrix/client/v3/rooms/!roomid:example.com/state/m.room.create').to_return_json(body: {})
+    stub_request(:get, 'https://example.com/_matrix/client/v3/room_summary/!roomid:example.com?via=example.com').to_raise(MatrixSdk::MatrixNotFoundError.new({}, 404))
 
     cl = MatrixSdk::Client.new 'https://example.com'
     assert_equal cl.cache, :all
@@ -335,15 +336,17 @@ class ClientTest < Test::Unit::TestCase
 
     cl.api.expects(:get_public_rooms).with(since: nil).returns MatrixSdk::Response.new(
       cl.api,
-      chunk: [
-        { room_id: '!room:example.com', name: 'Example room', topic: 'Example topic' }
-      ],
-      next_batch: 'batch'
+      {
+        chunk: [
+          { room_id: '!room:example.com', name: 'Example room', topic: 'Example topic' }
+        ],
+        next_batch: 'batch'
+      }
     )
 
     cl.api.expects(:get_public_rooms).with(since: 'batch').returns MatrixSdk::Response.new(
       cl.api,
-      chunk: []
+      { chunk: [] }
     )
 
     room = cl.public_rooms.first
@@ -357,7 +360,7 @@ class ClientTest < Test::Unit::TestCase
     stub_request(:get, 'https://example.com/_matrix/client/v3/rooms/!room:example.com/state/m.room.create').to_return_json(body: {})
     cl = MatrixSdk::Client.new 'https://example.com'
 
-    cl.api.expects(:create_room).with(room_alias: nil).returns(MatrixSdk::Response.new(cl.api, room_id: '!room:example.com'))
+    cl.api.expects(:create_room).with(room_alias: nil).returns(MatrixSdk::Response.new(cl.api, { room_id: '!room:example.com' }))
 
     room = cl.create_room
 
@@ -370,14 +373,14 @@ class ClientTest < Test::Unit::TestCase
     stub_request(:get, 'https://example.com/_matrix/client/v3/rooms/!room:example.com/state/m.room.create').to_return_json(body: {})
     cl = MatrixSdk::Client.new 'https://example.com'
 
-    cl.api.expects(:join_room).with('!room:example.com', server_name: []).returns(MatrixSdk::Response.new(cl.api, room_id: '!room:example.com'))
+    cl.api.expects(:join_room).with('!room:example.com', server_name: []).returns(MatrixSdk::Response.new(cl.api, { room_id: '!room:example.com' }))
     room = cl.join_room('!room:example.com')
 
     assert_not_nil room
     assert_equal room, cl.rooms.first
     assert_equal room, cl.find_room('!room:example.com')
 
-    cl.api.expects(:join_room).with('!room:example.com', server_name: ['matrix.org']).returns(MatrixSdk::Response.new(cl.api, room_id: '!room:example.com'))
+    cl.api.expects(:join_room).with('!room:example.com', server_name: ['matrix.org']).returns(MatrixSdk::Response.new(cl.api, { room_id: '!room:example.com' }))
     room = cl.join_room('!room:example.com', server_name: 'matrix.org')
 
     assert_not_nil room
